@@ -24,9 +24,14 @@ SoC의 기본 구성을 이루는 기본적인 요소들을 학습하고 RTL-to_
 
 #
 - 
-Chip : <img width="743" height="337" alt="Image" src="https://github.com/user-attachments/assets/d2df3ef3-e561-4ead-bf9a-d729bcfd9da1" />
-RISC-V :<img width="752" height="490" alt="Image" src="https://github.com/user-attachments/assets/f3661aeb-30ac-45cf-826e-4710c8fdc367" />
-BUS :<img width="764" height="283" alt="Image" src="https://github.com/user-attachments/assets/850f68c5-b4a8-4827-be07-39bd2bfd3dfa" />
+Chip :
+ <img width="743" height="337" alt="Image" src="https://github.com/user-attachments/assets/d2df3ef3-e561-4ead-bf9a-d729bcfd9da1"/>
+
+RISC-V :
+<img width="752" height="490" alt="Image" src="https://github.com/user-attachments/assets/f3661aeb-30ac-45cf-826e-4710c8fdc367"/>
+
+BUS :
+<img width="764" height="283" alt="Image" src="https://github.com/user-attachments/assets/850f68c5-b4a8-4827-be07-39bd2bfd3dfa"/>
 
 
 
