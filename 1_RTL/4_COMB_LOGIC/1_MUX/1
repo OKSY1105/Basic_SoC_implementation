@@ -1,0 +1,44 @@
+module MUX(
+
+i_clk,
+i_rstn,
+i_in1,
+i_in2,
+i_in3,
+i_in4,
+i_sel,
+o_out
+
+);
+
+input iclk;
+input i_rstn;
+input i_in1;
+input i_in2;
+input i_in3;
+input i_in4;
+
+input [1:0] i_sel;
+
+output o_out;
+
+reg o_out;
+		
+always @(posedge i_clk) begin
+	if(!i_rstn) begin
+		o_out<=0;
+
+	end
+	
+	case(i_sel) 
+		2'b00 : o_out <= i_in1;
+		2'b01 : o_out <= i_in2;
+		2'b10 : o_out <= i_in3;
+		2'b11 : o_out <= i_in4;
+	endcase
+
+end
+
+endmodule
+
+
