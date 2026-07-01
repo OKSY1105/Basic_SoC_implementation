@@ -1,0 +1,199 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+dC:/npuref
+vmac_pe
+Z0 !s110 1769504854
+!i10b 1
+!s100 D53mPH[iY3TN=CVJSz83z2
+IDjd[kMc?nlI^XfATFNKWM3
+Z1 VDg1SIo80bB@j0V0VzS_@n1
+Z2 dC:/npuref/NPU_study
+Z3 w1769417464
+Z4 8C:/npuref/NPU_study/systolic_array_2d
+Z5 FC:/npuref/NPU_study/systolic_array_2d
+L0 181
+Z6 OV;L;10.5b;63
+r1
+!s85 0
+31
+Z7 !s108 1769504854.000000
+Z8 !s107 C:/npuref/NPU_study/systolic_array_2d|
+Z9 !s90 -reportprogress|300|-work|work|-stats=none|C:/npuref/NPU_study/systolic_array_2d|
+!i113 1
+Z10 o-work work
+Z11 tCvgOpt 0
+vpe_chain_1d
+Z12 !s110 1769330954
+!i10b 1
+!s100 D2X45eSGe489LM1A>nz=J0
+IiWmd6TfYh?CUI1CGHGicf0
+R1
+Z13 dC:/npuref/NPU_study/1DPEchain
+w1769330380
+8C:/npuref/NPU_study/1DPEchain/pe_chain_1d
+FC:/npuref/NPU_study/1DPEchain/pe_chain_1d
+L0 6
+R6
+r1
+!s85 0
+31
+Z14 !s108 1769330954.000000
+!s107 C:/npuref/NPU_study/1DPEchain/pe_chain_1d|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/npuref/NPU_study/1DPEchain/pe_chain_1d|
+!i113 1
+R10
+R11
+vpe_systolic_cell
+R0
+!i10b 1
+!s100 7:dGSBUgo_MQVN84O@hgb3
+I;JCWOXYL>Wklf>ED;n`Xb0
+R1
+R2
+R3
+R4
+R5
+L0 126
+R6
+r1
+!s85 0
+31
+R7
+R8
+R9
+!i113 1
+R10
+R11
+vsystolic_array_1x4
+Z15 !s110 1769504424
+!i10b 1
+!s100 l3;1fDFLGDYZJ?E5boS;Z1
+I]`ae:5Y?W>V2YCoz>?`Kc1
+R1
+R2
+Z16 w1769503989
+Z17 8C:/npuref/NPU_study/systolic_controller_relu
+Z18 FC:/npuref/NPU_study/systolic_controller_relu
+L0 274
+R6
+r1
+!s85 0
+31
+Z19 !s108 1769504424.000000
+Z20 !s107 C:/npuref/NPU_study/systolic_controller_relu|
+Z21 !s90 -reportprogress|300|-work|work|-stats=none|C:/npuref/NPU_study/systolic_controller_relu|
+!i113 1
+R10
+R11
+vsystolic_array_2d
+R0
+!i10b 1
+!s100 Qf_^hGa@]LjR<Lc]:3F]M3
+IjZKl>4KLhSQ6SI:lJj0^D3
+R1
+R2
+R3
+R4
+R5
+L0 5
+R6
+r1
+!s85 0
+31
+R7
+R8
+R9
+!i113 1
+R10
+R11
+vsystolic_controller_relu
+R15
+!i10b 1
+!s100 k5=mA>@J4nTfG6[?gN1ZY0
+IWZUZPgVNF4cAOTUU:=Z?72
+R1
+R2
+R16
+R17
+R18
+L0 1
+R6
+r1
+!s85 0
+31
+R19
+R20
+R21
+!i113 1
+R10
+R11
+vtb_pe_chain_1d
+R12
+!i10b 1
+!s100 V_zAd0H8NYF2goYS^^Ko_0
+Ij?`Pi`1U2[CCbQk]W4Ii=3
+R1
+R13
+w1769330946
+8C:/npuref/NPU_study/1DPEchain/tb_pe_chain_1d
+FC:/npuref/NPU_study/1DPEchain/tb_pe_chain_1d
+L0 5
+R6
+r1
+!s85 0
+31
+R14
+!s107 C:/npuref/NPU_study/1DPEchain/tb_pe_chain_1d|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/npuref/NPU_study/1DPEchain/tb_pe_chain_1d|
+!i113 1
+R10
+R11
+vtb_systolic_array_2d
+R0
+!i10b 1
+!s100 dPG?GYTe>`6>e4Yk1DZa80
+I3e5EMzhL9:PczOWcm5g_f0
+R1
+R2
+w1769417203
+8C:/npuref/NPU_study/tb_systolic_array_2d
+FC:/npuref/NPU_study/tb_systolic_array_2d
+L0 5
+R6
+r1
+!s85 0
+31
+R7
+!s107 C:/npuref/NPU_study/tb_systolic_array_2d|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/npuref/NPU_study/tb_systolic_array_2d|
+!i113 1
+R10
+R11
+vtb_systolic_controller_relu
+!s110 1769504423
+!i10b 1
+!s100 zTFS4GOYIii_ZB<zREf[B1
+IzTNB4eD_fIPZI0=[@=3;M0
+R1
+R2
+w1769503847
+8C:/npuref/NPU_study/tb_systolic_controller_relu
+FC:/npuref/NPU_study/tb_systolic_controller_relu
+L0 4
+R6
+r1
+!s85 0
+31
+!s108 1769504423.000000
+!s107 C:/npuref/NPU_study/tb_systolic_controller_relu|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/npuref/NPU_study/tb_systolic_controller_relu|
+!i113 1
+R10
+R11

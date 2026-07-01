@@ -1,0 +1,310 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+dC:/intelFPGA/18.1
+vActivation_Unit
+Z0 DXx6 sv_std 3 std 0 22 AD7iAPLo6nTIKk<N0eo=D3
+Z1 !s110 1771082849
+!i10b 1
+!s100 ljz`hgP4Jk9Ti79Jz]aJ]3
+IJeg]5YncGR^Ah_[i170V93
+Z2 VDg1SIo80bB@j0V0VzS_@n1
+!s105 Activation_Unit_sv_unit
+S1
+Z3 dC:/npuref/NPU_porject
+w1770651159
+8C:/npuref/NPU_porject/Activation_Unit.sv
+FC:/npuref/NPU_porject/Activation_Unit.sv
+L0 3
+Z4 OV;L;10.5b;63
+r1
+!s85 0
+31
+Z5 !s108 1771082849.000000
+!s107 include.v|C:/npuref/NPU_porject/Activation_Unit.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/Activation_Unit.sv|
+!i113 1
+Z6 o-work work -sv
+Z7 tCvgOpt 0
+n@activation_@unit
+vBias_Bank
+R0
+R1
+!i10b 1
+!s100 Oj28fFelk2F=aI7Y;65>N2
+IoKGoVJC7Mi>dkKRzK:Nn51
+R2
+!s105 Bias_Bank_sv_unit
+S1
+R3
+w1769591282
+8C:/npuref/NPU_porject/Bias_Bank.sv
+FC:/npuref/NPU_porject/Bias_Bank.sv
+L0 3
+R4
+r1
+!s85 0
+31
+R5
+!s107 include.v|C:/npuref/NPU_porject/Bias_Bank.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/Bias_Bank.sv|
+!i113 1
+R6
+R7
+n@bias_@bank
+vGlobal_Buffer
+R0
+R1
+!i10b 1
+!s100 km=:dJk[GR=<>c^G>]RQN0
+I>?i@X3MGc3mnmRm?G0OCY0
+R2
+!s105 Global_Buffer_sv_unit
+S1
+R3
+w1770558224
+8C:/npuref/NPU_porject/Global_Buffer.sv
+FC:/npuref/NPU_porject/Global_Buffer.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+!s107 C:/npuref/NPU_porject/Global_Buffer.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/Global_Buffer.sv|
+!i113 1
+R6
+R7
+n@global_@buffer
+vmaxFinder
+R0
+R1
+!i10b 1
+!s100 65b:b=30W=EKA85d655WY0
+IEn1oIU@5>m:coHRA7U>K>1
+R2
+!s105 maxFinder_sv_unit
+S1
+R3
+w1770559194
+8C:/npuref/NPU_porject/maxFinder.sv
+FC:/npuref/NPU_porject/maxFinder.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+!s107 C:/npuref/NPU_porject/maxFinder.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/maxFinder.sv|
+!i113 1
+R6
+R7
+nmax@finder
+vNPU_Top
+R0
+R1
+!i10b 1
+!s100 jJEkWkC=U1cK<AS1D9G6S3
+I^9[fT6SncoGc4VZQ9UAkH2
+R2
+!s105 NPU_Top_sv_unit
+S1
+R3
+w1770649626
+8C:/npuref/NPU_porject/NPU_Top.sv
+FC:/npuref/NPU_porject/NPU_Top.sv
+L0 3
+R4
+r1
+!s85 0
+31
+R5
+!s107 include.v|C:/npuref/NPU_porject/NPU_Top.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/NPU_Top.sv|
+!i113 1
+R6
+R7
+n@n@p@u_@top
+vPE
+R0
+Z8 !s110 1771082850
+!i10b 1
+!s100 z7I;kKl980MWjUcYbXoK_0
+IenN2I@1^nGfd9P^gVYAmV1
+R2
+!s105 PE_sv_unit
+S1
+R3
+w1770651846
+8C:/npuref/NPU_porject/PE.sv
+FC:/npuref/NPU_porject/PE.sv
+L0 3
+R4
+r1
+!s85 0
+31
+Z9 !s108 1771082850.000000
+!s107 include.v|C:/npuref/NPU_porject/PE.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/PE.sv|
+!i113 1
+R6
+R7
+n@p@e
+vReLU
+R0
+R8
+!i10b 1
+!s100 Ub8bk>nl_5hHX=PB@VK973
+I=WmA7<jiYM@i^4;bRkW8L3
+R2
+!s105 ReLU_sv_unit
+S1
+R3
+w1770651377
+8C:/npuref/NPU_porject/ReLU.sv
+FC:/npuref/NPU_porject/ReLU.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R9
+!s107 C:/npuref/NPU_porject/ReLU.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/ReLU.sv|
+!i113 1
+R6
+R7
+n@re@l@u
+vSig_ROM
+R0
+R8
+!i10b 1
+!s100 z6DUT`ZP@@C^Rz;n:9o`g1
+IeS`2z56_f?UBkz[jGDmG61
+R2
+!s105 Sig_ROM_sv_unit
+S1
+R3
+w1770643643
+8C:/npuref/NPU_porject/Sig_ROM.sv
+FC:/npuref/NPU_porject/Sig_ROM.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R9
+!s107 C:/npuref/NPU_porject/Sig_ROM.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/Sig_ROM.sv|
+!i113 1
+R6
+R7
+n@sig_@r@o@m
+vSystolic_Array
+R0
+R8
+!i10b 1
+!s100 i>Un:;5k5]NW4Y<DAb5Z^1
+IaXl<HUD^lWgjPQb_OG:?C3
+R2
+!s105 Systolic_Array_sv_unit
+S1
+R3
+w1770644085
+8C:/npuref/NPU_porject/Systolic_Array.sv
+FC:/npuref/NPU_porject/Systolic_Array.sv
+L0 2
+R4
+r1
+!s85 0
+31
+R9
+!s107 include.v|C:/npuref/NPU_porject/Systolic_Array.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/Systolic_Array.sv|
+!i113 1
+R6
+R7
+n@systolic_@array
+vTB_NPU_Top
+R0
+R8
+!i10b 1
+!s100 73d;Ko?F256UkzTHk6:oo2
+IBeOb8[dj3lDU6<A@oZ^hT2
+R2
+!s105 TB_NPU_Top_sv_unit
+S1
+R3
+w1770571340
+8C:/npuref/NPU_porject/TB_NPU_Top.sv
+FC:/npuref/NPU_porject/TB_NPU_Top.sv
+L0 7
+R4
+r1
+!s85 0
+31
+R9
+!s107 include.v|C:/npuref/NPU_porject/TB_NPU_Top.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/TB_NPU_Top.sv|
+!i113 1
+R6
+R7
+n@t@b_@n@p@u_@top
+vWeight_Bank
+R0
+R8
+!i10b 1
+!s100 ooa9X>20>LzJW:=ankWR=3
+Ih36kFczI;fgCUlZ`gkZOK0
+R2
+!s105 Weight_Bank_sv_unit
+S1
+R3
+w1769590618
+8C:/npuref/NPU_porject/Weight_Bank.sv
+FC:/npuref/NPU_porject/Weight_Bank.sv
+L0 2
+R4
+r1
+!s85 0
+31
+R9
+!s107 include.v|C:/npuref/NPU_porject/Weight_Bank.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/Weight_Bank.sv|
+!i113 1
+R6
+R7
+n@weight_@bank
+vWeight_Memory
+R0
+R1
+!i10b 1
+!s100 _>fc^D8;>a2Mg1DCITkMf0
+IkY56S3mP11zaD@Hzl[kK10
+R2
+!s105 Weight_Memory_sv_unit
+S1
+R3
+w1770643375
+8C:/npuref/NPU_porject/Weight_Memory.sv
+FC:/npuref/NPU_porject/Weight_Memory.sv
+L0 2
+R4
+r1
+!s85 0
+31
+R5
+!s107 include.v|C:/npuref/NPU_porject/Weight_Memory.sv|
+!s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/npuref/NPU_porject/Weight_Memory.sv|
+!i113 1
+R6
+R7
+n@weight_@memory

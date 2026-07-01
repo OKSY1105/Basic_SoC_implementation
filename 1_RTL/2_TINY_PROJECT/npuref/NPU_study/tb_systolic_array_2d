@@ -1,0 +1,206 @@
+//[3] systolic_array_2d
+
+`timescale 1ns/1ps
+
+module tb_systolic_array_2d;
+
+  localparam K_DIM  = 2;       // A,B의 공통 차원 (2x2 행렬)
+  localparam DATA_W = 4;
+  localparam ACC_W  = 10;      // 2*DATA_W+$clog2(K_DIM) = 8+1 = 9, 여유있게 10
+  localparam ROWS   = 2;
+  localparam COLS   = 2;
+  localparam TOTAL_CYCLES = 10;
+
+  //==========================================================
+  // DUT 포트
+  //==========================================================
+  reg                     clk;
+  reg                     rst_n;
+  reg                     clr;
+  reg                     en;
+
+  reg  [DATA_W-1:0]       a_in_row_0;
+  reg  [DATA_W-1:0]       a_in_row_1;
+  
+  reg  [DATA_W-1:0]       b_in_col_0;
+  reg  [DATA_W-1:0]       b_in_col_1;
+
+  wire [ACC_W-1:0]        pe_mul_00, pe_mul_01;
+  wire [ACC_W-1:0]        pe_mul_10, pe_mul_11;
+  
+  wire [ACC_W-1:0]        pe_acc_sum_00, pe_acc_sum_01;
+  wire [ACC_W-1:0]        pe_acc_sum_10, pe_acc_sum_11;
+
+  systolic_array_2d #(
+    .DATA_W (DATA_W),
+    .ACC_W  (ACC_W),
+    .ROWS   (ROWS),
+    .COLS   (COLS)
+  ) dut (
+    .clk          (clk),
+    .rst_n        (rst_n),
+    .clr          (clr),
+    .en           (en),
+    .a_in_row_0   (a_in_row_0),
+    .a_in_row_1   (a_in_row_1),
+    .b_in_col_0   (b_in_col_0),
+    .b_in_col_1   (b_in_col_1),
+    .pe_mul_00    (pe_mul_00),
+    .pe_mul_01    (pe_mul_01),
+    .pe_mul_10    (pe_mul_10),
+    .pe_mul_11    (pe_mul_11),
+    .pe_acc_sum_00(pe_acc_sum_00),
+    .pe_acc_sum_01(pe_acc_sum_01),
+    .pe_acc_sum_10(pe_acc_sum_10),
+    .pe_acc_sum_11(pe_acc_sum_11)
+  );
+
+  //==========================================================
+  // Clock / Reset
+  //==========================================================
+  initial begin
+    clk = 1'b0;
+    forever #5 clk = ~clk;  // 100MHz
+  end
+
+  // 테스트용 행렬 데이터
+  integer A_00, A_01, A_10, A_11;
+  integer B_00, B_01, B_10, B_11;
+  integer C_ref_00, C_ref_01, C_ref_10, C_ref_11;
+  integer err_cnt;
+  integer iter;
+
+//==========================================================
+// Random Test
+//==========================================================  
+
+  initial begin
+      // 1. 초기화
+      rst_n = 0; 
+      en = 0;
+      clr = 0;
+      a_in_row_0 = 0; a_in_row_1 = 0;
+      b_in_col_0 = 0; b_in_col_1 = 0;
+
+      #20 rst_n = 1;
+      #10 en = 1; 
+
+      $display("=== [Step 3.5] Random Verification Start (10 Iterations) ===");
+
+      // ---------------------------------------------------------
+      // 10회 반복 테스트 (Random)
+      // ---------------------------------------------------------
+      for (iter = 0; iter < TOTAL_CYCLES; iter = iter + 1) begin
+
+          en = $random & 1; // 랜덤 enable
+
+          // (1) 랜덤 행렬 생성 & 참조 결과 계산
+          A_00 = $random & ((1 << DATA_W) - 1);
+          A_01 = $random & ((1 << DATA_W) - 1);
+          A_10 = $random & ((1 << DATA_W) - 1);
+          A_11 = $random & ((1 << DATA_W) - 1);
+          
+          B_00 = $random & ((1 << DATA_W) - 1);
+          B_01 = $random & ((1 << DATA_W) - 1);
+          B_10 = $random & ((1 << DATA_W) - 1);
+          B_11 = $random & ((1 << DATA_W) - 1);
+
+          // C = A * B 계산
+          C_ref_00 = A_00 * B_00 + A_01 * B_10;
+          C_ref_01 = A_00 * B_01 + A_01 * B_11;
+          C_ref_10 = A_10 * B_00 + A_11 * B_10;
+          C_ref_11 = A_10 * B_01 + A_11 * B_11;
+
+          // (2) Systolic 배열에 데이터 입력 (Skew 방식)
+          // Cycle 0
+          @(posedge clk); 
+          a_in_row_0 <= A_00; b_in_col_0 <= B_00;
+          a_in_row_1 <= 0;    b_in_col_1 <= 0;
+
+          // Cycle 1
+          @(posedge clk);
+          a_in_row_0 <= A_01; b_in_col_0 <= B_10;
+          a_in_row_1 <= A_10; b_in_col_1 <= B_01;
+
+          // Cycle 2
+          @(posedge clk);
+          a_in_row_0 <= 0;    b_in_col_0 <= 0;
+          a_in_row_1 <= A_11; b_in_col_1 <= B_11;
+
+          // Cycle 3 (Flush)
+          @(posedge clk);
+          a_in_row_1 <= 0;    b_in_col_1 <= 0;
+
+          // (3) 결과 안정화 대기
+          repeat(5) @(posedge clk);
+
+          // (4) 결과 검증
+          err_cnt = 0;
+          $display("==================================================");
+          $display("[TB] Iteration %0d Checking C = A*B result (en=%0d)", iter, en);
+
+          if (en) begin
+            // PE[0][0] 체크
+            if (pe_acc_sum_00 !== C_ref_00) begin
+              err_cnt = err_cnt + 1;
+              $display("ERROR! C[0][0] mismatch: dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_00, C_ref_00, $time);
+            end else begin
+              $display("PASS!  C[0][0] match   : dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_00, C_ref_00, $time);
+            end
+
+            // PE[0][1] 체크
+            if (pe_acc_sum_01 !== C_ref_01) begin
+              err_cnt = err_cnt + 1;
+              $display("ERROR! C[0][1] mismatch: dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_01, C_ref_01, $time);
+            end else begin
+              $display("PASS!  C[0][1] match   : dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_01, C_ref_01, $time);
+            end
+
+            // PE[1][0] 체크
+            if (pe_acc_sum_10 !== C_ref_10) begin
+              err_cnt = err_cnt + 1;
+              $display("ERROR! C[1][0] mismatch: dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_10, C_ref_10, $time);
+            end else begin
+              $display("PASS!  C[1][0] match   : dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_10, C_ref_10, $time);
+            end
+
+            // PE[1][1] 체크
+            if (pe_acc_sum_11 !== C_ref_11) begin
+              err_cnt = err_cnt + 1;
+              $display("ERROR! C[1][1] mismatch: dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_11, C_ref_11, $time);
+            end else begin
+              $display("PASS!  C[1][1] match   : dut=%0d, ref=%0d, time=%0t",
+                       pe_acc_sum_11, C_ref_11, $time);
+            end
+
+            if (err_cnt == 0)
+              $display("[TB] RESULT: PASS");
+            else
+              $display("[TB] RESULT: FAIL (err_cnt=%0d)", err_cnt);
+
+            $display("==================================================");
+          end else begin
+            $display("  (Skipped verification - en=0)");
+            $display("==================================================");
+          end
+
+          // (5) 다음 반복을 위해 리셋
+          rst_n = 0; 
+          repeat(2) @(posedge clk);
+          rst_n = 1;
+          @(posedge clk);
+
+      end // End of Loop
+
+      $display("=== All 10 Random Tests Finished! ===");
+      $finish;
+  end
+
+endmodule

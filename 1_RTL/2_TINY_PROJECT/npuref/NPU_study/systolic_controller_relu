@@ -1,0 +1,383 @@
+module systolic_controller_relu #(
+  parameter DATA_W = 4,
+  parameter K_DIM  = 4,  // Common dimension
+  parameter ROWS   = 1,
+  parameter COLS   = 4,
+  parameter BIAS   = 50,
+  parameter ACC_W  = 11  // 2*DATA_W + $clog2(K_DIM)
+)(
+  input                         clk,
+  input                         rst_n,
+
+  // --- Control Interface ---
+  input                         i_start,
+  output                        o_done,
+  output                        o_busy,
+
+  // --- Matrix A [1x4] ---
+  input  [DATA_W-1:0]           i_mat_a_00,
+  input  [DATA_W-1:0]           i_mat_a_01,
+  input  [DATA_W-1:0]           i_mat_a_02,
+  input  [DATA_W-1:0]           i_mat_a_03,
+
+  // --- Matrix B [4x4] ---
+  input  [DATA_W-1:0]           i_mat_b_00,
+  input  [DATA_W-1:0]           i_mat_b_01,
+  input  [DATA_W-1:0]           i_mat_b_02,
+  input  [DATA_W-1:0]           i_mat_b_03,
+  input  [DATA_W-1:0]           i_mat_b_10,
+  input  [DATA_W-1:0]           i_mat_b_11,
+  input  [DATA_W-1:0]           i_mat_b_12,
+  input  [DATA_W-1:0]           i_mat_b_13,
+  input  [DATA_W-1:0]           i_mat_b_20,
+  input  [DATA_W-1:0]           i_mat_b_21,
+  input  [DATA_W-1:0]           i_mat_b_22,
+  input  [DATA_W-1:0]           i_mat_b_23,
+  input  [DATA_W-1:0]           i_mat_b_30,
+  input  [DATA_W-1:0]           i_mat_b_31,
+  input  [DATA_W-1:0]           i_mat_b_32,
+  input  [DATA_W-1:0]           i_mat_b_33,
+
+  // --- Matrix C [1x4] (ReLU applied) ---
+  output [ACC_W-1:0]            o_mat_c_00,
+  output [ACC_W-1:0]            o_mat_c_01,
+  output [ACC_W-1:0]            o_mat_c_02,
+  output [ACC_W-1:0]            o_mat_c_03
+);
+
+  //==========================================================
+  // 1. FSM States
+  //==========================================================
+  localparam [1:0] IDLE       = 2'b00;
+  localparam [1:0] RUN        = 2'b01;
+  localparam [1:0] DONE_STATE = 2'b10;
+
+  reg [1:0] state, next_state;
+  reg [7:0] cnt;
+
+  // Input Buffer (Latched)
+  reg [DATA_W-1:0] latched_a_00, latched_a_01, latched_a_02, latched_a_03;
+  reg [DATA_W-1:0] latched_b_00, latched_b_01, latched_b_02, latched_b_03;
+  reg [DATA_W-1:0] latched_b_10, latched_b_11, latched_b_12, latched_b_13;
+  reg [DATA_W-1:0] latched_b_20, latched_b_21, latched_b_22, latched_b_23;
+  reg [DATA_W-1:0] latched_b_30, latched_b_31, latched_b_32, latched_b_33;
+
+  // Array Interface
+  reg [DATA_W-1:0] array_a_in_0;
+  reg [DATA_W-1:0] array_b_in_0, array_b_in_1, array_b_in_2, array_b_in_3;
+  wire             array_en;
+  wire             array_clr;
+
+  // Raw results from systolic array (before ReLU)
+  wire [ACC_W-1:0] raw_acc_00, raw_acc_01, raw_acc_02, raw_acc_03;
+
+  // Calculate CALC_CYCLES: ROWS + COLS + K_DIM + 2 = 1 + 4 + 4 + 2 = 11
+  localparam CALC_CYCLES = 11;
+
+  //==========================================================
+  // 2. FSM & Counter
+  //==========================================================
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      state <= IDLE;
+      cnt   <= 0;
+    end else begin
+      state <= next_state;
+      if (state == RUN)
+        cnt <= cnt + 1;
+      else
+        cnt <= 0;
+    end
+  end
+
+  always @(*) begin
+    next_state = state;
+    case (state)
+      IDLE: begin
+        if (i_start) next_state = RUN;
+      end
+      RUN: begin
+        if (cnt >= CALC_CYCLES) next_state = DONE_STATE;
+      end
+      DONE_STATE: begin
+        if (!i_start) next_state = IDLE;
+      end
+      default: next_state = IDLE;
+    endcase
+  end
+
+  assign o_busy   = (state == RUN);
+  assign o_done   = (state == DONE_STATE);
+  assign array_en = (state == RUN);
+  assign array_clr = (state == IDLE) && i_start;
+
+  //==========================================================
+  // 3. Input Buffer Latching
+  //==========================================================
+  always @(posedge clk) begin
+    if (state == IDLE && i_start) begin
+      latched_a_00 <= i_mat_a_00;
+      latched_a_01 <= i_mat_a_01;
+      latched_a_02 <= i_mat_a_02;
+      latched_a_03 <= i_mat_a_03;
+      
+      latched_b_00 <= i_mat_b_00;
+      latched_b_01 <= i_mat_b_01;
+      latched_b_02 <= i_mat_b_02;
+      latched_b_03 <= i_mat_b_03;
+      latched_b_10 <= i_mat_b_10;
+      latched_b_11 <= i_mat_b_11;
+      latched_b_12 <= i_mat_b_12;
+      latched_b_13 <= i_mat_b_13;
+      latched_b_20 <= i_mat_b_20;
+      latched_b_21 <= i_mat_b_21;
+      latched_b_22 <= i_mat_b_22;
+      latched_b_23 <= i_mat_b_23;
+      latched_b_30 <= i_mat_b_30;
+      latched_b_31 <= i_mat_b_31;
+      latched_b_32 <= i_mat_b_32;
+      latched_b_33 <= i_mat_b_33;
+    end
+  end
+
+  //==========================================================
+  // 4. Data Skewing Logic - Row Input (A)
+  //==========================================================
+  // Row 0 (only 1 row): array_a_in_0
+  always @(*) begin
+    array_a_in_0 = 0;
+    if (state == RUN) begin
+      // k = cnt - row_index(0) = cnt
+      case (cnt)
+        0: array_a_in_0 = latched_a_00;  // A[0][0]
+        1: array_a_in_0 = latched_a_01;  // A[0][1]
+        2: array_a_in_0 = latched_a_02;  // A[0][2]
+        3: array_a_in_0 = latched_a_03;  // A[0][3]
+        default: array_a_in_0 = 0;
+      endcase
+    end
+  end
+
+  //==========================================================
+  // 5. Data Skewing Logic - Column Input (B)
+  //==========================================================
+  // Col 0: array_b_in_0
+  always @(*) begin
+    array_b_in_0 = 0;
+    if (state == RUN) begin
+      // k = cnt - col_index(0) = cnt
+      case (cnt)
+        0: array_b_in_0 = latched_b_00;  // B[0][0]
+        1: array_b_in_0 = latched_b_10;  // B[1][0]
+        2: array_b_in_0 = latched_b_20;  // B[2][0]
+        3: array_b_in_0 = latched_b_30;  // B[3][0]
+        default: array_b_in_0 = 0;
+      endcase
+    end
+  end
+
+  // Col 1: array_b_in_1
+  always @(*) begin
+    array_b_in_1 = 0;
+    if (state == RUN) begin
+      // k = cnt - col_index(1) = cnt - 1
+      case (cnt)
+        1: array_b_in_1 = latched_b_01;  // B[0][1]
+        2: array_b_in_1 = latched_b_11;  // B[1][1]
+        3: array_b_in_1 = latched_b_21;  // B[2][1]
+        4: array_b_in_1 = latched_b_31;  // B[3][1]
+        default: array_b_in_1 = 0;
+      endcase
+    end
+  end
+
+  // Col 2: array_b_in_2
+  always @(*) begin
+    array_b_in_2 = 0;
+    if (state == RUN) begin
+      // k = cnt - col_index(2) = cnt - 2
+      case (cnt)
+        2: array_b_in_2 = latched_b_02;  // B[0][2]
+        3: array_b_in_2 = latched_b_12;  // B[1][2]
+        4: array_b_in_2 = latched_b_22;  // B[2][2]
+        5: array_b_in_2 = latched_b_32;  // B[3][2]
+        default: array_b_in_2 = 0;
+      endcase
+    end
+  end
+
+  // Col 3: array_b_in_3
+  always @(*) begin
+    array_b_in_3 = 0;
+    if (state == RUN) begin
+      // k = cnt - col_index(3) = cnt - 3
+      case (cnt)
+        3: array_b_in_3 = latched_b_03;  // B[0][3]
+        4: array_b_in_3 = latched_b_13;  // B[1][3]
+        5: array_b_in_3 = latched_b_23;  // B[2][3]
+        6: array_b_in_3 = latched_b_33;  // B[3][3]
+        default: array_b_in_3 = 0;
+      endcase
+    end
+  end
+
+  //==========================================================
+  // 6. Systolic Array Instantiation (1x4)
+  //==========================================================
+  systolic_array_1x4 #(
+    .DATA_W (DATA_W),
+    .ACC_W  (ACC_W)
+  ) u_core_array (
+    .clk          (clk),
+    .rst_n        (rst_n),
+    .clr          (array_clr),
+    .en           (array_en),
+    
+    // A input (1 row)
+    .a_in_row_0   (array_a_in_0),
+    
+    // B inputs (4 columns)
+    .b_in_col_0   (array_b_in_0),
+    .b_in_col_1   (array_b_in_1),
+    .b_in_col_2   (array_b_in_2),
+    .b_in_col_3   (array_b_in_3),
+    
+    // Raw outputs (before ReLU)
+    .pe_acc_sum_00(raw_acc_00),
+    .pe_acc_sum_01(raw_acc_01),
+    .pe_acc_sum_02(raw_acc_02),
+    .pe_acc_sum_03(raw_acc_03)
+  );
+
+  //==========================================================
+  // 7. Post-Processing Unit (ReLU + Bias)
+  //==========================================================
+  wire signed [ACC_W:0] temp_val_00, temp_val_01, temp_val_02, temp_val_03;
+  
+  // Bias subtraction (signed arithmetic)
+  assign temp_val_00 = $signed({1'b0, raw_acc_00}) - $signed(BIAS);
+  assign temp_val_01 = $signed({1'b0, raw_acc_01}) - $signed(BIAS);
+  assign temp_val_02 = $signed({1'b0, raw_acc_02}) - $signed(BIAS);
+  assign temp_val_03 = $signed({1'b0, raw_acc_03}) - $signed(BIAS);
+  
+  // ReLU activation
+  assign o_mat_c_00 = (temp_val_00 < 0) ? {ACC_W{1'b0}} : temp_val_00[ACC_W-1:0];
+  assign o_mat_c_01 = (temp_val_01 < 0) ? {ACC_W{1'b0}} : temp_val_01[ACC_W-1:0];
+  assign o_mat_c_02 = (temp_val_02 < 0) ? {ACC_W{1'b0}} : temp_val_02[ACC_W-1:0];
+  assign o_mat_c_03 = (temp_val_03 < 0) ? {ACC_W{1'b0}} : temp_val_03[ACC_W-1:0];
+
+endmodule
+
+//============================================================
+// Systolic Array 1x4 (1 row, 4 columns)
+//============================================================
+module systolic_array_1x4 #(
+  parameter DATA_W = 4,
+  parameter ACC_W  = 11
+)(
+  input                      clk,
+  input                      rst_n,
+  input                      clr,
+  input                      en,
+
+  // Row input (1 row only)
+  input  [DATA_W-1:0]        a_in_row_0,
+  
+  // Column inputs (4 columns)
+  input  [DATA_W-1:0]        b_in_col_0,
+  input  [DATA_W-1:0]        b_in_col_1,
+  input  [DATA_W-1:0]        b_in_col_2,
+  input  [DATA_W-1:0]        b_in_col_3,
+
+  // Accumulator outputs
+  output [ACC_W-1:0]         pe_acc_sum_00,
+  output [ACC_W-1:0]         pe_acc_sum_01,
+  output [ACC_W-1:0]         pe_acc_sum_02,
+  output [ACC_W-1:0]         pe_acc_sum_03
+);
+
+  // Internal connections for a propagation (horizontal)
+  wire [DATA_W-1:0] a_conn_00, a_conn_01, a_conn_02, a_conn_03, a_conn_04;
+  
+  // Internal connections for b propagation (vertical)
+  wire [DATA_W-1:0] b_conn_00, b_conn_10;
+  wire [DATA_W-1:0] b_conn_01, b_conn_11;
+  wire [DATA_W-1:0] b_conn_02, b_conn_12;
+  wire [DATA_W-1:0] b_conn_03, b_conn_13;
+
+  // Input bindings
+  assign a_conn_00 = a_in_row_0;
+  assign b_conn_00 = b_in_col_0;
+  assign b_conn_01 = b_in_col_1;
+  assign b_conn_02 = b_in_col_2;
+  assign b_conn_03 = b_in_col_3;
+
+  // PE[0][0]
+  pe_systolic_cell #(
+    .DATA_W(DATA_W),
+    .ACC_W(ACC_W)
+  ) u_cell_00 (
+    .clk     (clk),
+    .rst_n   (rst_n),
+    .clr     (clr),
+    .en      (en),
+    .a_in    (a_conn_00),
+    .a_out   (a_conn_01),
+    .b_in    (b_conn_00),
+    .b_out   (b_conn_10),
+    .mul     (),
+    .acc_sum (pe_acc_sum_00)
+  );
+
+  // PE[0][1]
+  pe_systolic_cell #(
+    .DATA_W(DATA_W),
+    .ACC_W(ACC_W)
+  ) u_cell_01 (
+    .clk     (clk),
+    .rst_n   (rst_n),
+    .clr     (clr),
+    .en      (en),
+    .a_in    (a_conn_01),
+    .a_out   (a_conn_02),
+    .b_in    (b_conn_01),
+    .b_out   (b_conn_11),
+    .mul     (),
+    .acc_sum (pe_acc_sum_01)
+  );
+
+  // PE[0][2]
+  pe_systolic_cell #(
+    .DATA_W(DATA_W),
+    .ACC_W(ACC_W)
+  ) u_cell_02 (
+    .clk     (clk),
+    .rst_n   (rst_n),
+    .clr     (clr),
+    .en      (en),
+    .a_in    (a_conn_02),
+    .a_out   (a_conn_03),
+    .b_in    (b_conn_02),
+    .b_out   (b_conn_12),
+    .mul     (),
+    .acc_sum (pe_acc_sum_02)
+  );
+
+  // PE[0][3]
+  pe_systolic_cell #(
+    .DATA_W(DATA_W),
+    .ACC_W(ACC_W)
+  ) u_cell_03 (
+    .clk     (clk),
+    .rst_n   (rst_n),
+    .clr     (clr),
+    .en      (en),
+    .a_in    (a_conn_03),
+    .a_out   (a_conn_04),
+    .b_in    (b_conn_03),
+    .b_out   (b_conn_13),
+    .mul     (),
+    .acc_sum (pe_acc_sum_03)
+  );
+
+endmodule

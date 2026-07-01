@@ -1,0 +1,16 @@
+C:/npuref/NPU_study/1DPEchain/pe_chain_1d {1 {vlog -work work -stats=none C:/npuref/NPU_study/1DPEchain/pe_chain_1d
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module pe_chain_1d
+-- Compiling module mac_pe
+
+Top level modules:
+	pe_chain_1d
+
+} {} {}} C:/npuref/NPU_study/1DPEchain/tb_pe_chain_1d {1 {vlog -work work -stats=none C:/npuref/NPU_study/1DPEchain/tb_pe_chain_1d
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module tb_pe_chain_1d
+
+Top level modules:
+	tb_pe_chain_1d
+
+} {} {}}

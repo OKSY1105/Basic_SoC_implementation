@@ -1,0 +1,41 @@
+`include "include.v"
+module Systolic_Array #(
+    parameter dataWidth = 8
+)(
+    input                           clk,
+    input                           rst,       
+    input                           en,        
+    input [4*dataWidth-1:0]         row_in,    
+    input [4*dataWidth-1:0]         col_in,    
+    output [4*4*`accWidth-1:0]    array_out,
+    output [`accWidth-1:0]        debug_pe00_mul
+);
+    wire [dataWidth-1:0] img_data [3:0];
+    wire [dataWidth-1:0] w_data [3:0];
+    wire [`accWidth-1:0] mul_internal [3:0][3:0];
+    
+    genvar i, j;
+    generate
+        for (i=0; i<4; i=i+1) begin
+            assign img_data[i] = row_in[(i+1)*dataWidth-1 : i*dataWidth];
+            assign w_data[i]   = col_in[(i+1)*dataWidth-1 : i*dataWidth];
+        end
+    endgenerate
+    generate
+        for (i=0; i<4; i=i+1) begin : ROWS 
+            for (j=0; j<4; j=j+1) begin : COLS 
+                PE #(.dataWidth(dataWidth)) pe_inst (
+                    .clk(clk),
+                    .rst(rst),
+                    .en(en),
+                    .a(img_data[i]), 
+                    .b(w_data[j]),   
+                    .psum(array_out[((i*4+j)+1)*`accWidth-1 : (i*4+j)*`accWidth]),
+                    .debug_mul(mul_internal[i][j])
+                );
+            end
+        end
+    endgenerate
+    
+    assign debug_pe00_mul = mul_internal[0][0];
+endmodule
