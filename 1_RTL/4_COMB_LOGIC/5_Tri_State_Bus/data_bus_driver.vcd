@@ -1,0 +1,65 @@
+$date
+    Jul  1, 2026  20:38:01
+$end
+$version
+    TOOL:	xmsim(64)	22.03-s012
+$end
+$timescale
+    1 ns
+$end
+
+$scope module tb_data_bus_driver $end
+$var reg       8 !    i_in1 [7:0] $end
+$var reg       8 "    i_in2 [7:0] $end
+$var reg       1 #    i_en1 $end
+$var reg       1 $    i_en2 $end
+$var wire      8 %    o_bus_data [7:0] $end
+
+$scope module uut $end
+$var wire      8 &    i_in1 [7:0] $end
+$var wire      8 '    i_in2 [7:0] $end
+$var wire      1 (    i_en1  $end
+$var wire      1 )    i_en2  $end
+$var reg       8 *    o_bus_data [7:0] $end
+$upscope $end
+
+$upscope $end
+
+$enddefinitions $end
+$dumpvars
+b10101010 !
+b11001100 "
+0#
+0$
+b0 %
+b10101010 &
+b11001100 '
+0(
+0)
+b0 *
+$end
+#10
+1#
+1(
+b10101010 *
+b10101010 %
+#20
+0#
+1$
+1)
+0(
+b11001100 *
+b11001100 %
+#30
+1#
+1(
+bz *
+bz %
+#40
+0#
+0$
+0)
+0(
+b0 *
+b0 %
+#50

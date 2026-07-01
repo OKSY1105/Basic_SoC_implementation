@@ -1,0 +1,27 @@
+xmvlog(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
+TOOL:	xmvlog(64)	22.03-s012: Started on Jul 01, 2026 at 19:53:53 KST
+xmvlog
+    -MESS
+    -linedebug
+    ./comparator.v
+    ./tb_comparator.v
+
+file: ./comparator.v
+o_out1,
+     |
+xmvlog: *E,UNDIDN (./comparator.v,5|5): 'o_out1': undeclared identifier [12.5(IEEE)].
+o_out2,
+     |
+xmvlog: *E,UNDIDN (./comparator.v,6|5): 'o_out2': undeclared identifier [12.5(IEEE)].
+o_out3
+     |
+xmvlog: *E,UNDIDN (./comparator.v,7|5): 'o_out3': undeclared identifier [12.5(IEEE)].
+output  [1:0] o_out;
+                  |
+xmvlog: *E,NOPORT (./comparator.v,13|18): input/output/inout 'o_out' not declared in port list [12.3.2(IEEE)].
+	module work_lib.comparator
+		errors: 4, warnings: 0
+file: ./tb_comparator.v
+	module work_lib.tb_comparator
+		errors: 0, warnings: 0
+TOOL:	xmvlog(64)	22.03-s012: Exiting on Jul 01, 2026 at 19:53:53 KST  (total: 00:00:00)
