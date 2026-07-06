@@ -1,0 +1,15 @@
+xmvlog(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
+TOOL:	xmvlog(64)	22.03-s012: Started on Jul 02, 2026 at 00:37:58 KST
+xmvlog
+    -MESS
+    -linedebug
+    ./bidir_bus.v
+    ./tb_bidir_bus.v
+
+file: ./bidir_bus.v
+	module work_lib.bidir_bus
+		errors: 0, warnings: 0
+file: ./tb_bidir_bus.v
+	module work_lib.tb_bidir_bus
+		errors: 0, warnings: 0
+TOOL:	xmvlog(64)	22.03-s012: Exiting on Jul 02, 2026 at 00:37:58 KST  (total: 00:00:00)

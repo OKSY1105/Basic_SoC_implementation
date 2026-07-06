@@ -1,0 +1,42 @@
+module tb_bidir_bus;
+
+reg [7:0] i_data_to_bus;
+reg i_send;
+
+reg [7:0] io_bus_data;
+wire [7:0] o_data_from_bus;
+
+
+initial begin
+
+i_send =0;
+i_rcv = 0;
+i_data_to_bus =8'hF;
+io_bus_data = 8'hA;
+o_data_from_bus =8'hz; #10
+
+i_send =1;
+i_rcv=0;
+io_bus_data = i_data_to_bus; #20
+
+i_send=0;
+i_rcv =1;
+o_data_from_bus = io_bus_data; #20
+
+i_data_to_bus = 8'hF; #5
+
+i_send =1;
+i_rcv =1;
+o_data_from_bus = i_data_to_bus; #20
+
+$finish;
+
+
+
+
+
+
+end
+
+
+endmodule
