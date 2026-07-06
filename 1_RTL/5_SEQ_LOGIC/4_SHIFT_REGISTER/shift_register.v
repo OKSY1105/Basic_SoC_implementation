@@ -26,9 +26,11 @@ r_shift <=8'b0;
 end
 else begin
 //r_data <= {r_data[6:0] ,i_data};
-//r_shift<={ r_shift[6:0], i_data}
-r_shift [0] = i_data;
-r_shift = r_shift <<1;
+r_shift<={ r_shift[6:0], i_data};
+
+//r_shift = r_shift <<1;
+//r_shift [0] = i_data;
+
 end
 
 end

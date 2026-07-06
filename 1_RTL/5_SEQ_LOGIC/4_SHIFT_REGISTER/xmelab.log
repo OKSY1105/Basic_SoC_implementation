@@ -1,5 +1,5 @@
 xmelab(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
-TOOL:	xmelab(64)	22.03-s012: Started on Jul 06, 2026 at 23:43:48 KST
+TOOL:	xmelab(64)	22.03-s012: Started on Jul 06, 2026 at 23:57:46 KST
 xmelab
     -MESS
     -access rwc
@@ -9,8 +9,8 @@ xmelab
 		Caching library 'work_lib' ....... Done
 	Building instance overlay tables: .................... Done
 	Generating native compiled code:
-		work_lib.shift_register:module <0x49847a0b>
-			streams:   3, words:  1235
+		work_lib.shift_register:module <0x5d441819>
+			streams:   4, words:  1188
 		work_lib.tb_shift_register:module <0x5ef94fa3>
 			streams:   5, words:  3727
 	Building instance specific data structures.
@@ -26,4 +26,4 @@ xmelab
 		Cont. assignments:   1       1
 		Pseudo assignments:  3       3
 	Writing initial simulation snapshot: work_lib.tb_shift_register:module
-TOOL:	xmelab(64)	22.03-s012: Exiting on Jul 06, 2026 at 23:43:48 KST  (total: 00:00:00)
+TOOL:	xmelab(64)	22.03-s012: Exiting on Jul 06, 2026 at 23:57:46 KST  (total: 00:00:00)

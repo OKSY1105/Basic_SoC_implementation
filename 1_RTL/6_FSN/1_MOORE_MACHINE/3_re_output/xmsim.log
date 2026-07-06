@@ -6,10 +6,10 @@ Relinquished control to SimVision...
 xcelium> 
 xcelium> database -open waves -into waves.shm -default
 Created default SHM database waves
-xcelium> probe -create -shm tb_shift_register.dut.i_clk tb_shift_register.dut.i_data tb_shift_register.dut.i_rstn tb_shift_register.dut.o_data tb_shift_register.dut.r_shift
+xcelium> probe -create -shm tb_FSM3.DUT.i_clk tb_FSM3.DUT.i_go tb_FSM3.DUT.i_rstn tb_FSM3.DUT.i_ws tb_FSM3.DUT.next tb_FSM3.DUT.o_ds tb_FSM3.DUT.o_rd tb_FSM3.DUT.state
 Created probe 1
 xcelium> run
-Simulation complete via $finish(1) at time 720 NS + 0
-./tb_shift_register.v:32 #80 $finish;
+Simulation complete via $finish(1) at time 500 NS + 0
+./tb_FSM3.v:35 	#100; $finish;
 xcelium> ^C
 xcelium> exit
