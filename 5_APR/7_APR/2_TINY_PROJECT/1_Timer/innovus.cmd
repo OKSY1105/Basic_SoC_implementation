@@ -1,0 +1,51 @@
+#######################################################
+#                                                     
+#  Innovus Command Logging File                     
+#  Created on Thu Jul  9 05:44:55 2026                
+#                                                     
+#######################################################
+
+#@(#)CDS: Innovus v22.17-s086_1 (64bit) 09/24/2024 10:51 (Linux 3.10.0-693.el7.x86_64)
+#@(#)CDS: NanoRoute 22.17-s086_1 NR240905-1647/22_17-UB (database version 18.20.629) {superthreading v2.20}
+#@(#)CDS: AAE 22.17-s013 (64bit) 09/24/2024 (Linux 3.10.0-693.el7.x86_64)
+#@(#)CDS: CTE 22.17-s017_1 () Sep 12 2024 04:53:54 ( )
+#@(#)CDS: SYNTECH 22.17-s006_1 () Aug 12 2024 03:52:27 ( )
+#@(#)CDS: CPE v22.17-s051
+#@(#)CDS: IQuantus/TQuantus 21.2.2-s369 (64bit) Tue May 7 14:30:42 PDT 2024 (Linux 3.10.0-693.el7.x86_64)
+
+set_db init_power_nets VDD
+set_db init_ground_nets VSS
+read_mmmc timer.view
+#@ Begin verbose source timer.view (pre)
+create_library_set -name max_timing\
+   -timing /home/hah010/Basic_SoC_implementation/3_SYN/1_LIB/slow_vdd1v0_basicCells.lib
+create_library_set -name min_timing\
+   -timing /home/hah010/Basic_SoC_implementation/3_SYN/1_LIB/fast_vdd1v0_basicCells.lib
+create_timing_condition -name default_mapping_tc_2\
+   -library_sets min_timing
+create_timing_condition -name default_mapping_tc_1\
+   -library_sets max_timing
+create_rc_corner -name rccorners\
+   -cap_table /home/hah010/Basic_SoC_implementation/5_APR/4_CAP_TABLE/cln28hpl_1p10m+alrdl_5x2yu2yz_typical.capTbl\
+   -pre_route_res 1\
+   -post_route_res 1\
+   -pre_route_cap 1\
+   -post_route_cap 1\
+   -post_route_cross_cap 1\
+   -pre_route_clock_res 0\
+   -pre_route_clock_cap 0\
+   -qrc_tech /home/hah010/Basic_SoC_implementation/5_APR/5_QRC_TECH/gpdk045.tch
+create_delay_corner -name max_delay\
+   -timing_condition {default_mapping_tc_1}\
+   -rc_corner rccorners
+create_delay_corner -name min_delay\
+   -timing_condition {default_mapping_tc_2}\
+   -rc_corner rccorners
+create_constraint_mode -name sdc_cons\
+   -sdc_files\
+   /home/hah010/Basic_SoC_implementation/3_SYN/5_SYN/2_TINY_PROJECT/1_Timer/outputs/digtimer_final.sdc 
+create_analysis_view -name wc -constraint_mode sdc_cons -delay_corner max_delay
+create_analysis_view -name bc -constraint_mode sdc_cons -delay_corner min_delay
+set_analysis_view -setup wc -hold bc
+setPlaceMode -place_global_ignore_scan false
+#@ End verbose source timer.view
