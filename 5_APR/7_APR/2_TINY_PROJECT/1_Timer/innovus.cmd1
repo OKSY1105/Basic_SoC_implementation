@@ -1,7 +1,7 @@
 #######################################################
 #                                                     
 #  Innovus Command Logging File                     
-#  Created on Thu Jul  9 05:49:09 2026                
+#  Created on Thu Jul  9 18:40:51 2026                
 #                                                     
 #######################################################
 
@@ -48,15 +48,13 @@ create_analysis_view -name wc -constraint_mode sdc_cons -delay_corner max_delay
 create_analysis_view -name bc -constraint_mode sdc_cons -delay_corner min_delay
 set_analysis_view -setup wc -hold bc
 #@ End verbose source timer.view
-setPlaceMode -place_global_ignore_scan false
-PlaceMode -place_global_ignore_scan false
-set_db -place_global_ignore_scan false
-PlaceMode -place_global_ignore_scan true
-set_db -place_global_ignore_scan true
-set_db -place_design_floorplan_mode true
-set_db -place_global_ignore_scan true
+connect_global_net VDD -type pg_pin -pin VDD -inst_base_name *
+connect_global_net VDD -type pg_pin -pin VDD -inst_base_name *
+connect_global_net VSS -type pg_pin -pin VSS -inst_base_name *
 create_clock_tree_spec
 ccopt_design
+create_row -site CoreSiteDouble -no_flip_rows
+place_opt_design
 set_db route_detail_fix_antenna 1
 set_db route_antenna_diode_insertion 0
 set_db route_with_timing_driven 1
@@ -66,6 +64,8 @@ set_db route_detail_post_route_litho_repair 0
 set_db route_with_si_driven 1
 set_db route_detail_auto_stop 0
 set_db route_selected_net_only 0
+set_db design_top_routing_layer 11
+set_db design_bottom_routing_layer 1
 set_db route_detail_end_iteration 1
 set_db route_with_timing_driven true
 set_db route_with_si_driven true
@@ -83,5 +83,31 @@ set_db check_drc_report digtimer.drc.rpt
 set_db check_drc_limit 1000
 check_drc
 set_db check_drc_area {0 0 0 0}
-check_connectivity -type all -geometry_connect -error 1000 -warning 50
-check_connectivity -type all -geometry_connect -error 1000 -warning 50
+set_layer_preference violation -is_visible 1
+set_db route_detail_fix_antenna 1
+set_db route_antenna_diode_insertion 0
+set_db route_with_timing_driven 1
+set_db route_with_eco 0
+set_db route_with_litho_driven 0
+set_db route_detail_post_route_litho_repair 0
+set_db route_with_si_driven 1
+set_db route_detail_auto_stop 0
+set_db route_selected_net_only 0
+set_db route_with_timing_driven true
+set_db route_with_si_driven true
+route_design -global_detail -via_opt -wire_opt
+verify_drc
+set_db check_drc_disable_rules {}
+set_db check_drc_ndr_spacing auto
+set_db check_drc_check_only default
+set_db check_drc_inside_via_def true
+set_db check_drc_exclude_pg_net false
+set_db check_drc_ignore_trial_route false
+set_db check_drc_ignore_cell_blockage false
+set_db check_drc_use_min_spacing_on_block_obs auto
+set_db check_drc_report digtimer.drc.rpt
+set_db check_drc_limit 1000
+check_drc
+set_db check_drc_area {0 0 0 0}
+gui_select -rect {37.86200 22.89100 36.08500 22.71550}
+gui_select -rect {38.92850 23.01150 39.22500 22.99650}

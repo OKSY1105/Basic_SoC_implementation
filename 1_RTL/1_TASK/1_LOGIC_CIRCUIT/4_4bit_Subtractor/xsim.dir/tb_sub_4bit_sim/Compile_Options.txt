@@ -1,0 +1,1 @@
+-debug "typical" "tb_sub_4bit" -s "tb_sub_4bit_sim" 

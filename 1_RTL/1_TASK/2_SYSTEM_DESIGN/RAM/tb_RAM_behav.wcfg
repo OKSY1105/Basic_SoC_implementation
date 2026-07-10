@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_RAM_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_RAM" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="20.050 ns"></ZoomStartTime>
+      <ZoomEndTime time="72.351 ns"></ZoomEndTime>
+      <Cursor1Time time="40.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="340"></NameColumnWidth>
+      <ValueColumnWidth column_width="150"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="7" />
+   <wvobject fp_name="/tb_RAM/i_clk" type="logic">
+      <obj_property name="ElementShortName">i_clk</obj_property>
+      <obj_property name="ObjectShortName">i_clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RAM/i_rstn" type="logic">
+      <obj_property name="ElementShortName">i_rstn</obj_property>
+      <obj_property name="ObjectShortName">i_rstn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RAM/i_bitline" type="logic">
+      <obj_property name="ElementShortName">i_bitline</obj_property>
+      <obj_property name="ObjectShortName">i_bitline</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RAM/i_worldline" type="logic">
+      <obj_property name="ElementShortName">i_worldline</obj_property>
+      <obj_property name="ObjectShortName">i_worldline</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RAM/i_WE" type="logic">
+      <obj_property name="ElementShortName">i_WE</obj_property>
+      <obj_property name="ObjectShortName">i_WE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RAM/DUT/r_hold" type="logic">
+      <obj_property name="ElementShortName">r_hold</obj_property>
+      <obj_property name="ObjectShortName">r_hold</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RAM/o_outline" type="logic">
+      <obj_property name="ElementShortName">o_outline</obj_property>
+      <obj_property name="ObjectShortName">o_outline</obj_property>
+   </wvobject>
+</wave_config>

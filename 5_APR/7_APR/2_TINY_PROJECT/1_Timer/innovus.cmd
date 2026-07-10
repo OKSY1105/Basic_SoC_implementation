@@ -1,7 +1,7 @@
 #######################################################
 #                                                     
 #  Innovus Command Logging File                     
-#  Created on Thu Jul  9 05:44:55 2026                
+#  Created on Thu Jul  9 18:36:14 2026                
 #                                                     
 #######################################################
 
@@ -47,5 +47,4 @@ create_constraint_mode -name sdc_cons\
 create_analysis_view -name wc -constraint_mode sdc_cons -delay_corner max_delay
 create_analysis_view -name bc -constraint_mode sdc_cons -delay_corner min_delay
 set_analysis_view -setup wc -hold bc
-setPlaceMode -place_global_ignore_scan false
 #@ End verbose source timer.view
