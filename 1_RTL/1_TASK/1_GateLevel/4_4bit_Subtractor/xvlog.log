@@ -1,4 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/4_4bit_Subtractor/sub_4bit.v" into library work
-INFO: [VRFC 10-311] analyzing module sub_4bit
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/4_4bit_Subtractor/tb_sub_4bit.v" into library work
-INFO: [VRFC 10-311] analyzing module tb_sub_4bit

@@ -1,1 +1,0 @@
--debug "typical" "tb_multi_2bit" -s "tb_multi_2bit_sim" 
