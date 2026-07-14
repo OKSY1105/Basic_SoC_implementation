@@ -3,19 +3,19 @@ Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
 Cadence and the Cadence logo are registered trademarks and Genus is a trademark
 of Cadence Design Systems, Inc. in the United States and other countries.
 
-[20:00:04.158513] Configured Lic search path (22.01-s003): 5280@localhost
+[23:54:11.163201] Configured Lic search path (22.01-s003): 5280@172.31.52.241
 
 Version: 22.17-s071_1, built Wed Sep 11 20:37:05 PDT 2024
-Options: -files synth.tcl 
-Date:    Tue Jul 14 20:00:04 2026
+Options: -files my_syn.tcl 
+Date:    Tue Jul 14 23:54:11 2026
 Host:    kopo-seongnam (x86_64 w/Linux 3.10.0-1160.el7.x86_64) (20cores*80cpus*2physical cpus*Intel(R) Xeon(R) Gold 5218R CPU @ 2.10GHz 28160KB) (394624392KB)
-PID:     101150
+PID:     167237
 OS:      CentOS Linux release 7.9.2009 (Core)
 
 Checking out license: Genus_Synthesis
-[20:00:04.088339] Periodic Lic check successful
-[20:00:04.088354] Feature usage summary:
-[20:00:04.088355] Genus_Synthesis
+[23:54:11.047818] Periodic Lic check successful
+[23:54:11.047827] Feature usage summary:
+[23:54:11.047827] Genus_Synthesis
 
 
 
@@ -30,26 +30,27 @@ Loading tool scripts...
 Finished loading tool scripts (14 seconds elapsed).
 
 #@ Processing -files option
-@genus 1> source synth.tcl
-#@ Begin verbose source ./synth.tcl
-@file(synth.tcl) 1: set_db library /home/hah010/Basic_SoC_implementation/5_APR/1_LIB/typical.lib
+@genus 1> source my_syn.tcl
+#@ Begin verbose source ./my_syn.tcl
+@file(my_syn.tcl) 1: set_db library /usr/cadence/genus/share/genus/libs/tech/gtech/gtech.db 
 Error   : File error. [FILE-100] [set_db]
-        : Cannot open file '/home/hah010/Basic_SoC_implementation/5_APR/1_LIB/typical.lib'. File not found.
+        : Cannot open file '/usr/cadence/genus/share/genus/libs/tech/gtech/gtech.db'. File not found.
         : Make sure that the file is a readable regular file and has the specified name.
 Error   : A library file does not exist. [LBR-68] [set_db]
-        : File '/home/hah010/Basic_SoC_implementation/5_APR/1_LIB/typical.lib' could not be found. File '<none>' was the last file that was successfully read in.
+        : File '/usr/cadence/genus/share/genus/libs/tech/gtech/gtech.db' could not be found. File '<none>' was the last file that was successfully read in.
         : Make sure that the library file exists or check for a typo in the file name.
 Error   : The data value for this attribute is invalid. [TUI-24] [set_db]
-        : The value '/home/hah010/Basic_SoC_implementation/5_APR/1_LIB/typical.lib' cannot be set for attribute 'library'.
+        : The value '/usr/cadence/genus/share/genus/libs/tech/gtech/gtech.db' cannot be set for attribute 'library'.
         : To see the usage/description for this attribute, type '::legacy::set_attribute -h <attr_name> *' (in legacy UI mode) or 'help * <attr_name> -detail' (in CUI mode).
-#@ End verbose source ./synth.tcl
+#@ End verbose source ./my_syn.tcl
 1
-Encountered problems processing file: synth.tcl
+Encountered problems processing file: my_syn.tcl
 WARNING: This version of the tool is 670 days old.
+@genus:root: 2> exit
 
 Lic Summary:
-[20:04:04.031499] Cdslmd servers: kopo-seongnam
-[20:04:04.031522] Feature usage summary:
-[20:04:04.031528] Genus_Synthesis
+[23:55:30.418424] Cdslmd servers: kopo-seongnam
+[23:55:30.418451] Feature usage summary:
+[23:55:30.418451] Genus_Synthesis
 
 Normal exit.
