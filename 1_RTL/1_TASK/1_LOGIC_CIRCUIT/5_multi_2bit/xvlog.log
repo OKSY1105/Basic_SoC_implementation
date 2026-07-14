@@ -1,4 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/5_multi_2bit/multi_2bit.v" into library work
-INFO: [VRFC 10-311] analyzing module multi_2bit
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/5_multi_2bit/tb_multi_2bit.v" into library work
-INFO: [VRFC 10-311] analyzing module tb_multi_2bit

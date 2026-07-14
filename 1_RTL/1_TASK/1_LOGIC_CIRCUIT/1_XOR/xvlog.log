@@ -1,4 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/1_XOR/first_xor.v" into library work
-INFO: [VRFC 10-311] analyzing module first_xor
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/1_XOR/tb_first_xor.v" into library work
-INFO: [VRFC 10-311] analyzing module tb_first_xor

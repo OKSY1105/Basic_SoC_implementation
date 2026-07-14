@@ -1,4 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/FA_4bit.v" into library work
-INFO: [VRFC 10-311] analyzing module FA_4bit
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/tb_FA_4bit.v" into library work
-INFO: [VRFC 10-311] analyzing module tb_FA_4bit
