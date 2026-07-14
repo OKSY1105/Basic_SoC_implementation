@@ -1,0 +1,8 @@
+sel = 1, normal_if = 2, normal_case = 0, normal_ternary = 3, latch_if = x, latch_case = 0
+sel = 2, normal_if = 3, normal_case = 1, normal_ternary = 0, latch_if = 1, latch_case = 1
+sel = 3, normal_if = 0, normal_case = 2, normal_ternary = 1, latch_if = 1, latch_case = 1
+sel = 0, normal_if = 1, normal_case = 3, normal_ternary = 2, latch_if = 1, latch_case = 3
+sel = 1, normal_if = 2, normal_case = 0, normal_ternary = 3, latch_if = 1, latch_case = 0
+sel = 2, normal_if = 3, normal_case = 1, normal_ternary = 0, latch_if = 1, latch_case = 1
+sel = 3, normal_if = 0, normal_case = 2, normal_ternary = 1, latch_if = 1, latch_case = 1
+sel = 0, normal_if = 1, normal_case = 3, normal_ternary = 2, latch_if = 1, latch_case = 3
