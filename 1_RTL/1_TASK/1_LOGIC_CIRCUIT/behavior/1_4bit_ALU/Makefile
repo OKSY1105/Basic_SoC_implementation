@@ -1,65 +1,20 @@
-# ==== 설정 ====
-SIM_TOP = tb_multi_2bit
-
-RTL_TOP = ALU_4bit
-
-SRC     = *.v                             
-VIVADO  = /home/sean/Vivado/2024.2/bin    
-
-export PATH := $(VIVADO):$(PATH)
-
 clean:
-	rm -rf xsim.dir *.jou *.log *.pb .Xil *.wdb *.vcd webtalk*
+	rm -rf cds.lib hdl.var *.lib waves.shm *.log *.key *.dsn *.trn *.vcd \
+		.simvision .symbol* xcelium.d work.lib
+
+set:
+	touch cds.lib hdl.var
+	mkdir -p work.lib
+	echo "define work_lib ./work.lib" > ./cds.lib
+	echo "define WORK work_lib" > ./hdl.var
 
 compile:
-	xvlog -sv $(SRC)
+	xmvlog -MESS -linedebug ./*v
 
 elab:
-	xelab -debug typical $(SIM_TOP) -s $(SIM_TOP)_sim
+	xmelab -MESS -access rwc ALU_4bit
 
 sim:
-	xsim $(strip $(SIM_TOP))_sim -gui
+	xmsim -MESS -gui ALU_4bit
 
-sim_batch :
-	xsim $(strip $(SIM_TOP))_sim -R
-
-schematic:
-	TOP=$(RTL_TOP) vivado -mode gui -source schematic.tcl
-
-all: clean compile elab sim
-
-.PHONY: clean compile elab sim all schematic
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+all: clean set compile elab sim

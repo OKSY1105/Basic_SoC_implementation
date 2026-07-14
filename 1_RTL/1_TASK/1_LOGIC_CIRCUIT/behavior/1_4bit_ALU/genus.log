@@ -1,0 +1,55 @@
+Cadence Genus(TM) Synthesis Solution.
+Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+Cadence and the Cadence logo are registered trademarks and Genus is a trademark
+of Cadence Design Systems, Inc. in the United States and other countries.
+
+[18:53:06.158649] Configured Lic search path (22.01-s003): 5280@localhost
+
+Version: 22.17-s071_1, built Wed Sep 11 20:37:05 PDT 2024
+Options: -files synth.tcl 
+Date:    Tue Jul 14 18:53:06 2026
+Host:    kopo-seongnam (x86_64 w/Linux 3.10.0-1160.el7.x86_64) (20cores*80cpus*2physical cpus*Intel(R) Xeon(R) Gold 5218R CPU @ 2.10GHz 28160KB) (394624392KB)
+PID:     91171
+OS:      CentOS Linux release 7.9.2009 (Core)
+
+Checking out license: Genus_Synthesis
+[18:53:06.252954] Periodic Lic check successful
+[18:53:06.252968] Feature usage summary:
+[18:53:06.252968] Genus_Synthesis
+
+
+
+***********************************************************************************************************
+***********************************************************************************************************
+
+
+
+Finished executable startup (1 second elapsed).
+
+Loading tool scripts...
+Finished loading tool scripts (14 seconds elapsed).
+
+#@ Processing -files option
+@genus 1> source synth.tcl
+#@ Begin verbose source ./synth.tcl
+@file(synth.tcl) 1: read_hdl ./*v
+Warning : Cannot open file. [VLOGPT-650]
+        : File './*v'.
+        : The specified file could not be opened.  Check the value of the init_hdl_search_path attribute.
+@file(synth.tcl) 2: elaborate ALU_4bit
+Error   : Failed to execute command. [LBR-163] [elaborate]
+        : No target technology library was loaded.
+        : Specify libraries using read_libs or read_mmmc.
+UM:   flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   elaborate
+#@ End verbose source ./synth.tcl
+1
+Encountered problems processing file: synth.tcl
+WARNING: This version of the tool is 670 days old.
+
+Lic Summary:
+[18:53:47.432897] Cdslmd servers: kopo-seongnam
+[18:53:47.432921] Feature usage summary:
+[18:53:47.432923] Genus_Synthesis
+
+Normal exit.

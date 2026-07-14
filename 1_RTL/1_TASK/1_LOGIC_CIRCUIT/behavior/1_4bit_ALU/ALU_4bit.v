@@ -1,4 +1,4 @@
-module 4bit_ALU(
+module ALU_4bit(
 
 i_S,
 i_A,
@@ -19,8 +19,8 @@ input i_Cin;
 output o_Cout;
 output [3:0] o_out;
 
-reg o_Cout
-reg [3:0] o_output
+reg o_Cout;
+reg [3:0] o_out;
 
 always @(*) begin
 
@@ -55,6 +55,7 @@ always @(*) begin
 		end
 		
 		else begin
+			case(i_S)
 				4'b0000 : {o_Cout,o_out} = i_A;
 	                        4'b0001 : {o_Cout,o_out} = (i_A & i_B);
                                 4'b0010 : {o_Cout,o_out} = (i_A & ~i_B);
@@ -71,6 +72,7 @@ always @(*) begin
                                 4'b1101 : {o_Cout,o_out} =(i_A & i_B) + i_A + 1;
                                 4'b1110 : {o_Cout,o_out} =(i_A & ~i_B) +i_A+1;
                                 4'b1111 : {o_Cout,o_out} = i_A+1;
+			endcase
 
 		end
 
@@ -80,6 +82,7 @@ always @(*) begin
 
 	
 	else begin
+		case(i_S)
 				4'b0000 : o_out = ~(i_A);
                                 4'b0001 : o_out = ~(i_A & i_B);
                                 4'b0010 : o_out = ~(i_A & ~i_B);
@@ -96,15 +99,9 @@ always @(*) begin
                                 4'b1101 : o_out = (i_A & ~i_B) ;
                                 4'b1110 : o_out = (i_A & i_B) ;
                                 4'b1111 : o_out = i_A;
-
+		endcase
 
 	end
-
-end
-
-
-
-
 
 end
 
