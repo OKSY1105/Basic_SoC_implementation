@@ -1,0 +1,7 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/11_Module/module.v" into library work
+INFO: [VRFC 10-311] analyzing module add_name
+INFO: [VRFC 10-311] analyzing module add_position
+INFO: [VRFC 10-311] analyzing module add_sub
+INFO: [VRFC 10-311] analyzing module module_top
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/11_Module/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench
