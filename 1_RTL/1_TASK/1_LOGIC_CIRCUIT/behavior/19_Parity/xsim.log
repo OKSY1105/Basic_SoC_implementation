@@ -1,0 +1,286 @@
+#-----------------------------------------------------------
+# xsim v2024.2 (64-bit)
+# SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
+# IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
+# SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
+# Start of session at: Thu Jul 23 02:24:45 2026
+# Process ID         : 3164
+# Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity
+# Command line       : xsim -mode tcl -source {xsim.dir/testbench/xsim_script.tcl}
+# Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/xsim.log
+# Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/xsim.jou
+# Running On         : BOOK-3GSAOKNJKI
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-1255U
+# CPU Frequency      : 2611.202 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 12386 MB
+# Swap memory        : 3221 MB
+# Total Virtual      : 15607 MB
+# Available Virtual  : 15026 MB
+#-----------------------------------------------------------
+source xsim.dir/testbench/xsim_script.tcl
+# xsim {testbench} -autoloadwcfg -runall
+Time resolution is 1 ps
+run -all
+data_in = 00000000, parity_bit = 0, parity_error = 1 
+data_in = 00000001, parity_bit = 1, parity_error = 0 
+data_in = 00000010, parity_bit = 1, parity_error = 0 
+data_in = 00000011, parity_bit = 0, parity_error = 1 
+data_in = 00000100, parity_bit = 1, parity_error = 0 
+data_in = 00000101, parity_bit = 0, parity_error = 1 
+data_in = 00000110, parity_bit = 0, parity_error = 1 
+data_in = 00000111, parity_bit = 1, parity_error = 0 
+data_in = 00001000, parity_bit = 1, parity_error = 0 
+data_in = 00001001, parity_bit = 0, parity_error = 1 
+data_in = 00001010, parity_bit = 0, parity_error = 1 
+data_in = 00001011, parity_bit = 1, parity_error = 0 
+data_in = 00001100, parity_bit = 0, parity_error = 1 
+data_in = 00001101, parity_bit = 1, parity_error = 0 
+data_in = 00001110, parity_bit = 1, parity_error = 0 
+data_in = 00001111, parity_bit = 0, parity_error = 1 
+data_in = 00010000, parity_bit = 1, parity_error = 0 
+data_in = 00010001, parity_bit = 0, parity_error = 1 
+data_in = 00010010, parity_bit = 0, parity_error = 1 
+data_in = 00010011, parity_bit = 1, parity_error = 0 
+data_in = 00010100, parity_bit = 0, parity_error = 1 
+data_in = 00010101, parity_bit = 1, parity_error = 0 
+data_in = 00010110, parity_bit = 1, parity_error = 0 
+data_in = 00010111, parity_bit = 0, parity_error = 1 
+data_in = 00011000, parity_bit = 0, parity_error = 1 
+data_in = 00011001, parity_bit = 1, parity_error = 0 
+data_in = 00011010, parity_bit = 1, parity_error = 0 
+data_in = 00011011, parity_bit = 0, parity_error = 1 
+data_in = 00011100, parity_bit = 1, parity_error = 0 
+data_in = 00011101, parity_bit = 0, parity_error = 1 
+data_in = 00011110, parity_bit = 0, parity_error = 1 
+data_in = 00011111, parity_bit = 1, parity_error = 0 
+data_in = 00100000, parity_bit = 1, parity_error = 0 
+data_in = 00100001, parity_bit = 0, parity_error = 1 
+data_in = 00100010, parity_bit = 0, parity_error = 1 
+data_in = 00100011, parity_bit = 1, parity_error = 0 
+data_in = 00100100, parity_bit = 0, parity_error = 1 
+data_in = 00100101, parity_bit = 1, parity_error = 0 
+data_in = 00100110, parity_bit = 1, parity_error = 0 
+data_in = 00100111, parity_bit = 0, parity_error = 1 
+data_in = 00101000, parity_bit = 0, parity_error = 1 
+data_in = 00101001, parity_bit = 1, parity_error = 0 
+data_in = 00101010, parity_bit = 1, parity_error = 0 
+data_in = 00101011, parity_bit = 0, parity_error = 1 
+data_in = 00101100, parity_bit = 1, parity_error = 0 
+data_in = 00101101, parity_bit = 0, parity_error = 1 
+data_in = 00101110, parity_bit = 0, parity_error = 1 
+data_in = 00101111, parity_bit = 1, parity_error = 0 
+data_in = 00110000, parity_bit = 0, parity_error = 1 
+data_in = 00110001, parity_bit = 1, parity_error = 0 
+data_in = 00110010, parity_bit = 1, parity_error = 0 
+data_in = 00110011, parity_bit = 0, parity_error = 1 
+data_in = 00110100, parity_bit = 1, parity_error = 0 
+data_in = 00110101, parity_bit = 0, parity_error = 1 
+data_in = 00110110, parity_bit = 0, parity_error = 1 
+data_in = 00110111, parity_bit = 1, parity_error = 0 
+data_in = 00111000, parity_bit = 1, parity_error = 0 
+data_in = 00111001, parity_bit = 0, parity_error = 1 
+data_in = 00111010, parity_bit = 0, parity_error = 1 
+data_in = 00111011, parity_bit = 1, parity_error = 0 
+data_in = 00111100, parity_bit = 0, parity_error = 1 
+data_in = 00111101, parity_bit = 1, parity_error = 0 
+data_in = 00111110, parity_bit = 1, parity_error = 0 
+data_in = 00111111, parity_bit = 0, parity_error = 1 
+data_in = 01000000, parity_bit = 1, parity_error = 0 
+data_in = 01000001, parity_bit = 0, parity_error = 1 
+data_in = 01000010, parity_bit = 0, parity_error = 1 
+data_in = 01000011, parity_bit = 1, parity_error = 0 
+data_in = 01000100, parity_bit = 0, parity_error = 1 
+data_in = 01000101, parity_bit = 1, parity_error = 0 
+data_in = 01000110, parity_bit = 1, parity_error = 0 
+data_in = 01000111, parity_bit = 0, parity_error = 1 
+data_in = 01001000, parity_bit = 0, parity_error = 1 
+data_in = 01001001, parity_bit = 1, parity_error = 0 
+data_in = 01001010, parity_bit = 1, parity_error = 0 
+data_in = 01001011, parity_bit = 0, parity_error = 1 
+data_in = 01001100, parity_bit = 1, parity_error = 0 
+data_in = 01001101, parity_bit = 0, parity_error = 1 
+data_in = 01001110, parity_bit = 0, parity_error = 1 
+data_in = 01001111, parity_bit = 1, parity_error = 0 
+data_in = 01010000, parity_bit = 0, parity_error = 1 
+data_in = 01010001, parity_bit = 1, parity_error = 0 
+data_in = 01010010, parity_bit = 1, parity_error = 0 
+data_in = 01010011, parity_bit = 0, parity_error = 1 
+data_in = 01010100, parity_bit = 1, parity_error = 0 
+data_in = 01010101, parity_bit = 0, parity_error = 1 
+data_in = 01010110, parity_bit = 0, parity_error = 1 
+data_in = 01010111, parity_bit = 1, parity_error = 0 
+data_in = 01011000, parity_bit = 1, parity_error = 0 
+data_in = 01011001, parity_bit = 0, parity_error = 1 
+data_in = 01011010, parity_bit = 0, parity_error = 1 
+data_in = 01011011, parity_bit = 1, parity_error = 0 
+data_in = 01011100, parity_bit = 0, parity_error = 1 
+data_in = 01011101, parity_bit = 1, parity_error = 0 
+data_in = 01011110, parity_bit = 1, parity_error = 0 
+data_in = 01011111, parity_bit = 0, parity_error = 1 
+data_in = 01100000, parity_bit = 0, parity_error = 1 
+data_in = 01100001, parity_bit = 1, parity_error = 0 
+data_in = 01100010, parity_bit = 1, parity_error = 0 
+data_in = 01100011, parity_bit = 0, parity_error = 1 
+data_in = 01100100, parity_bit = 1, parity_error = 0 
+data_in = 01100101, parity_bit = 0, parity_error = 1 
+data_in = 01100110, parity_bit = 0, parity_error = 1 
+data_in = 01100111, parity_bit = 1, parity_error = 0 
+data_in = 01101000, parity_bit = 1, parity_error = 0 
+data_in = 01101001, parity_bit = 0, parity_error = 1 
+data_in = 01101010, parity_bit = 0, parity_error = 1 
+data_in = 01101011, parity_bit = 1, parity_error = 0 
+data_in = 01101100, parity_bit = 0, parity_error = 1 
+data_in = 01101101, parity_bit = 1, parity_error = 0 
+data_in = 01101110, parity_bit = 1, parity_error = 0 
+data_in = 01101111, parity_bit = 0, parity_error = 1 
+data_in = 01110000, parity_bit = 1, parity_error = 0 
+data_in = 01110001, parity_bit = 0, parity_error = 1 
+data_in = 01110010, parity_bit = 0, parity_error = 1 
+data_in = 01110011, parity_bit = 1, parity_error = 0 
+data_in = 01110100, parity_bit = 0, parity_error = 1 
+data_in = 01110101, parity_bit = 1, parity_error = 0 
+data_in = 01110110, parity_bit = 1, parity_error = 0 
+data_in = 01110111, parity_bit = 0, parity_error = 1 
+data_in = 01111000, parity_bit = 0, parity_error = 1 
+data_in = 01111001, parity_bit = 1, parity_error = 0 
+data_in = 01111010, parity_bit = 1, parity_error = 0 
+data_in = 01111011, parity_bit = 0, parity_error = 1 
+data_in = 01111100, parity_bit = 1, parity_error = 0 
+data_in = 01111101, parity_bit = 0, parity_error = 1 
+data_in = 01111110, parity_bit = 0, parity_error = 1 
+data_in = 01111111, parity_bit = 1, parity_error = 0 
+data_in = 10000000, parity_bit = 1, parity_error = 0 
+data_in = 10000001, parity_bit = 0, parity_error = 1 
+data_in = 10000010, parity_bit = 0, parity_error = 1 
+data_in = 10000011, parity_bit = 1, parity_error = 0 
+data_in = 10000100, parity_bit = 0, parity_error = 1 
+data_in = 10000101, parity_bit = 1, parity_error = 0 
+data_in = 10000110, parity_bit = 1, parity_error = 0 
+data_in = 10000111, parity_bit = 0, parity_error = 1 
+data_in = 10001000, parity_bit = 0, parity_error = 1 
+data_in = 10001001, parity_bit = 1, parity_error = 0 
+data_in = 10001010, parity_bit = 1, parity_error = 0 
+data_in = 10001011, parity_bit = 0, parity_error = 1 
+data_in = 10001100, parity_bit = 1, parity_error = 0 
+data_in = 10001101, parity_bit = 0, parity_error = 1 
+data_in = 10001110, parity_bit = 0, parity_error = 1 
+data_in = 10001111, parity_bit = 1, parity_error = 0 
+data_in = 10010000, parity_bit = 0, parity_error = 1 
+data_in = 10010001, parity_bit = 1, parity_error = 0 
+data_in = 10010010, parity_bit = 1, parity_error = 0 
+data_in = 10010011, parity_bit = 0, parity_error = 1 
+data_in = 10010100, parity_bit = 1, parity_error = 0 
+data_in = 10010101, parity_bit = 0, parity_error = 1 
+data_in = 10010110, parity_bit = 0, parity_error = 1 
+data_in = 10010111, parity_bit = 1, parity_error = 0 
+data_in = 10011000, parity_bit = 1, parity_error = 0 
+data_in = 10011001, parity_bit = 0, parity_error = 1 
+data_in = 10011010, parity_bit = 0, parity_error = 1 
+data_in = 10011011, parity_bit = 1, parity_error = 0 
+data_in = 10011100, parity_bit = 0, parity_error = 1 
+data_in = 10011101, parity_bit = 1, parity_error = 0 
+data_in = 10011110, parity_bit = 1, parity_error = 0 
+data_in = 10011111, parity_bit = 0, parity_error = 1 
+data_in = 10100000, parity_bit = 0, parity_error = 1 
+data_in = 10100001, parity_bit = 1, parity_error = 0 
+data_in = 10100010, parity_bit = 1, parity_error = 0 
+data_in = 10100011, parity_bit = 0, parity_error = 1 
+data_in = 10100100, parity_bit = 1, parity_error = 0 
+data_in = 10100101, parity_bit = 0, parity_error = 1 
+data_in = 10100110, parity_bit = 0, parity_error = 1 
+data_in = 10100111, parity_bit = 1, parity_error = 0 
+data_in = 10101000, parity_bit = 1, parity_error = 0 
+data_in = 10101001, parity_bit = 0, parity_error = 1 
+data_in = 10101010, parity_bit = 0, parity_error = 1 
+data_in = 10101011, parity_bit = 1, parity_error = 0 
+data_in = 10101100, parity_bit = 0, parity_error = 1 
+data_in = 10101101, parity_bit = 1, parity_error = 0 
+data_in = 10101110, parity_bit = 1, parity_error = 0 
+data_in = 10101111, parity_bit = 0, parity_error = 1 
+data_in = 10110000, parity_bit = 1, parity_error = 0 
+data_in = 10110001, parity_bit = 0, parity_error = 1 
+data_in = 10110010, parity_bit = 0, parity_error = 1 
+data_in = 10110011, parity_bit = 1, parity_error = 0 
+data_in = 10110100, parity_bit = 0, parity_error = 1 
+data_in = 10110101, parity_bit = 1, parity_error = 0 
+data_in = 10110110, parity_bit = 1, parity_error = 0 
+data_in = 10110111, parity_bit = 0, parity_error = 1 
+data_in = 10111000, parity_bit = 0, parity_error = 1 
+data_in = 10111001, parity_bit = 1, parity_error = 0 
+data_in = 10111010, parity_bit = 1, parity_error = 0 
+data_in = 10111011, parity_bit = 0, parity_error = 1 
+data_in = 10111100, parity_bit = 1, parity_error = 0 
+data_in = 10111101, parity_bit = 0, parity_error = 1 
+data_in = 10111110, parity_bit = 0, parity_error = 1 
+data_in = 10111111, parity_bit = 1, parity_error = 0 
+data_in = 11000000, parity_bit = 0, parity_error = 1 
+data_in = 11000001, parity_bit = 1, parity_error = 0 
+data_in = 11000010, parity_bit = 1, parity_error = 0 
+data_in = 11000011, parity_bit = 0, parity_error = 1 
+data_in = 11000100, parity_bit = 1, parity_error = 0 
+data_in = 11000101, parity_bit = 0, parity_error = 1 
+data_in = 11000110, parity_bit = 0, parity_error = 1 
+data_in = 11000111, parity_bit = 1, parity_error = 0 
+data_in = 11001000, parity_bit = 1, parity_error = 0 
+data_in = 11001001, parity_bit = 0, parity_error = 1 
+data_in = 11001010, parity_bit = 0, parity_error = 1 
+data_in = 11001011, parity_bit = 1, parity_error = 0 
+data_in = 11001100, parity_bit = 0, parity_error = 1 
+data_in = 11001101, parity_bit = 1, parity_error = 0 
+data_in = 11001110, parity_bit = 1, parity_error = 0 
+data_in = 11001111, parity_bit = 0, parity_error = 1 
+data_in = 11010000, parity_bit = 1, parity_error = 0 
+data_in = 11010001, parity_bit = 0, parity_error = 1 
+data_in = 11010010, parity_bit = 0, parity_error = 1 
+data_in = 11010011, parity_bit = 1, parity_error = 0 
+data_in = 11010100, parity_bit = 0, parity_error = 1 
+data_in = 11010101, parity_bit = 1, parity_error = 0 
+data_in = 11010110, parity_bit = 1, parity_error = 0 
+data_in = 11010111, parity_bit = 0, parity_error = 1 
+data_in = 11011000, parity_bit = 0, parity_error = 1 
+data_in = 11011001, parity_bit = 1, parity_error = 0 
+data_in = 11011010, parity_bit = 1, parity_error = 0 
+data_in = 11011011, parity_bit = 0, parity_error = 1 
+data_in = 11011100, parity_bit = 1, parity_error = 0 
+data_in = 11011101, parity_bit = 0, parity_error = 1 
+data_in = 11011110, parity_bit = 0, parity_error = 1 
+data_in = 11011111, parity_bit = 1, parity_error = 0 
+data_in = 11100000, parity_bit = 1, parity_error = 0 
+data_in = 11100001, parity_bit = 0, parity_error = 1 
+data_in = 11100010, parity_bit = 0, parity_error = 1 
+data_in = 11100011, parity_bit = 1, parity_error = 0 
+data_in = 11100100, parity_bit = 0, parity_error = 1 
+data_in = 11100101, parity_bit = 1, parity_error = 0 
+data_in = 11100110, parity_bit = 1, parity_error = 0 
+data_in = 11100111, parity_bit = 0, parity_error = 1 
+data_in = 11101000, parity_bit = 0, parity_error = 1 
+data_in = 11101001, parity_bit = 1, parity_error = 0 
+data_in = 11101010, parity_bit = 1, parity_error = 0 
+data_in = 11101011, parity_bit = 0, parity_error = 1 
+data_in = 11101100, parity_bit = 1, parity_error = 0 
+data_in = 11101101, parity_bit = 0, parity_error = 1 
+data_in = 11101110, parity_bit = 0, parity_error = 1 
+data_in = 11101111, parity_bit = 1, parity_error = 0 
+data_in = 11110000, parity_bit = 0, parity_error = 1 
+data_in = 11110001, parity_bit = 1, parity_error = 0 
+data_in = 11110010, parity_bit = 1, parity_error = 0 
+data_in = 11110011, parity_bit = 0, parity_error = 1 
+data_in = 11110100, parity_bit = 1, parity_error = 0 
+data_in = 11110101, parity_bit = 0, parity_error = 1 
+data_in = 11110110, parity_bit = 0, parity_error = 1 
+data_in = 11110111, parity_bit = 1, parity_error = 0 
+data_in = 11111000, parity_bit = 1, parity_error = 0 
+data_in = 11111001, parity_bit = 0, parity_error = 1 
+data_in = 11111010, parity_bit = 0, parity_error = 1 
+data_in = 11111011, parity_bit = 1, parity_error = 0 
+data_in = 11111100, parity_bit = 0, parity_error = 1 
+data_in = 11111101, parity_bit = 1, parity_error = 0 
+data_in = 11111110, parity_bit = 1, parity_error = 0 
+data_in = 11111111, parity_bit = 0, parity_error = 1 
+$finish called at time : 265 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/testbench.v" Line 37
+exit
+INFO: [Common 17-206] Exiting xsim at Thu Jul 23 02:24:50 2026...
