@@ -1,0 +1,16 @@
+half_in_a = 0, half_in_b = 0, half_out_sum = 0, half_out_carry = 0
+half_in_a = 0, half_in_b = 1, half_out_sum = 1, half_out_carry = 0
+half_in_a = 1, half_in_b = 0, half_out_sum = 1, half_out_carry = 0
+half_in_a = 1, half_in_b = 1, half_out_sum = 0, half_out_carry = 1
+full_in_a = 0, full_in_b = 0, full_in_carry = 0, full_out_sum = 0, full_out_carry = 0
+full_in_a = 0, full_in_b = 1, full_in_carry = 0, full_out_sum = 1, full_out_carry = 0
+full_in_a = 1, full_in_b = 0, full_in_carry = 0, full_out_sum = 1, full_out_carry = 0
+full_in_a = 1, full_in_b = 1, full_in_carry = 0, full_out_sum = 0, full_out_carry = 1
+full_in_a = 0, full_in_b = 0, full_in_carry = 1, full_out_sum = 1, full_out_carry = 0
+full_in_a = 0, full_in_b = 1, full_in_carry = 1, full_out_sum = 0, full_out_carry = 1
+full_in_a = 1, full_in_b = 0, full_in_carry = 1, full_out_sum = 0, full_out_carry = 1
+full_in_a = 1, full_in_b = 1, full_in_carry = 1, full_out_sum = 1, full_out_carry = 1
+bcd_in_a =  2, bcd_in_b=  3, bcd_in_carry = 0, bcd_out_sum =  5, bcd_out_carry = 0
+bcd_in_a =  5, bcd_in_b=  5, bcd_in_carry = 0, bcd_out_sum =  0, bcd_out_carry = 1
+bcd_in_a =  8, bcd_in_b=  7, bcd_in_carry = 0, bcd_out_sum =  5, bcd_out_carry = 1
+bcd_in_a =  9, bcd_in_b=  9, bcd_in_carry = 1, bcd_out_sum =  9, bcd_out_carry = 1

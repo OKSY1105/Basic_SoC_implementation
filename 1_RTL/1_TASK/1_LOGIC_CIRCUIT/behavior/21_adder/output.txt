@@ -1,0 +1,21 @@
+=== Half Adder Test ===
+i_half_a = 0, i_half_b = 0 -> o_half_sum = 0, o_half_carry = 0
+i_half_a = 0, i_half_b = 1 -> o_half_sum = 1, o_half_carry = 0
+i_half_a = 1, i_half_b = 0 -> o_half_sum = 1, o_half_carry = 0
+i_half_a = 1, i_half_b = 1 -> o_half_sum = 0, o_half_carry = 1
+
+=== Full Adder Test ===
+i_full_a = 0, i_full_b = 0, i_full_carry = 0 -> o_full_sum = 0, o_full_carry = 1
+i_full_a = 0, i_full_b = 1, i_full_carry = 0 -> o_full_sum = 1, o_full_carry = 0
+i_full_a = 1, i_full_b = 0, i_full_carry = 0 -> o_full_sum = 1, o_full_carry = 1
+i_full_a = 1, i_full_b = 1, i_full_carry = 0 -> o_full_sum = 0, o_full_carry = 1
+i_full_a = 0, i_full_b = 0, i_full_carry = 1 -> o_full_sum = 1, o_full_carry = 0
+i_full_a = 0, i_full_b = 1, i_full_carry = 1 -> o_full_sum = 0, o_full_carry = 1
+i_full_a = 1, i_full_b = 0, i_full_carry = 1 -> o_full_sum = 0, o_full_carry = 0
+i_full_a = 1, i_full_b = 1, i_full_carry = 1 -> o_full_sum = 1, o_full_carry = 1
+
+=== BCD Adder Test ===
+i_bcd_a =  2, i_bcd_b =  3, i_bcd_carry = 0 -> o_bcd_sum =  5, o_bcd_carry = 0
+i_bcd_a =  5, i_bcd_b =  5, i_bcd_carry = 0 -> o_bcd_sum =  0, o_bcd_carry = 1
+i_bcd_a =  8, i_bcd_b =  7, i_bcd_carry = 0 -> o_bcd_sum =  5, o_bcd_carry = 1
+i_bcd_a =  9, i_bcd_b =  9, i_bcd_carry = 1 -> o_bcd_sum =  9, o_bcd_carry = 1
