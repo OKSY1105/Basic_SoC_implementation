@@ -1,0 +1,30 @@
+#-----------------------------------------------------------
+# xsim v2024.2 (64-bit)
+# SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
+# IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
+# SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
+# Start of session at: Fri Jul 24 00:14:42 2026
+# Process ID         : 1673
+# Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/20_Multiplexer
+# Command line       : xsim -mode tcl -source {xsim.dir/testbench/xsim_script.tcl}
+# Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/20_Multiplexer/xsim.log
+# Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/20_Multiplexer/xsim.jou
+# Running On         : BOOK-3GSAOKNJKI
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-1255U
+# CPU Frequency      : 2611.202 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 12386 MB
+# Swap memory        : 3221 MB
+# Total Virtual      : 15607 MB
+# Available Virtual  : 15056 MB
+#-----------------------------------------------------------
+source xsim.dir/testbench/xsim_script.tcl
+# xsim {testbench} -autoloadwcfg -runall
+Time resolution is 1 ps
+run -all
+$finish called at time : 2560 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/20_Multiplexer/testbench.v" Line 199
+exit
+INFO: [Common 17-206] Exiting xsim at Fri Jul 24 00:14:47 2026...
