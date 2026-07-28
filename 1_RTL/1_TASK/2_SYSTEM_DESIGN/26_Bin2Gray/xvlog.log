@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/26_Bin2Gray/bin_2_gray.v" into library work
+INFO: [VRFC 10-311] analyzing module bin_2_gray
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/26_Bin2Gray/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench
