@@ -1,0 +1,24 @@
+#
+# An unexpected error has occurred (11)
+#
+Stack:
+/home/sean/Vivado/2024.2/tps/lnx64/jre21.0.1_12/lib//server/libjvm.so(+0xe4f55c) [0x718ab384f55c]
+/home/sean/Vivado/2024.2/tps/lnx64/jre21.0.1_12/lib//server/libjvm.so(JVM_handle_linux_signal+0x23e) [0x718ab385002e]
+/lib/x86_64-linux-gnu/libc.so.6(+0x42520) [0x718af9042520]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_common.so(std::_Hashtable<hdi::tcltasks::detail::collection_wrapper_base const*, std::pair<hdi::tcltasks::detail::collection_wrapper_base const* const, Tcl_Obj*>, std::allocator<std::pair<hdi::tcltasks::detail::collection_wrapper_base const* const, Tcl_Obj*> >, std::__detail::_Select1st, std::equal_to<hdi::tcltasks::detail::collection_wrapper_base const*>, boost::hash<hdi::tcltasks::detail::collection_wrapper_base const*>, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits<true, false, false> >::equal_range(hdi::tcltasks::detail::collection_wrapper_base const* const&)+0x2c) [0x718b03d2c2dc]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_common.so(hdi::tcltasks::detail::collection_wrapper_base::~collection_wrapper_base()+0x10b) [0x718b03d2b60b]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_commontasks.so(+0x3352b7) [0x718b051352b7]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_common.so(hdi::tcltasks::detail::collection_wrapper_base::decr_ref() const+0x23) [0x718b03d2a523]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_commontasks.so(+0x334af0) [0x718b05134af0]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_tcltasks.so(+0x2501cb2) [0x7189feb01cb2]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_tcltasks.so(+0x2501cf9) [0x7189feb01cf9]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libboost_program_options.so.1.72.0(boost::program_options::option_description::~option_description()+0xb9) [0x718b047d27e9]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libboost_program_options.so.1.72.0(boost::program_options::option_description::~option_description()+0x9) [0x718b047d2829]
+/home/sean/Vivado/2024.2/lib/lnx64.o/libxv_common.so(hdi::tcltasks::options_description::~options_description()+0x151) [0x718b04080e61]
+/lib/x86_64-linux-gnu/libc.so.6(+0x45495) [0x718af9045495]
+/lib/x86_64-linux-gnu/libc.so.6(on_exit+0) [0x718af9045610]
+/lib/x86_64-linux-gnu/libX11.so.6(+0x3dee4) [0x718aff2fdee4]
+/lib/x86_64-linux-gnu/libX11.so.6(_XIOError+0x6b) [0x718aff30139b]
+/lib/x86_64-linux-gnu/libX11.so.6(_XEventsQueued+0xa5) [0x718aff304c95]
+/lib/x86_64-linux-gnu/libX11.so.6(XEventsQueued+0x58) [0x718aff2f1208]
+[0x718a9c6b5aef]

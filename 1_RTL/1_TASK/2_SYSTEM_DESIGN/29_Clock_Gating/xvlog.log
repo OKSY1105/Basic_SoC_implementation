@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/29_Clock_Gating/clock_gating.v" into library work
+INFO: [VRFC 10-311] analyzing module clock_gating
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/29_Clock_Gating/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench

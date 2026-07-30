@@ -1,0 +1,15 @@
+i_en=0, i_data=00, o_data_out=00
+i_en=0, i_data=00, o_data_out=00
+i_en=0, i_data=00, o_data_out=00
+i_en=0, i_data=aa, o_data_out=00
+i_en=0, i_data=aa, o_data_out=00
+i_en=1, i_data=aa, o_data_out=00
+i_en=1, i_data=aa, o_data_out=aa
+i_en=1, i_data=55, o_data_out=aa
+i_en=1, i_data=55, o_data_out=55
+i_en=0, i_data=55, o_data_out=55
+i_en=0, i_data=55, o_data_out=55
+i_en=0, i_data=ff, o_data_out=55
+i_en=0, i_data=ff, o_data_out=55
+i_en=1, i_data=ff, o_data_out=55
+i_en=1, i_data=ff, o_data_out=ff

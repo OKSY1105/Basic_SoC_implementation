@@ -3,8 +3,8 @@
 # SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
 # IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
 # SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-# Start of session at: Tue Jul 28 16:12:28 2026
-# Process ID         : 2090
+# Start of session at: Wed Jul 29 11:07:39 2026
+# Process ID         : 1057
 # Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/27_Pipeline
 # Command line       : xsim -source {xsim.dir/work.testbench/xsim_script.tcl}
 # Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/27_Pipeline/xsim.log
@@ -19,7 +19,7 @@
 # Host memory        : 12386 MB
 # Swap memory        : 3221 MB
 # Total Virtual      : 15607 MB
-# Available Virtual  : 15032 MB
+# Available Virtual  : 15071 MB
 #-----------------------------------------------------------
 start_gui
 source xsim.dir/work.testbench/xsim_script.tcl
@@ -49,4 +49,4 @@ $finish called at time : 115 ns : File "/home/sean/Basic_SoC_implementation/1_RT
 close_sim
 INFO: [Simtcl 6-16] Simulation closed
 exit
-INFO: [Common 17-206] Exiting xsim at Tue Jul 28 16:13:05 2026...
+INFO: [Common 17-206] Exiting xsim at Wed Jul 29 11:08:10 2026...
