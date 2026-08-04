@@ -9,6 +9,6 @@ Completed static elaboration
 Starting simulation data flow analysis
 Completed simulation data flow analysis
 Time Resolution for simulation is 1ps
-Compiling module work.interrupt_crtl
+Compiling module work.interrupt_ctrl
 Compiling module work.testbench
 Built simulation snapshot work.testbench

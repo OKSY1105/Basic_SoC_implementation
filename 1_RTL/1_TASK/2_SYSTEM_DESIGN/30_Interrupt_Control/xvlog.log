@@ -1,4 +1,4 @@
-INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/30_Interrupt_Control/interrupt_crtl.v" into library work
-INFO: [VRFC 10-311] analyzing module interrupt_crtl
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/30_Interrupt_Control/interrupt_ctrl.v" into library work
+INFO: [VRFC 10-311] analyzing module interrupt_ctrl
 INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/30_Interrupt_Control/testbench.v" into library work
 INFO: [VRFC 10-311] analyzing module testbench

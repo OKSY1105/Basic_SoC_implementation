@@ -1,0 +1,7 @@
+Success: Address 0, Data 0
+Success: Address 255, Data 0
+Success: Address 5, Data a5
+Success: Address 10, Data 5a
+Success: Address 15, Data 0
+Address width: 8 bits
+All tests passed successfully!

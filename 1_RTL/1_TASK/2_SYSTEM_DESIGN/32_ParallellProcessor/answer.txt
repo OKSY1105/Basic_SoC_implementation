@@ -1,0 +1,15 @@
+Time: 40ns, Input: 55, Output: 00aa5456
+  Path 1: 56
+  Path 2: 54
+  Path 3: aa
+  Path 4: 00
+Time: 70ns, Input: aa, Output: aa55a9ab
+  Path 1: ab
+  Path 2: a9
+  Path 3: 55
+  Path 4: aa
+Time: 100ns, Input: ff, Output: aa00fe00
+  Path 1: 00
+  Path 2: fe
+  Path 3: 00
+  Path 4: aa

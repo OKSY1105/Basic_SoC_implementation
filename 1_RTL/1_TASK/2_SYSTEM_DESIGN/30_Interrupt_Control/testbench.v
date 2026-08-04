@@ -12,7 +12,7 @@ module testbench;
     integer file;  
 
     // 모듈 인스턴스화 (RTL 모듈 이름 및 포트명 일치)
-    interrupt_crtl #(
+    interrupt_ctrl #(
         .INT_COUNT(INT_COUNT)
     ) u_interrupt_ctrl (
         .i_clk              (clk),
