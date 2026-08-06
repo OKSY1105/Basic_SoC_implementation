@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/35_Fibonacci/fibonacci_generator.v" into library work
+INFO: [VRFC 10-311] analyzing module fibonacci_generator
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/35_Fibonacci/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench

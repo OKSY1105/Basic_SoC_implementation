@@ -1,0 +1,5 @@
+Test Case 1: Input = 01100001, Output = 01000000
+Test Case 2: Input = 00100101, Output = 00100000
+Test Case 3: Input = 10000000, Output = 10000000
+Test Case 4: Input = 00000001, Output = 00000001
+Test Case 5: Input = 00000000, Output = 00000000
