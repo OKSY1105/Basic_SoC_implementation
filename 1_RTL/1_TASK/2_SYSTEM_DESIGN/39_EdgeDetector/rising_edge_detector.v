@@ -14,7 +14,7 @@ always @(posedge i_clk)begin
 	
 	r_pre_signal <= i_signal;
 	
-	if((i_signal)&&(~r_pre_signal)) o_edge_detected <= ~o_edge_detected;
-	else o_edge_detected <=1'b0;
+	o_edge_detected <= (i_signal & ~(r_pre_signal));
+	
 end
 endmodule

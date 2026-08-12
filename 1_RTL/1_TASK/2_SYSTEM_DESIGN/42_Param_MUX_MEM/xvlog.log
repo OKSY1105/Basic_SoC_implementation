@@ -1,0 +1,5 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/42_Param_MUX_MEM/param_mux_mem.sv" into library work
+INFO: [VRFC 10-311] analyzing module param_mux
+INFO: [VRFC 10-311] analyzing module param_mem
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/42_Param_MUX_MEM/testbench.sv" into library work
+INFO: [VRFC 10-311] analyzing module testbench
