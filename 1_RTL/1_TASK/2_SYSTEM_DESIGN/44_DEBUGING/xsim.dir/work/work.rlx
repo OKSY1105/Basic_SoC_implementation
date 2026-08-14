@@ -1,0 +1,6 @@
+0.7
+2020.2
+Nov  8 2024
+22:36:55
+/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/44_DEBUGING/bug_code.v,1786603294,verilog,,/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/44_DEBUGING/testbench.v,,bin_2_gray;clock_gating;counter;fsm;interrupt_ctrl;msb_one_extractor;param_mem;parity_checker;rising_edge_detector,,,,,,,,
+/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/44_DEBUGING/testbench.v,1786583869,verilog,,,,testbench,,,,,,,,

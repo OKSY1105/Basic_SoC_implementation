@@ -1,0 +1,16 @@
+Time=      35ns, Signal=0, Edge Detected=0
+Time=      45ns, Signal=1, Edge Detected=0
+Time=      55ns, Signal=0, Edge Detected=1
+Time=      65ns, Signal=0, Edge Detected=0
+Time=      75ns, Signal=1, Edge Detected=0
+Time=      85ns, Signal=1, Edge Detected=1
+Time=      95ns, Signal=1, Edge Detected=0
+Time=     105ns, Signal=0, Edge Detected=0
+Time=     115ns, Signal=1, Edge Detected=0
+Time=     125ns, Signal=1, Edge Detected=1
+Time=     135ns, Signal=0, Edge Detected=0
+Time=     145ns, Signal=0, Edge Detected=0
+Time=     155ns, Signal=0, Edge Detected=0
+Time=     165ns, Signal=1, Edge Detected=0
+Time=     175ns, Signal=1, Edge Detected=1
+Time=     185ns, Signal=1, Edge Detected=0
