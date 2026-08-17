@@ -1,30 +1,29 @@
 `timescale 1ns / 1ps
 module parity(
 
-data_in,
-parity_bit
+i_data_in,
+o_parity_bit
 
 );
 
-input [7:0] data_in;
-output parity_bit;
+input [7:0] i_data_in;
+output o_parity_bit;
 
-assign parity_bit = data_in[7]^data_in[6]^data_in[5]^data_in[4]^data_in[3]^data_in[2]^data_in[1]^data_in[0];
+assign o_parity_bit = i_data_in[7]^i_data_in[6]^i_data_in[5]^i_data_in[4]^i_data_in[3]^i_data_in[2]^i_data_in[1]^i_data_in[0];
 endmodule
-
 
 module parity_checker(
 
-data_in,
-parity_bit,
-parity_error
+i_data_in,
+i_parity_bit,
+o_parity_error
 
 );
 
-input [7:0] data_in;
-input parity_bit;
-output parity_error;
+input [7:0] i_data_in;
+input i_parity_bit;
+output o_parity_error;
 
-assign parity_error = (^(data_in)^parity_bit);
+assign o_parity_error = (^(i_data_in)^i_parity_bit);
 
 endmodule
