@@ -25,6 +25,25 @@ input [7:0] data_in;
 input parity_bit;
 output parity_error;
 
-assign parity_error = (^(data_in)^parity_bit);
+assign parity_error = ((^data_in)^parity_bit);
 
 endmodule
+/*
+module parity(
+    input [7:0] data_in, 
+    output parity_bit  
+);
+
+assign parity_bit = ^data_in; 
+
+endmodule
+
+module parity_checker(
+    input [7:0] data_in,  
+    input    parity_bit,  
+    output   parity_error
+);
+
+assign parity_error = (^(data_in) ^ parity_bit);
+
+endmodule*/
