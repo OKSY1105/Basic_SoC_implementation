@@ -19,17 +19,23 @@ reg r_en;
 wire w_gate_clk;
 
 always @(i_clk or i_en or  negedge i_rst_n) begin
-	if(!i_rst_n)  r_en<= 0;
+	if(!i_rst_n) r_en<= 0;
+		
 	
 	else begin
-		if(!i_clk) r_en <= i_en;
+		if(i_clk) r_en <= i_en;
 	end
 end
 
 assign w_gate_clk = i_clk & r_en;
 
-always @(posedge w_gate_clk or negedge i_rst_n) begin
+always @(posedge i_clk or negedge i_rst_n) begin
        if(!i_rst_n) o_data_out <=0;
-       else o_data_out <= i_data;
+       else begin
+	       if(w_gate_clk) o_data_out <=i_data;
+	       else o_data_out <= o_data_out;
+       end
 end       
 endmodule
+
+

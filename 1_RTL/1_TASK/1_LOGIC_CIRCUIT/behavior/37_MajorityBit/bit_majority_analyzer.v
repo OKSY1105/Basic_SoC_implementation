@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+/*`timescale 1ns/1ps
 module bit_majority_analyzer(
 	i_in1,
 	i_in2,
@@ -28,8 +28,8 @@ end
 assign o_result = w_result;
 
 endmodule
+*/
 
-/*
 
 `timescale 1ns/1ps
 module bit_majority_analyzer(
@@ -47,4 +47,4 @@ output [7:0] o_result;
 assign o_result = (i_in1 &i_in3) |(i_in2&i_in3)|(i_in1&i_in2);
 
 endmodule
-*/
+

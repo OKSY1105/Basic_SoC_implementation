@@ -29,8 +29,8 @@ endmodule
 
 
 module param_mem #(
-    parameter N = 4,               // address bit count (size 2^N)
-    parameter DATA_WIDTH = 8       // data bit width
+    parameter N = 4,               
+    parameter DATA_WIDTH = 8      
 )(
     i_clk,
     i_addr,
@@ -49,13 +49,16 @@ reg [DATA_WIDTH-1:0] o_data_out;
 reg [DATA_WIDTH-1:0] r_memory [0:(2**N)-1];
 
 
-    always @(posedge clk) begin
+    always @(posedge i_clk) begin
         o_data_out <= r_memory[i_addr];
     end
 
     always @(posedge i_clk) begin
         if (i_write_enable) begin
-            r_memory[addr] <= i_data_in;
+            r_memory[i_addr] <= i_data_in;
         end
     end
 endmodule
+
+
+
