@@ -18,7 +18,7 @@ reg [7:0] o_data_out;
 reg r_en;
 wire w_gate_clk;
 
-always @(i_clk or i_en or  negedge i_rst_n) begin
+always @(posedge i_clk or i_en or  negedge i_rst_n) begin
 	if(!i_rst_n) r_en<= 0;
 		
 	
