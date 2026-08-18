@@ -27,3 +27,10 @@ output o_parity_error;
 assign o_parity_error = (^(i_data_in)^i_parity_bit);
 
 endmodule
+
+
+
+
+
+
+
