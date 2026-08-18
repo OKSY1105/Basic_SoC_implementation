@@ -1,1 +1,0 @@
-xsim {testbench} -autoloadwcfg -runall

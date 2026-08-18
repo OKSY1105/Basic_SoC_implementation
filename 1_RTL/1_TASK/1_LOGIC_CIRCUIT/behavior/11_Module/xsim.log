@@ -3,8 +3,8 @@
 # SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
 # IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
 # SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-# Start of session at: Mon Jul 20 14:31:47 2026
-# Process ID         : 5338
+# Start of session at: Wed Aug 19 01:51:46 2026
+# Process ID         : 1063
 # Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/11_Module
 # Command line       : xsim -source {xsim.dir/work.testbench/xsim_script.tcl}
 # Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/11_Module/xsim.log
@@ -19,22 +19,23 @@
 # Host memory        : 12386 MB
 # Swap memory        : 3221 MB
 # Total Virtual      : 15607 MB
-# Available Virtual  : 15020 MB
+# Available Virtual  : 15047 MB
 #-----------------------------------------------------------
 start_gui
 source xsim.dir/work.testbench/xsim_script.tcl
 # set_param project.enableReportConfiguration 0
+# load_feature core
+# current_fileset
 WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu208ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu208ld/production/2.0/board.xml as part xczu58dr-fsvg1517-2-i specified in board_part file is either invalid or not available
 WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu216ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu216ld/production/2.0/board.xml as part xczu59dr-ffvf1760-2-i specified in board_part file is either invalid or not available
 WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu670ld:part0:1.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu670ld/1.0/board.xml as part xczu57dr-fsve1156-2-i specified in board_part file is either invalid or not available
-# load_feature core
-# current_fileset
 INFO: [IP_Flow 19-234] Refreshing IP repositories
 INFO: [IP_Flow 19-1704] No user IP repositories specified
 INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/sean/Vivado/2024.2/data/ip'.
-# xsim {work.testbench} -wdb {sim_tb.wdb} -autoloadwcfg -tclbatch {sgdh_sim.tcl}
+current_fileset: Time (s): cpu = 00:00:11 ; elapsed = 00:00:06 . Memory (MB): peak = 10225.320 ; gain = 414.062 ; free physical = 7740 ; free virtual = 13629
+# xsim {work.testbench} -wdb {sim_tb.wdb} -autoloadwcfg -tclbatch {sean_sim.tcl}
 Time resolution is 1 ps
-source sgdh_sim.tcl
+source sean_sim.tcl
 ## set curr_wave [current_wave_config]
 ## if { [string length $curr_wave] == 0 } {
 ##   if { [llength [get_objects]] > 0} {
@@ -45,520 +46,527 @@ source sgdh_sim.tcl
 ##   }
 ## }
 ## run 10000ns
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 00
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 11
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 11
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 22
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 22
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 33
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 33
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 11
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 11
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 22
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 22
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 33
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 33
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 44
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 44
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 22
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 22
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 33
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 33
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 44
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 44
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 55
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 55
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 33
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 33
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 44
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 44
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 55
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 55
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 66
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 66
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = f1
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 1f
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 02
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 20
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 13
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 31
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 02
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 20
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 13
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 31
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 35
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 53
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 13
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 31
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 35
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 53
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 46
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 64
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 35
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 53
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 46
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 64
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 57
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 75
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = e2
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 2e
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = f3
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 3f
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = f3
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 3f
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 37
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 73
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 37
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 73
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 48
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 84
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = d3
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 3d
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 39
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 0, i_add_sub_sel = 1, o_final_cal_out = 93
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f1
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 1f
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 02
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 20
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 13
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 31
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 02
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 20
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 13
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 31
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 35
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 53
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 13
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 31
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 35
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 53
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 46
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 64
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 24
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 42
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 35
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 53
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 46
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 64
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 57
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 75
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = e2
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 2e
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f3
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 3f
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f3
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 3f
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 37
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 73
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 37
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 73
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 48
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 84
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = d3
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 3d
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 39
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 93
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = c4
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 4c
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = d5
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 5d
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = d5
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 5d
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 19
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 91
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 19
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = 91
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 0, o_final_cal_out = 2a
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 1, i_add_sub_sel = 1, o_final_cal_out = a2
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e2
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 2e
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f3
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 3f
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f3
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 3f
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 04
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 40
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 37
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 73
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 15
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 51
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 26
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 62
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 37
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 73
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 48
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 84
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = d3
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 3d
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 39
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 93
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = c4
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 4c
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = d5
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 5d
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = d5
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 5d
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 19
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 91
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 19
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 91
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 2a
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = a2
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = b5
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 5b
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = c6
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 6c
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = d7
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 7d
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = c6
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 6c
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = d7
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 7d
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f9
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 9f
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = d7
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 7d
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f9
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 9f
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 0a
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = a0
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = f9
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = 9f
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 0a
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = a0
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 0, o_final_cal_out = 1b
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 2, i_add_sub_sel = 1, o_final_cal_out = b1
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d3
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 3d
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 1, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 2, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 3, i_add_b = 0, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e4
-i_add_a = 0, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 4e
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 1, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 2, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 3, i_add_b = 1, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f5
-i_add_a = 0, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 5f
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 1, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 2, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 3, i_add_b = 2, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 06
-i_add_a = 0, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 60
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 17
-i_add_a = 1, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 71
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 28
-i_add_a = 2, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 82
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 39
-i_add_a = 3, i_add_b = 3, i_add_c = 0, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 93
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = c4
-i_add_a = 0, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 4c
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d5
-i_add_a = 1, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 5d
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 2, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 3, i_add_b = 0, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d5
-i_add_a = 0, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 5d
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 1, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 2, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 3, i_add_b = 1, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e6
-i_add_a = 0, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 6e
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 1, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 2, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 19
-i_add_a = 3, i_add_b = 2, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 91
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f7
-i_add_a = 0, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7f
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 08
-i_add_a = 1, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 80
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 19
-i_add_a = 2, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 91
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 2a
-i_add_a = 3, i_add_b = 3, i_add_c = 1, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = a2
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = b5
-i_add_a = 0, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 5b
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = c6
-i_add_a = 1, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 6c
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d7
-i_add_a = 2, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7d
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 3, i_add_b = 0, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = c6
-i_add_a = 0, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 6c
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d7
-i_add_a = 1, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7d
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 2, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f9
-i_add_a = 3, i_add_b = 1, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 9f
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d7
-i_add_a = 0, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7d
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 1, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f9
-i_add_a = 2, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 9f
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 0a
-i_add_a = 3, i_add_b = 2, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = a0
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = e8
-i_add_a = 0, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 8e
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = f9
-i_add_a = 1, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 9f
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 0a
-i_add_a = 2, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = a0
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 1b
-i_add_a = 3, i_add_b = 3, i_add_c = 2, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = b1
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = a6
-i_add_a = 0, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 6a
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = b7
-i_add_a = 1, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7b
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = c8
-i_add_a = 2, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 8c
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d9
-i_add_a = 3, i_add_b = 0, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 9d
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = b7
-i_add_a = 0, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 7b
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = c8
-i_add_a = 1, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 8c
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d9
-i_add_a = 2, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 9d
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = ea
-i_add_a = 3, i_add_b = 1, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = ae
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = c8
-i_add_a = 0, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 8c
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d9
-i_add_a = 1, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 9d
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = ea
-i_add_a = 2, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = ae
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = fb
-i_add_a = 3, i_add_b = 2, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = bf
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = d9
-i_add_a = 0, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = 9d
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = ea
-i_add_a = 1, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = ae
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = fb
-i_add_a = 2, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = bf
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 0, o_final_cal_out = 0c
-i_add_a = 3, i_add_b = 3, i_add_c = 3, i_add_d = 3, i_add_sub_sel = 1, o_final_cal_out = c0
-i_add_a = 0, i_add_b = 0, i_add_c = 0, i_add_d = 0, i_add_sub_sel = 0, o_final_cal_out = 00
-$finish called at time : 5130 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/11_Module/testbench.v" Line 47
+--------------------------------------------------------------------------------
+[SIM START] Multi-Operand Arithmetic Verification
+--------------------------------------------------------------------------------
+[STEP 000] A:    0 | B:    0 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000000
+[STEP 001] A:    0 | B:    0 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000000
+[STEP 002] A:    1 | B:    0 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000011
+[STEP 003] A:    1 | B:    0 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000011
+[STEP 004] A:    2 | B:    0 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000022
+[STEP 005] A:    2 | B:    0 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000022
+[STEP 006] A:    3 | B:    0 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000033
+[STEP 007] A:    3 | B:    0 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000033
+[STEP 008] A:    0 | B:    1 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000011
+[STEP 009] A:    0 | B:    1 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000011
+[STEP 010] A:    1 | B:    1 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000022
+[STEP 011] A:    1 | B:    1 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000022
+[STEP 012] A:    2 | B:    1 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000033
+[STEP 013] A:    2 | B:    1 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000033
+[STEP 014] A:    3 | B:    1 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000044
+[STEP 015] A:    3 | B:    1 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000044
+[STEP 016] A:    0 | B:    2 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000022
+[STEP 017] A:    0 | B:    2 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000022
+[STEP 018] A:    1 | B:    2 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000033
+[STEP 019] A:    1 | B:    2 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000033
+[STEP 020] A:    2 | B:    2 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000044
+[STEP 021] A:    2 | B:    2 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000044
+[STEP 022] A:    3 | B:    2 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000055
+[STEP 023] A:    3 | B:    2 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000055
+[STEP 024] A:    0 | B:    3 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000033
+[STEP 025] A:    0 | B:    3 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000033
+[STEP 026] A:    1 | B:    3 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000044
+[STEP 027] A:    1 | B:    3 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000044
+[STEP 028] A:    2 | B:    3 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000055
+[STEP 029] A:    2 | B:    3 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000055
+[STEP 030] A:    3 | B:    3 | C:    0 | D:    0 | SEL: 0 | OUT: 0x00000066
+[STEP 031] A:    3 | B:    3 | C:    0 | D:    0 | SEL: 1 | OUT: 0x00000066
+[STEP 032] A:    0 | B:    0 | C:    1 | D:    0 | SEL: 0 | OUT: 0x000000f1
+[STEP 033] A:    0 | B:    0 | C:    1 | D:    0 | SEL: 1 | OUT: 0x0000001f
+[STEP 034] A:    1 | B:    0 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000002
+[STEP 035] A:    1 | B:    0 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000020
+[STEP 036] A:    2 | B:    0 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000013
+[STEP 037] A:    2 | B:    0 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000031
+[STEP 038] A:    3 | B:    0 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000024
+[STEP 039] A:    3 | B:    0 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000042
+[STEP 040] A:    0 | B:    1 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000002
+[STEP 041] A:    0 | B:    1 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000020
+[STEP 042] A:    1 | B:    1 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000013
+[STEP 043] A:    1 | B:    1 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000031
+[STEP 044] A:    2 | B:    1 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000024
+[STEP 045] A:    2 | B:    1 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000042
+[STEP 046] A:    3 | B:    1 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000035
+[STEP 047] A:    3 | B:    1 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000053
+[STEP 048] A:    0 | B:    2 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000013
+[STEP 049] A:    0 | B:    2 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000031
+[STEP 050] A:    1 | B:    2 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000024
+[STEP 051] A:    1 | B:    2 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000042
+[STEP 052] A:    2 | B:    2 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000035
+[STEP 053] A:    2 | B:    2 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000053
+[STEP 054] A:    3 | B:    2 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000046
+[STEP 055] A:    3 | B:    2 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000064
+[STEP 056] A:    0 | B:    3 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000024
+[STEP 057] A:    0 | B:    3 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000042
+[STEP 058] A:    1 | B:    3 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000035
+[STEP 059] A:    1 | B:    3 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000053
+[STEP 060] A:    2 | B:    3 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000046
+[STEP 061] A:    2 | B:    3 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000064
+[STEP 062] A:    3 | B:    3 | C:    1 | D:    0 | SEL: 0 | OUT: 0x00000057
+[STEP 063] A:    3 | B:    3 | C:    1 | D:    0 | SEL: 1 | OUT: 0x00000075
+[STEP 064] A:    0 | B:    0 | C:    2 | D:    0 | SEL: 0 | OUT: 0x000000e2
+[STEP 065] A:    0 | B:    0 | C:    2 | D:    0 | SEL: 1 | OUT: 0x0000002e
+[STEP 066] A:    1 | B:    0 | C:    2 | D:    0 | SEL: 0 | OUT: 0x000000f3
+[STEP 067] A:    1 | B:    0 | C:    2 | D:    0 | SEL: 1 | OUT: 0x0000003f
+[STEP 068] A:    2 | B:    0 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000004
+[STEP 069] A:    2 | B:    0 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000040
+[STEP 070] A:    3 | B:    0 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000015
+[STEP 071] A:    3 | B:    0 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000051
+[STEP 072] A:    0 | B:    1 | C:    2 | D:    0 | SEL: 0 | OUT: 0x000000f3
+[STEP 073] A:    0 | B:    1 | C:    2 | D:    0 | SEL: 1 | OUT: 0x0000003f
+[STEP 074] A:    1 | B:    1 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000004
+[STEP 075] A:    1 | B:    1 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000040
+[STEP 076] A:    2 | B:    1 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000015
+[STEP 077] A:    2 | B:    1 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000051
+[STEP 078] A:    3 | B:    1 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000026
+[STEP 079] A:    3 | B:    1 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000062
+[STEP 080] A:    0 | B:    2 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000004
+[STEP 081] A:    0 | B:    2 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000040
+[STEP 082] A:    1 | B:    2 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000015
+[STEP 083] A:    1 | B:    2 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000051
+[STEP 084] A:    2 | B:    2 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000026
+[STEP 085] A:    2 | B:    2 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000062
+[STEP 086] A:    3 | B:    2 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000037
+[STEP 087] A:    3 | B:    2 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000073
+[STEP 088] A:    0 | B:    3 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000015
+[STEP 089] A:    0 | B:    3 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000051
+[STEP 090] A:    1 | B:    3 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000026
+[STEP 091] A:    1 | B:    3 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000062
+[STEP 092] A:    2 | B:    3 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000037
+[STEP 093] A:    2 | B:    3 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000073
+[STEP 094] A:    3 | B:    3 | C:    2 | D:    0 | SEL: 0 | OUT: 0x00000048
+[STEP 095] A:    3 | B:    3 | C:    2 | D:    0 | SEL: 1 | OUT: 0x00000084
+[STEP 096] A:    0 | B:    0 | C:    3 | D:    0 | SEL: 0 | OUT: 0x000000d3
+[STEP 097] A:    0 | B:    0 | C:    3 | D:    0 | SEL: 1 | OUT: 0x0000003d
+[STEP 098] A:    1 | B:    0 | C:    3 | D:    0 | SEL: 0 | OUT: 0x000000e4
+[STEP 099] A:    1 | B:    0 | C:    3 | D:    0 | SEL: 1 | OUT: 0x0000004e
+[STEP 100] A:    2 | B:    0 | C:    3 | D:    0 | SEL: 0 | OUT: 0x000000f5
+[STEP 101] A:    2 | B:    0 | C:    3 | D:    0 | SEL: 1 | OUT: 0x0000005f
+[STEP 102] A:    3 | B:    0 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000006
+[STEP 103] A:    3 | B:    0 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000060
+[STEP 104] A:    0 | B:    1 | C:    3 | D:    0 | SEL: 0 | OUT: 0x000000e4
+[STEP 105] A:    0 | B:    1 | C:    3 | D:    0 | SEL: 1 | OUT: 0x0000004e
+[STEP 106] A:    1 | B:    1 | C:    3 | D:    0 | SEL: 0 | OUT: 0x000000f5
+[STEP 107] A:    1 | B:    1 | C:    3 | D:    0 | SEL: 1 | OUT: 0x0000005f
+[STEP 108] A:    2 | B:    1 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000006
+[STEP 109] A:    2 | B:    1 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000060
+[STEP 110] A:    3 | B:    1 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000017
+[STEP 111] A:    3 | B:    1 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000071
+[STEP 112] A:    0 | B:    2 | C:    3 | D:    0 | SEL: 0 | OUT: 0x000000f5
+[STEP 113] A:    0 | B:    2 | C:    3 | D:    0 | SEL: 1 | OUT: 0x0000005f
+[STEP 114] A:    1 | B:    2 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000006
+[STEP 115] A:    1 | B:    2 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000060
+[STEP 116] A:    2 | B:    2 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000017
+[STEP 117] A:    2 | B:    2 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000071
+[STEP 118] A:    3 | B:    2 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000028
+[STEP 119] A:    3 | B:    2 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000082
+[STEP 120] A:    0 | B:    3 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000006
+[STEP 121] A:    0 | B:    3 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000060
+[STEP 122] A:    1 | B:    3 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000017
+[STEP 123] A:    1 | B:    3 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000071
+[STEP 124] A:    2 | B:    3 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000028
+[STEP 125] A:    2 | B:    3 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000082
+[STEP 126] A:    3 | B:    3 | C:    3 | D:    0 | SEL: 0 | OUT: 0x00000039
+[STEP 127] A:    3 | B:    3 | C:    3 | D:    0 | SEL: 1 | OUT: 0x00000093
+[STEP 128] A:    0 | B:    0 | C:    0 | D:    1 | SEL: 0 | OUT: 0x000000f1
+[STEP 129] A:    0 | B:    0 | C:    0 | D:    1 | SEL: 1 | OUT: 0x0000001f
+[STEP 130] A:    1 | B:    0 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000002
+[STEP 131] A:    1 | B:    0 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000020
+[STEP 132] A:    2 | B:    0 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000013
+[STEP 133] A:    2 | B:    0 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000031
+[STEP 134] A:    3 | B:    0 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000024
+[STEP 135] A:    3 | B:    0 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000042
+[STEP 136] A:    0 | B:    1 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000002
+[STEP 137] A:    0 | B:    1 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000020
+[STEP 138] A:    1 | B:    1 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000013
+[STEP 139] A:    1 | B:    1 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000031
+[STEP 140] A:    2 | B:    1 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000024
+[STEP 141] A:    2 | B:    1 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000042
+[STEP 142] A:    3 | B:    1 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000035
+[STEP 143] A:    3 | B:    1 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000053
+[STEP 144] A:    0 | B:    2 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000013
+[STEP 145] A:    0 | B:    2 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000031
+[STEP 146] A:    1 | B:    2 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000024
+[STEP 147] A:    1 | B:    2 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000042
+[STEP 148] A:    2 | B:    2 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000035
+[STEP 149] A:    2 | B:    2 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000053
+[STEP 150] A:    3 | B:    2 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000046
+[STEP 151] A:    3 | B:    2 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000064
+[STEP 152] A:    0 | B:    3 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000024
+[STEP 153] A:    0 | B:    3 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000042
+[STEP 154] A:    1 | B:    3 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000035
+[STEP 155] A:    1 | B:    3 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000053
+[STEP 156] A:    2 | B:    3 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000046
+[STEP 157] A:    2 | B:    3 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000064
+[STEP 158] A:    3 | B:    3 | C:    0 | D:    1 | SEL: 0 | OUT: 0x00000057
+[STEP 159] A:    3 | B:    3 | C:    0 | D:    1 | SEL: 1 | OUT: 0x00000075
+[STEP 160] A:    0 | B:    0 | C:    1 | D:    1 | SEL: 0 | OUT: 0x000000e2
+[STEP 161] A:    0 | B:    0 | C:    1 | D:    1 | SEL: 1 | OUT: 0x0000002e
+[STEP 162] A:    1 | B:    0 | C:    1 | D:    1 | SEL: 0 | OUT: 0x000000f3
+[STEP 163] A:    1 | B:    0 | C:    1 | D:    1 | SEL: 1 | OUT: 0x0000003f
+[STEP 164] A:    2 | B:    0 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000004
+[STEP 165] A:    2 | B:    0 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000040
+[STEP 166] A:    3 | B:    0 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000015
+[STEP 167] A:    3 | B:    0 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000051
+[STEP 168] A:    0 | B:    1 | C:    1 | D:    1 | SEL: 0 | OUT: 0x000000f3
+[STEP 169] A:    0 | B:    1 | C:    1 | D:    1 | SEL: 1 | OUT: 0x0000003f
+[STEP 170] A:    1 | B:    1 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000004
+[STEP 171] A:    1 | B:    1 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000040
+[STEP 172] A:    2 | B:    1 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000015
+[STEP 173] A:    2 | B:    1 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000051
+[STEP 174] A:    3 | B:    1 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000026
+[STEP 175] A:    3 | B:    1 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000062
+[STEP 176] A:    0 | B:    2 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000004
+[STEP 177] A:    0 | B:    2 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000040
+[STEP 178] A:    1 | B:    2 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000015
+[STEP 179] A:    1 | B:    2 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000051
+[STEP 180] A:    2 | B:    2 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000026
+[STEP 181] A:    2 | B:    2 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000062
+[STEP 182] A:    3 | B:    2 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000037
+[STEP 183] A:    3 | B:    2 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000073
+[STEP 184] A:    0 | B:    3 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000015
+[STEP 185] A:    0 | B:    3 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000051
+[STEP 186] A:    1 | B:    3 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000026
+[STEP 187] A:    1 | B:    3 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000062
+[STEP 188] A:    2 | B:    3 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000037
+[STEP 189] A:    2 | B:    3 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000073
+[STEP 190] A:    3 | B:    3 | C:    1 | D:    1 | SEL: 0 | OUT: 0x00000048
+[STEP 191] A:    3 | B:    3 | C:    1 | D:    1 | SEL: 1 | OUT: 0x00000084
+[STEP 192] A:    0 | B:    0 | C:    2 | D:    1 | SEL: 0 | OUT: 0x000000d3
+[STEP 193] A:    0 | B:    0 | C:    2 | D:    1 | SEL: 1 | OUT: 0x0000003d
+[STEP 194] A:    1 | B:    0 | C:    2 | D:    1 | SEL: 0 | OUT: 0x000000e4
+[STEP 195] A:    1 | B:    0 | C:    2 | D:    1 | SEL: 1 | OUT: 0x0000004e
+[STEP 196] A:    2 | B:    0 | C:    2 | D:    1 | SEL: 0 | OUT: 0x000000f5
+[STEP 197] A:    2 | B:    0 | C:    2 | D:    1 | SEL: 1 | OUT: 0x0000005f
+[STEP 198] A:    3 | B:    0 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000006
+[STEP 199] A:    3 | B:    0 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000060
+[STEP 200] A:    0 | B:    1 | C:    2 | D:    1 | SEL: 0 | OUT: 0x000000e4
+[STEP 201] A:    0 | B:    1 | C:    2 | D:    1 | SEL: 1 | OUT: 0x0000004e
+[STEP 202] A:    1 | B:    1 | C:    2 | D:    1 | SEL: 0 | OUT: 0x000000f5
+[STEP 203] A:    1 | B:    1 | C:    2 | D:    1 | SEL: 1 | OUT: 0x0000005f
+[STEP 204] A:    2 | B:    1 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000006
+[STEP 205] A:    2 | B:    1 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000060
+[STEP 206] A:    3 | B:    1 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000017
+[STEP 207] A:    3 | B:    1 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000071
+[STEP 208] A:    0 | B:    2 | C:    2 | D:    1 | SEL: 0 | OUT: 0x000000f5
+[STEP 209] A:    0 | B:    2 | C:    2 | D:    1 | SEL: 1 | OUT: 0x0000005f
+[STEP 210] A:    1 | B:    2 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000006
+[STEP 211] A:    1 | B:    2 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000060
+[STEP 212] A:    2 | B:    2 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000017
+[STEP 213] A:    2 | B:    2 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000071
+[STEP 214] A:    3 | B:    2 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000028
+[STEP 215] A:    3 | B:    2 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000082
+[STEP 216] A:    0 | B:    3 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000006
+[STEP 217] A:    0 | B:    3 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000060
+[STEP 218] A:    1 | B:    3 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000017
+[STEP 219] A:    1 | B:    3 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000071
+[STEP 220] A:    2 | B:    3 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000028
+[STEP 221] A:    2 | B:    3 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000082
+[STEP 222] A:    3 | B:    3 | C:    2 | D:    1 | SEL: 0 | OUT: 0x00000039
+[STEP 223] A:    3 | B:    3 | C:    2 | D:    1 | SEL: 1 | OUT: 0x00000093
+[STEP 224] A:    0 | B:    0 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000c4
+[STEP 225] A:    0 | B:    0 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000004c
+[STEP 226] A:    1 | B:    0 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000d5
+[STEP 227] A:    1 | B:    0 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000005d
+[STEP 228] A:    2 | B:    0 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000e6
+[STEP 229] A:    2 | B:    0 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000006e
+[STEP 230] A:    3 | B:    0 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000f7
+[STEP 231] A:    3 | B:    0 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000007f
+[STEP 232] A:    0 | B:    1 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000d5
+[STEP 233] A:    0 | B:    1 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000005d
+[STEP 234] A:    1 | B:    1 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000e6
+[STEP 235] A:    1 | B:    1 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000006e
+[STEP 236] A:    2 | B:    1 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000f7
+[STEP 237] A:    2 | B:    1 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000007f
+[STEP 238] A:    3 | B:    1 | C:    3 | D:    1 | SEL: 0 | OUT: 0x00000008
+[STEP 239] A:    3 | B:    1 | C:    3 | D:    1 | SEL: 1 | OUT: 0x00000080
+[STEP 240] A:    0 | B:    2 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000e6
+[STEP 241] A:    0 | B:    2 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000006e
+[STEP 242] A:    1 | B:    2 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000f7
+[STEP 243] A:    1 | B:    2 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000007f
+[STEP 244] A:    2 | B:    2 | C:    3 | D:    1 | SEL: 0 | OUT: 0x00000008
+[STEP 245] A:    2 | B:    2 | C:    3 | D:    1 | SEL: 1 | OUT: 0x00000080
+[STEP 246] A:    3 | B:    2 | C:    3 | D:    1 | SEL: 0 | OUT: 0x00000019
+[STEP 247] A:    3 | B:    2 | C:    3 | D:    1 | SEL: 1 | OUT: 0x00000091
+[STEP 248] A:    0 | B:    3 | C:    3 | D:    1 | SEL: 0 | OUT: 0x000000f7
+[STEP 249] A:    0 | B:    3 | C:    3 | D:    1 | SEL: 1 | OUT: 0x0000007f
+[STEP 250] A:    1 | B:    3 | C:    3 | D:    1 | SEL: 0 | OUT: 0x00000008
+[STEP 251] A:    1 | B:    3 | C:    3 | D:    1 | SEL: 1 | OUT: 0x00000080
+[STEP 252] A:    2 | B:    3 | C:    3 | D:    1 | SEL: 0 | OUT: 0x00000019
+[STEP 253] A:    2 | B:    3 | C:    3 | D:    1 | SEL: 1 | OUT: 0x00000091
+[STEP 254] A:    3 | B:    3 | C:    3 | D:    1 | SEL: 0 | OUT: 0x0000002a
+[STEP 255] A:    3 | B:    3 | C:    3 | D:    1 | SEL: 1 | OUT: 0x000000a2
+[STEP 256] A:    0 | B:    0 | C:    0 | D:    2 | SEL: 0 | OUT: 0x000000e2
+[STEP 257] A:    0 | B:    0 | C:    0 | D:    2 | SEL: 1 | OUT: 0x0000002e
+[STEP 258] A:    1 | B:    0 | C:    0 | D:    2 | SEL: 0 | OUT: 0x000000f3
+[STEP 259] A:    1 | B:    0 | C:    0 | D:    2 | SEL: 1 | OUT: 0x0000003f
+[STEP 260] A:    2 | B:    0 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000004
+[STEP 261] A:    2 | B:    0 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000040
+[STEP 262] A:    3 | B:    0 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000015
+[STEP 263] A:    3 | B:    0 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000051
+[STEP 264] A:    0 | B:    1 | C:    0 | D:    2 | SEL: 0 | OUT: 0x000000f3
+[STEP 265] A:    0 | B:    1 | C:    0 | D:    2 | SEL: 1 | OUT: 0x0000003f
+[STEP 266] A:    1 | B:    1 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000004
+[STEP 267] A:    1 | B:    1 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000040
+[STEP 268] A:    2 | B:    1 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000015
+[STEP 269] A:    2 | B:    1 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000051
+[STEP 270] A:    3 | B:    1 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000026
+[STEP 271] A:    3 | B:    1 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000062
+[STEP 272] A:    0 | B:    2 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000004
+[STEP 273] A:    0 | B:    2 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000040
+[STEP 274] A:    1 | B:    2 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000015
+[STEP 275] A:    1 | B:    2 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000051
+[STEP 276] A:    2 | B:    2 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000026
+[STEP 277] A:    2 | B:    2 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000062
+[STEP 278] A:    3 | B:    2 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000037
+[STEP 279] A:    3 | B:    2 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000073
+[STEP 280] A:    0 | B:    3 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000015
+[STEP 281] A:    0 | B:    3 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000051
+[STEP 282] A:    1 | B:    3 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000026
+[STEP 283] A:    1 | B:    3 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000062
+[STEP 284] A:    2 | B:    3 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000037
+[STEP 285] A:    2 | B:    3 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000073
+[STEP 286] A:    3 | B:    3 | C:    0 | D:    2 | SEL: 0 | OUT: 0x00000048
+[STEP 287] A:    3 | B:    3 | C:    0 | D:    2 | SEL: 1 | OUT: 0x00000084
+[STEP 288] A:    0 | B:    0 | C:    1 | D:    2 | SEL: 0 | OUT: 0x000000d3
+[STEP 289] A:    0 | B:    0 | C:    1 | D:    2 | SEL: 1 | OUT: 0x0000003d
+[STEP 290] A:    1 | B:    0 | C:    1 | D:    2 | SEL: 0 | OUT: 0x000000e4
+[STEP 291] A:    1 | B:    0 | C:    1 | D:    2 | SEL: 1 | OUT: 0x0000004e
+[STEP 292] A:    2 | B:    0 | C:    1 | D:    2 | SEL: 0 | OUT: 0x000000f5
+[STEP 293] A:    2 | B:    0 | C:    1 | D:    2 | SEL: 1 | OUT: 0x0000005f
+[STEP 294] A:    3 | B:    0 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000006
+[STEP 295] A:    3 | B:    0 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000060
+[STEP 296] A:    0 | B:    1 | C:    1 | D:    2 | SEL: 0 | OUT: 0x000000e4
+[STEP 297] A:    0 | B:    1 | C:    1 | D:    2 | SEL: 1 | OUT: 0x0000004e
+[STEP 298] A:    1 | B:    1 | C:    1 | D:    2 | SEL: 0 | OUT: 0x000000f5
+[STEP 299] A:    1 | B:    1 | C:    1 | D:    2 | SEL: 1 | OUT: 0x0000005f
+[STEP 300] A:    2 | B:    1 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000006
+[STEP 301] A:    2 | B:    1 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000060
+[STEP 302] A:    3 | B:    1 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000017
+[STEP 303] A:    3 | B:    1 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000071
+[STEP 304] A:    0 | B:    2 | C:    1 | D:    2 | SEL: 0 | OUT: 0x000000f5
+[STEP 305] A:    0 | B:    2 | C:    1 | D:    2 | SEL: 1 | OUT: 0x0000005f
+[STEP 306] A:    1 | B:    2 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000006
+[STEP 307] A:    1 | B:    2 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000060
+[STEP 308] A:    2 | B:    2 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000017
+[STEP 309] A:    2 | B:    2 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000071
+[STEP 310] A:    3 | B:    2 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000028
+[STEP 311] A:    3 | B:    2 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000082
+[STEP 312] A:    0 | B:    3 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000006
+[STEP 313] A:    0 | B:    3 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000060
+[STEP 314] A:    1 | B:    3 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000017
+[STEP 315] A:    1 | B:    3 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000071
+[STEP 316] A:    2 | B:    3 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000028
+[STEP 317] A:    2 | B:    3 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000082
+[STEP 318] A:    3 | B:    3 | C:    1 | D:    2 | SEL: 0 | OUT: 0x00000039
+[STEP 319] A:    3 | B:    3 | C:    1 | D:    2 | SEL: 1 | OUT: 0x00000093
+[STEP 320] A:    0 | B:    0 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000c4
+[STEP 321] A:    0 | B:    0 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000004c
+[STEP 322] A:    1 | B:    0 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000d5
+[STEP 323] A:    1 | B:    0 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000005d
+[STEP 324] A:    2 | B:    0 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000e6
+[STEP 325] A:    2 | B:    0 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000006e
+[STEP 326] A:    3 | B:    0 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000f7
+[STEP 327] A:    3 | B:    0 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000007f
+[STEP 328] A:    0 | B:    1 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000d5
+[STEP 329] A:    0 | B:    1 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000005d
+[STEP 330] A:    1 | B:    1 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000e6
+[STEP 331] A:    1 | B:    1 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000006e
+[STEP 332] A:    2 | B:    1 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000f7
+[STEP 333] A:    2 | B:    1 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000007f
+[STEP 334] A:    3 | B:    1 | C:    2 | D:    2 | SEL: 0 | OUT: 0x00000008
+[STEP 335] A:    3 | B:    1 | C:    2 | D:    2 | SEL: 1 | OUT: 0x00000080
+[STEP 336] A:    0 | B:    2 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000e6
+[STEP 337] A:    0 | B:    2 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000006e
+[STEP 338] A:    1 | B:    2 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000f7
+[STEP 339] A:    1 | B:    2 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000007f
+[STEP 340] A:    2 | B:    2 | C:    2 | D:    2 | SEL: 0 | OUT: 0x00000008
+[STEP 341] A:    2 | B:    2 | C:    2 | D:    2 | SEL: 1 | OUT: 0x00000080
+[STEP 342] A:    3 | B:    2 | C:    2 | D:    2 | SEL: 0 | OUT: 0x00000019
+[STEP 343] A:    3 | B:    2 | C:    2 | D:    2 | SEL: 1 | OUT: 0x00000091
+[STEP 344] A:    0 | B:    3 | C:    2 | D:    2 | SEL: 0 | OUT: 0x000000f7
+[STEP 345] A:    0 | B:    3 | C:    2 | D:    2 | SEL: 1 | OUT: 0x0000007f
+[STEP 346] A:    1 | B:    3 | C:    2 | D:    2 | SEL: 0 | OUT: 0x00000008
+[STEP 347] A:    1 | B:    3 | C:    2 | D:    2 | SEL: 1 | OUT: 0x00000080
+[STEP 348] A:    2 | B:    3 | C:    2 | D:    2 | SEL: 0 | OUT: 0x00000019
+[STEP 349] A:    2 | B:    3 | C:    2 | D:    2 | SEL: 1 | OUT: 0x00000091
+[STEP 350] A:    3 | B:    3 | C:    2 | D:    2 | SEL: 0 | OUT: 0x0000002a
+[STEP 351] A:    3 | B:    3 | C:    2 | D:    2 | SEL: 1 | OUT: 0x000000a2
+[STEP 352] A:    0 | B:    0 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000b5
+[STEP 353] A:    0 | B:    0 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000005b
+[STEP 354] A:    1 | B:    0 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000c6
+[STEP 355] A:    1 | B:    0 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000006c
+[STEP 356] A:    2 | B:    0 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000d7
+[STEP 357] A:    2 | B:    0 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000007d
+[STEP 358] A:    3 | B:    0 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000e8
+[STEP 359] A:    3 | B:    0 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000008e
+[STEP 360] A:    0 | B:    1 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000c6
+[STEP 361] A:    0 | B:    1 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000006c
+[STEP 362] A:    1 | B:    1 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000d7
+[STEP 363] A:    1 | B:    1 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000007d
+[STEP 364] A:    2 | B:    1 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000e8
+[STEP 365] A:    2 | B:    1 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000008e
+[STEP 366] A:    3 | B:    1 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000f9
+[STEP 367] A:    3 | B:    1 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000009f
+[STEP 368] A:    0 | B:    2 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000d7
+[STEP 369] A:    0 | B:    2 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000007d
+[STEP 370] A:    1 | B:    2 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000e8
+[STEP 371] A:    1 | B:    2 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000008e
+[STEP 372] A:    2 | B:    2 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000f9
+[STEP 373] A:    2 | B:    2 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000009f
+[STEP 374] A:    3 | B:    2 | C:    3 | D:    2 | SEL: 0 | OUT: 0x0000000a
+[STEP 375] A:    3 | B:    2 | C:    3 | D:    2 | SEL: 1 | OUT: 0x000000a0
+[STEP 376] A:    0 | B:    3 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000e8
+[STEP 377] A:    0 | B:    3 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000008e
+[STEP 378] A:    1 | B:    3 | C:    3 | D:    2 | SEL: 0 | OUT: 0x000000f9
+[STEP 379] A:    1 | B:    3 | C:    3 | D:    2 | SEL: 1 | OUT: 0x0000009f
+[STEP 380] A:    2 | B:    3 | C:    3 | D:    2 | SEL: 0 | OUT: 0x0000000a
+[STEP 381] A:    2 | B:    3 | C:    3 | D:    2 | SEL: 1 | OUT: 0x000000a0
+[STEP 382] A:    3 | B:    3 | C:    3 | D:    2 | SEL: 0 | OUT: 0x0000001b
+[STEP 383] A:    3 | B:    3 | C:    3 | D:    2 | SEL: 1 | OUT: 0x000000b1
+[STEP 384] A:    0 | B:    0 | C:    0 | D:    3 | SEL: 0 | OUT: 0x000000d3
+[STEP 385] A:    0 | B:    0 | C:    0 | D:    3 | SEL: 1 | OUT: 0x0000003d
+[STEP 386] A:    1 | B:    0 | C:    0 | D:    3 | SEL: 0 | OUT: 0x000000e4
+[STEP 387] A:    1 | B:    0 | C:    0 | D:    3 | SEL: 1 | OUT: 0x0000004e
+[STEP 388] A:    2 | B:    0 | C:    0 | D:    3 | SEL: 0 | OUT: 0x000000f5
+[STEP 389] A:    2 | B:    0 | C:    0 | D:    3 | SEL: 1 | OUT: 0x0000005f
+[STEP 390] A:    3 | B:    0 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000006
+[STEP 391] A:    3 | B:    0 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000060
+[STEP 392] A:    0 | B:    1 | C:    0 | D:    3 | SEL: 0 | OUT: 0x000000e4
+[STEP 393] A:    0 | B:    1 | C:    0 | D:    3 | SEL: 1 | OUT: 0x0000004e
+[STEP 394] A:    1 | B:    1 | C:    0 | D:    3 | SEL: 0 | OUT: 0x000000f5
+[STEP 395] A:    1 | B:    1 | C:    0 | D:    3 | SEL: 1 | OUT: 0x0000005f
+[STEP 396] A:    2 | B:    1 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000006
+[STEP 397] A:    2 | B:    1 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000060
+[STEP 398] A:    3 | B:    1 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000017
+[STEP 399] A:    3 | B:    1 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000071
+[STEP 400] A:    0 | B:    2 | C:    0 | D:    3 | SEL: 0 | OUT: 0x000000f5
+[STEP 401] A:    0 | B:    2 | C:    0 | D:    3 | SEL: 1 | OUT: 0x0000005f
+[STEP 402] A:    1 | B:    2 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000006
+[STEP 403] A:    1 | B:    2 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000060
+[STEP 404] A:    2 | B:    2 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000017
+[STEP 405] A:    2 | B:    2 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000071
+[STEP 406] A:    3 | B:    2 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000028
+[STEP 407] A:    3 | B:    2 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000082
+[STEP 408] A:    0 | B:    3 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000006
+[STEP 409] A:    0 | B:    3 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000060
+[STEP 410] A:    1 | B:    3 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000017
+[STEP 411] A:    1 | B:    3 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000071
+[STEP 412] A:    2 | B:    3 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000028
+[STEP 413] A:    2 | B:    3 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000082
+[STEP 414] A:    3 | B:    3 | C:    0 | D:    3 | SEL: 0 | OUT: 0x00000039
+[STEP 415] A:    3 | B:    3 | C:    0 | D:    3 | SEL: 1 | OUT: 0x00000093
+[STEP 416] A:    0 | B:    0 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000c4
+[STEP 417] A:    0 | B:    0 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000004c
+[STEP 418] A:    1 | B:    0 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000d5
+[STEP 419] A:    1 | B:    0 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000005d
+[STEP 420] A:    2 | B:    0 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000e6
+[STEP 421] A:    2 | B:    0 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000006e
+[STEP 422] A:    3 | B:    0 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000f7
+[STEP 423] A:    3 | B:    0 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000007f
+[STEP 424] A:    0 | B:    1 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000d5
+[STEP 425] A:    0 | B:    1 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000005d
+[STEP 426] A:    1 | B:    1 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000e6
+[STEP 427] A:    1 | B:    1 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000006e
+[STEP 428] A:    2 | B:    1 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000f7
+[STEP 429] A:    2 | B:    1 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000007f
+[STEP 430] A:    3 | B:    1 | C:    1 | D:    3 | SEL: 0 | OUT: 0x00000008
+[STEP 431] A:    3 | B:    1 | C:    1 | D:    3 | SEL: 1 | OUT: 0x00000080
+[STEP 432] A:    0 | B:    2 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000e6
+[STEP 433] A:    0 | B:    2 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000006e
+[STEP 434] A:    1 | B:    2 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000f7
+[STEP 435] A:    1 | B:    2 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000007f
+[STEP 436] A:    2 | B:    2 | C:    1 | D:    3 | SEL: 0 | OUT: 0x00000008
+[STEP 437] A:    2 | B:    2 | C:    1 | D:    3 | SEL: 1 | OUT: 0x00000080
+[STEP 438] A:    3 | B:    2 | C:    1 | D:    3 | SEL: 0 | OUT: 0x00000019
+[STEP 439] A:    3 | B:    2 | C:    1 | D:    3 | SEL: 1 | OUT: 0x00000091
+[STEP 440] A:    0 | B:    3 | C:    1 | D:    3 | SEL: 0 | OUT: 0x000000f7
+[STEP 441] A:    0 | B:    3 | C:    1 | D:    3 | SEL: 1 | OUT: 0x0000007f
+[STEP 442] A:    1 | B:    3 | C:    1 | D:    3 | SEL: 0 | OUT: 0x00000008
+[STEP 443] A:    1 | B:    3 | C:    1 | D:    3 | SEL: 1 | OUT: 0x00000080
+[STEP 444] A:    2 | B:    3 | C:    1 | D:    3 | SEL: 0 | OUT: 0x00000019
+[STEP 445] A:    2 | B:    3 | C:    1 | D:    3 | SEL: 1 | OUT: 0x00000091
+[STEP 446] A:    3 | B:    3 | C:    1 | D:    3 | SEL: 0 | OUT: 0x0000002a
+[STEP 447] A:    3 | B:    3 | C:    1 | D:    3 | SEL: 1 | OUT: 0x000000a2
+[STEP 448] A:    0 | B:    0 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000b5
+[STEP 449] A:    0 | B:    0 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000005b
+[STEP 450] A:    1 | B:    0 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000c6
+[STEP 451] A:    1 | B:    0 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000006c
+[STEP 452] A:    2 | B:    0 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000d7
+[STEP 453] A:    2 | B:    0 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000007d
+[STEP 454] A:    3 | B:    0 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000e8
+[STEP 455] A:    3 | B:    0 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000008e
+[STEP 456] A:    0 | B:    1 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000c6
+[STEP 457] A:    0 | B:    1 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000006c
+[STEP 458] A:    1 | B:    1 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000d7
+[STEP 459] A:    1 | B:    1 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000007d
+[STEP 460] A:    2 | B:    1 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000e8
+[STEP 461] A:    2 | B:    1 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000008e
+[STEP 462] A:    3 | B:    1 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000f9
+[STEP 463] A:    3 | B:    1 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000009f
+[STEP 464] A:    0 | B:    2 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000d7
+[STEP 465] A:    0 | B:    2 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000007d
+[STEP 466] A:    1 | B:    2 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000e8
+[STEP 467] A:    1 | B:    2 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000008e
+[STEP 468] A:    2 | B:    2 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000f9
+[STEP 469] A:    2 | B:    2 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000009f
+[STEP 470] A:    3 | B:    2 | C:    2 | D:    3 | SEL: 0 | OUT: 0x0000000a
+[STEP 471] A:    3 | B:    2 | C:    2 | D:    3 | SEL: 1 | OUT: 0x000000a0
+[STEP 472] A:    0 | B:    3 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000e8
+[STEP 473] A:    0 | B:    3 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000008e
+[STEP 474] A:    1 | B:    3 | C:    2 | D:    3 | SEL: 0 | OUT: 0x000000f9
+[STEP 475] A:    1 | B:    3 | C:    2 | D:    3 | SEL: 1 | OUT: 0x0000009f
+[STEP 476] A:    2 | B:    3 | C:    2 | D:    3 | SEL: 0 | OUT: 0x0000000a
+[STEP 477] A:    2 | B:    3 | C:    2 | D:    3 | SEL: 1 | OUT: 0x000000a0
+[STEP 478] A:    3 | B:    3 | C:    2 | D:    3 | SEL: 0 | OUT: 0x0000001b
+[STEP 479] A:    3 | B:    3 | C:    2 | D:    3 | SEL: 1 | OUT: 0x000000b1
+[STEP 480] A:    0 | B:    0 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000a6
+[STEP 481] A:    0 | B:    0 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000006a
+[STEP 482] A:    1 | B:    0 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000b7
+[STEP 483] A:    1 | B:    0 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000007b
+[STEP 484] A:    2 | B:    0 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000c8
+[STEP 485] A:    2 | B:    0 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000008c
+[STEP 486] A:    3 | B:    0 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000d9
+[STEP 487] A:    3 | B:    0 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000009d
+[STEP 488] A:    0 | B:    1 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000b7
+[STEP 489] A:    0 | B:    1 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000007b
+[STEP 490] A:    1 | B:    1 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000c8
+[STEP 491] A:    1 | B:    1 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000008c
+[STEP 492] A:    2 | B:    1 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000d9
+[STEP 493] A:    2 | B:    1 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000009d
+[STEP 494] A:    3 | B:    1 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000ea
+[STEP 495] A:    3 | B:    1 | C:    3 | D:    3 | SEL: 1 | OUT: 0x000000ae
+[STEP 496] A:    0 | B:    2 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000c8
+[STEP 497] A:    0 | B:    2 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000008c
+[STEP 498] A:    1 | B:    2 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000d9
+[STEP 499] A:    1 | B:    2 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000009d
+[STEP 500] A:    2 | B:    2 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000ea
+[STEP 501] A:    2 | B:    2 | C:    3 | D:    3 | SEL: 1 | OUT: 0x000000ae
+[STEP 502] A:    3 | B:    2 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000fb
+[STEP 503] A:    3 | B:    2 | C:    3 | D:    3 | SEL: 1 | OUT: 0x000000bf
+[STEP 504] A:    0 | B:    3 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000d9
+[STEP 505] A:    0 | B:    3 | C:    3 | D:    3 | SEL: 1 | OUT: 0x0000009d
+[STEP 506] A:    1 | B:    3 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000ea
+[STEP 507] A:    1 | B:    3 | C:    3 | D:    3 | SEL: 1 | OUT: 0x000000ae
+[STEP 508] A:    2 | B:    3 | C:    3 | D:    3 | SEL: 0 | OUT: 0x000000fb
+[STEP 509] A:    2 | B:    3 | C:    3 | D:    3 | SEL: 1 | OUT: 0x000000bf
+[STEP 510] A:    3 | B:    3 | C:    3 | D:    3 | SEL: 0 | OUT: 0x0000000c
+[STEP 511] A:    3 | B:    3 | C:    3 | D:    3 | SEL: 1 | OUT: 0x000000c0
+--------------------------------------------------------------------------------
+[SIM END] Verification Finished Successfully.
+--------------------------------------------------------------------------------
+$finish called at time : 5140 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/11_Module/testbench.v" Line 68
+xsim: Time (s): cpu = 00:00:11 ; elapsed = 00:00:07 . Memory (MB): peak = 10837.152 ; gain = 611.832 ; free physical = 7678 ; free virtual = 13572
 close_sim
 INFO: [Simtcl 6-16] Simulation closed
 exit
-INFO: [Common 17-206] Exiting xsim at Mon Jul 20 14:32:07 2026...
+INFO: [Common 17-206] Exiting xsim at Wed Aug 19 01:52:33 2026...
