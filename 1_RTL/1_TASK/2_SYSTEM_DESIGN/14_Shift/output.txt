@@ -1,4 +1,4 @@
-load = 0, d=0000
+load = 0, d=xxxx
 load = 1, d=1010
 load = 0, d=1010, q=1010 
 load = 0, d=1010, q=0101 

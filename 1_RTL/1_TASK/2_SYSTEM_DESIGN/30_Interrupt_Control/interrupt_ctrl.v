@@ -160,7 +160,7 @@ always @ (posedge i_clk or negedge i_rst_n) begin
 	end
 
 	else begin
-		
+	
 		case(o_interrupt_active) 
 			
 			1'b0: if(w_masked_req !=0) begin

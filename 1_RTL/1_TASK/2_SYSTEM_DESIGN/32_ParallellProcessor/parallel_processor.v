@@ -22,6 +22,8 @@ reg [(DATA_WIDTH * NUM_PATHS) -1 :0] o_data_out;
 reg o_data_out_valid;
 
 
+
+
 always @(posedge i_clk or posedge i_rst) begin
 	if(i_rst) begin
 		o_data_out <= { (DATA_WIDTH * NUM_PATHS) {1'b0} };
@@ -29,16 +31,18 @@ always @(posedge i_clk or posedge i_rst) begin
 	end
 
 	else begin
-		o_data_out_valid <= i_data_valid; 	
+		 	
+		o_data_out_valid <= i_data_valid;
 	
 		if(i_data_valid) begin
 			o_data_out [7 :0]  <= i_data_in+1'b1;
 			o_data_out [15:8]  <= i_data_in-1'b1;
 			o_data_out [23:16]  <= i_data_in ^8'hFF;
 			o_data_out [31:24]  <= i_data_in & 8'hAA;
+			
 		end
 
-	else o_data_out <= o_data_out;
+	
 	
 	end
 

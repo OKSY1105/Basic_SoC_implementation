@@ -1,84 +1,79 @@
 `timescale 1ns / 1ps
 
 module testbench;
-    // 테스트 파라미터
-    localparam INPUT_FREQ   = 100_000_000;  // 100 MHz
-    localparam OUTPUT_FREQ  = 25_000_000;   // 25 MHz
-    localparam INPUT_PERIOD  = 1000000000 / INPUT_FREQ;   // 입력 클럭 주기 (ns)
-    localparam OUTPUT_PERIOD = 1000000000 / OUTPUT_FREQ;  // 예상 출력 클럭 주기 (ns)
+    // 동작 파라미터 정의
+    localparam integer CLK_SRC_HZ   = 100_000_000; // 100 MHz
+    localparam integer CLK_TGT_HZ   = 25_000_000;  // 25 MHz
+    localparam integer T_IN_NS      = 1_000_000_000 / CLK_SRC_HZ; // 10 ns
+    localparam integer T_OUT_NS     = 1_000_000_000 / CLK_TGT_HZ; // 40 ns
 
-    // 테스트 신호
-    reg clk_in;
-    reg rst_n;
-    wire clk_out;
-    integer file;   
+    // 테스트벤치 신호
+    reg  tb_clk_in  = 1'b0;
+    reg  tb_rst_n   = 1'b0;
+    wire tb_clk_out;
+    integer fd_out;
 
-    // 클럭 분주기 인스턴스 (포트 이름 맞춤)
+    // 분주기 인스턴스
     clock_divider #(
-        .INPUT_FREQ(INPUT_FREQ),
-        .OUTPUT_FREQ(OUTPUT_FREQ)
-    ) u_clock_divider (
-        .i_clk(clk_in),
-        .i_rst_n(rst_n),
-        .o_clk(clk_out)
+        .INPUT_FREQ(CLK_SRC_HZ),
+        .OUTPUT_FREQ(CLK_TGT_HZ)
+    ) u_dut (
+        .i_clk(tb_clk_in),
+        .i_rst_n(tb_rst_n),
+        .o_clk(tb_clk_out)
     );
 
-    // 클럭 생성
+    // 100MHz 입력 클럭 생성
+    always #(T_IN_NS / 2) tb_clk_in = ~tb_clk_in;
+
+    // 시뮬레이션 제어 시퀀스
     initial begin
-        clk_in = 0;
-        forever #(INPUT_PERIOD/2) clk_in = ~clk_in;
-    end
+        fd_out = $fopen("output.txt", "w");
 
-    // 테스트 시나리오
-    initial begin
-        file = $fopen("output.txt", "w");
-        // 초기화
-        rst_n = 0;
-        #(INPUT_PERIOD*10);
-        rst_n = 1;
+        // 리셋 시퀀스 (10 사이클 유지 후 해제)
+        tb_rst_n = 1'b0;
+        #(T_IN_NS * 10);
+        tb_rst_n = 1'b1;
 
-        // 출력 클럭 관찰
-        #(OUTPUT_PERIOD*20);
-
-        // 테스트 종료
-        $fclose(file);  
+        // 20 사이클 동안 출력 관찰 후 종료
+        #(T_OUT_NS * 20);
+        $fclose(fd_out);
         $finish;
     end
 
-    // 출력 클럭 주기 및 듀티 사이클 체크
-    real last_rise = 0;
-    real last_fall = 0;
-    real period = 0;
-    real high_time = 0;
-    real duty_cycle = 0;
+    // 타이밍 측정 변수
+    real t_rise_prev = 0.0;
+    real t_fall_prev = 0.0;
+    real t_cycle     = 0.0;
+    real t_high      = 0.0;
+    real duty_val    = 0.0;
 
-    always @(posedge clk_out) begin
-        if (last_rise != 0) begin
-            period = $realtime - last_rise;
-            
-            // 내부 계산 시 음수/시점 오차 방지 보완
-            high_time = last_fall - last_rise;
-            duty_cycle = (high_time / period) * 100.0;
-
-            // ★ 원본과 100% 동일한 파일 출력 포맷 (%0d ns, %0.2f%%)
-            $fdisplay(file, "Output clock period = %0d ns, Duty cycle = %0.2f%%", 
-                      period, duty_cycle);
-            
-            // 주기 검증
-            if (period < OUTPUT_PERIOD*0.99 || period > OUTPUT_PERIOD*1.01) begin
-                $fdisplay(file, "Warning: Unexpected output clock period. Expected %0d ns", OUTPUT_PERIOD);
-            end
-            
-            // 듀티 사이클 검증
-            if (duty_cycle < 49 || duty_cycle > 51) begin
-                $fdisplay(file, "Warning: Duty cycle is out of 49-51% range");
-            end
-        end
-        last_rise = $realtime;
+    // 하강 에지 타임스탬프 기록
+    always @(negedge tb_clk_out) begin
+        t_fall_prev = $realtime;
     end
 
-    always @(negedge clk_out) begin
-        last_fall = $realtime;
+    // 상승 에지 주기 및 듀티비 연산/검증
+    always @(posedge tb_clk_out) begin
+        if (t_rise_prev > 0.0) begin
+            t_cycle  = $realtime - t_rise_prev;
+            t_high   = t_fall_prev - t_rise_prev;
+            duty_val = (t_high / t_cycle) * 100.0;
+
+            // 원본과 동일한 포맷 기록
+            $fdisplay(fd_out, "Output clock period = %0d ns, Duty cycle = %0.2f%%", 
+                      t_cycle, duty_val);
+
+            // 오차 검증 및 경고 출력
+            if (t_cycle < (T_OUT_NS * 0.99) || t_cycle > (T_OUT_NS * 1.01)) begin
+                $fdisplay(fd_out, "Warning: Unexpected output clock period. Expected %0d ns", T_OUT_NS);
+            end
+
+            if (duty_val < 49.0 || duty_val > 51.0) begin
+                $fdisplay(fd_out, "Warning: Duty cycle is out of 49-51% range");
+            end
+        end
+        t_rise_prev = $realtime;
     end
 
 endmodule

@@ -46,3 +46,7 @@ source sean_sim.tcl
 ## }
 ## run 10000ns
 $finish called at time : 110 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/41_ParallelAdder/testbench.sv" Line 86
+close_sim
+INFO: [Simtcl 6-16] Simulation closed
+exit
+INFO: [Common 17-206] Exiting xsim at Wed Aug 19 15:55:08 2026...

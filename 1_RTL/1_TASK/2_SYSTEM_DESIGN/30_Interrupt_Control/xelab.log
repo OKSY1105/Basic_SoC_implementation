@@ -1,7 +1,7 @@
 Vivado Simulator v2024.2.0
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
-Running: /home/sean/Vivado/2024.2/bin/unwrapped/lnx64.o/xelab testbench --debug wave 
+Running: /home/sean/Vivado/2024.2/bin/unwrapped/lnx64.o/xelab testbench -s testbench 
 Multi-threading is on. Using 10 slave threads.
 Starting static elaboration
 Pass Through NonSizing Optimizer
@@ -11,4 +11,4 @@ Completed simulation data flow analysis
 Time Resolution for simulation is 1ps
 Compiling module work.interrupt_ctrl
 Compiling module work.testbench
-Built simulation snapshot work.testbench
+Built simulation snapshot testbench

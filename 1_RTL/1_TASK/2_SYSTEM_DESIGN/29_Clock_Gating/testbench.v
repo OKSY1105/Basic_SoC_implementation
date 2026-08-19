@@ -2,79 +2,79 @@
 
 module testbench;
 
-    // ==========================================
-    // Signal Declarations (변경된 포트 스타일 반영)
-    // ==========================================
-    reg        i_clk;
-    reg        i_rst_n;
-    reg        i_en;
-    reg  [7:0] i_data;
-    
-    wire [7:0] o_data_out;
-    
-    integer file;   
+  // ==========================================
+  // 신호 정의 (tb_ Prefix 적용)
+  // ==========================================
+  reg        tb_sys_clk;
+  reg        tb_sys_rst_n;
+  reg        tb_gate_en;
+  reg  [7:0] tb_din;
 
-    // ==========================================
-    // Module Instantiation (DU)
-    // ==========================================
-    clock_gating u_clock_gating (
-        .i_clk      ( i_clk      ),
-        .i_rst_n    ( i_rst_n    ),
-        .i_en       ( i_en       ),
-        .i_data     ( i_data     ),
-        .o_data_out ( o_data_out )
-    );
+  wire [7:0] tb_dout;
 
-    // ==========================================
-    // Clock Generation
-    // ==========================================
-    always #5 i_clk = ~i_clk;
+  integer    fd_log;
 
-    // ==========================================
-    // Test Stimulus
-    // ==========================================
-    initial begin
-        // 초기화
-        i_clk   = 0;
-        i_rst_n = 0;
-        i_en    = 0;
-        i_data  = 8'h00;
-        file    = $fopen("output.txt", "w");
+  // ==========================================
+  // DUT 인스턴스화
+  // ==========================================
+  clock_gating u_clock_gating (
+    .i_clk      ( tb_sys_clk   ),
+    .i_rst_n    ( tb_sys_rst_n ),
+    .i_en       ( tb_gate_en   ),
+    .i_data     ( tb_din       ),
+    .o_data_out ( tb_dout      )
+  );
 
-        // 리셋 해제
-        #20 i_rst_n = 1;
+  // ==========================================
+  // 100MHz 클록 생성 (10ns 주기)
+  // ==========================================
+  always #5 tb_sys_clk = ~tb_sys_clk;
 
-        // 테스트 1: i_en이 0일 때
-        #7  i_data = 8'hAA;
-        #20;
+  // ==========================================
+  // 자극 인가 시퀀스
+  // ==========================================
+  initial begin
+    // 초기화
+    tb_sys_clk   = 1'b0;
+    tb_sys_rst_n = 1'b0;
+    tb_gate_en   = 1'b0;
+    tb_din       = 8'h00;
+    fd_log       = $fopen("output.txt", "w");
 
-        // 테스트 2: i_en을 1로 설정
-        i_en = 1;
-        #20 i_data = 8'h55;
-        #20;
+    // 리셋 해제
+    #20 tb_sys_rst_n = 1'b1;
 
-        // 테스트 3: i_en을 다시 0으로 설정
-        i_en = 0;
-        #20 i_data = 8'hFF;
-        #20;
+    // 단계 1: 게이트 비활성화 상태 데이터 변경
+    #7  tb_din = 8'hAA;
+    #20;
 
-        // 테스트 4: i_en을 다시 1로 설정
-        i_en = 1;
-        #20;
+    // 단계 2: 게이트 활성화 및 데이터 인가
+    tb_gate_en = 1'b1;
+    #20 tb_din = 8'h55;
+    #20;
 
-        // 파일 닫기 및 시뮬레이션 종료
-        $fflush(file); // 마지막 출력 버퍼 저장
-        $fclose(file);  
-        #20 $finish;
-    end
+    // 단계 3: 게이트 비활성화 및 데이터 인가
+    tb_gate_en = 1'b0;
+    #20 tb_din = 8'hFF;
+    #20;
 
-    // ==========================================
-    // Logging & Monitoring
-    // ==========================================
-    always @(posedge i_clk) begin
-        $fdisplay(file, "i_en=%b, i_data=%h, o_data_out=%h", 
-                  i_en, i_data, o_data_out);
-        $fflush(file); // 버퍼 비우기 (파일 잘림 방지)
-    end
+    // 단계 4: 게이트 재활성화
+    tb_gate_en = 1'b1;
+    #20;
+
+    // 시뮬레이션 완료 처리
+    $fflush(fd_log);
+    $fclose(fd_log);
+    #20 $finish;
+  end
+
+  // ==========================================
+  // 사이클 단위 로깅 블록
+  // ==========================================
+  always @(posedge tb_sys_clk) begin
+    $fdisplay(fd_log, "i_en=%b, i_data=%h, o_data_out=%h",
+              tb_gate_en, tb_din, tb_dout);
+    $fflush(fd_log);
+  end
 
 endmodule

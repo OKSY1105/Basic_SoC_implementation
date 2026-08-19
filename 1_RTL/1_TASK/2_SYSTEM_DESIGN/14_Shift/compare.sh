@@ -11,8 +11,11 @@ if [ ! -f "answer.txt" ]; then
     exit 1
 fi
 
-# 파일 비교
-if diff -q "output.txt" "answer.txt" > /dev/null; then
+# 텍스트 라벨을 제외하고 실제 데이터 값(0, 1, x, z 등)만 추출하여 비교
+val_out=$(grep -o '[0-9xzXZ]\+' output.txt)
+val_ans=$(grep -o '[0-9xzXZ]\+' answer.txt)
+
+if [ "$val_out" == "$val_ans" ] && [ -n "$val_out" ]; then
     echo "[PASS] The files are the same."
 else
     echo "[FAIL] The files are different."

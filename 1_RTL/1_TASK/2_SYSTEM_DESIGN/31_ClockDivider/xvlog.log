@@ -2,4 +2,4 @@ INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation
 INFO: [VRFC 10-311] analyzing module clock_divider
 INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/31_ClockDivider/testbench.v" into library work
 INFO: [VRFC 10-311] analyzing module testbench
-WARNING: [VRFC 10-1581] illegal format specifier   for fdisplay [/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/31_ClockDivider/testbench.v:74]
+WARNING: [VRFC 10-1581] illegal format specifier   for fdisplay [/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/31_ClockDivider/testbench.v:73]

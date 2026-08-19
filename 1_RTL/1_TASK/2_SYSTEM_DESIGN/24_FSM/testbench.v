@@ -2,63 +2,70 @@
 
 module testbench;
 
-    // ==========================================
-    // Signal Declarations
-    // ==========================================
-    reg         i_clk;
-    reg         i_reset;
-    reg         i_in;
-    wire        o_out;
-    integer     file;
+  // ==========================================
+  // 신호 정의 (tb_ Prefix 적용)
+  // ==========================================
+  reg        tb_clk;
+  reg        tb_rst_n_inv; // active-high reset
+  reg        tb_serial_in;
+  wire       tb_fsm_out;
+  integer    fd_log;
 
-    // ==========================================
-    // Module Instantiation
-    // ==========================================
-    // fsm 모듈의 포트(i_clk, i_reset, i_in, o_out)에 1:1 정확히 매핑
-    fsm u_fsm (
-        .i_clk   ( i_clk   ),
-        .i_reset ( i_reset ),
-        .i_in    ( i_in    ),
-        .o_out   ( o_out   )
-    );
+  // ==========================================
+  // DUT 인스턴스화
+  // ==========================================
+  fsm u_fsm (
+    .i_clk   ( tb_clk        ),
+    .i_reset ( tb_rst_n_inv  ),
+    .i_in    ( tb_serial_in  ),
+    .o_out   ( tb_fsm_out    )
+  );
 
-    // ==========================================
-    // Clock Generation
-    // ==========================================
-    initial i_clk = 0;
-    always #5 i_clk = ~i_clk; // 10ns clock period
+  // ==========================================
+  // 클록 생성 (10ns 주기)
+  // ==========================================
+  initial tb_clk = 1'b0;
+  always #5 tb_clk = ~tb_clk;
 
-    // ==========================================
-    // Test Stimulus
-    // ==========================================
-    reg [9:0] in_sequence = 10'b0111101110; // 원하는 입력 시퀀스
-    integer i;
+  // ==========================================
+  // 테스트 자극 시퀀스
+  // ==========================================
+  localparam [9:0] PATTERN_SEQ = 10'b0111101110;
+  integer          bit_idx;
 
-    initial begin
-        file = $fopen("output.txt", "w");
-        i_reset = 1;
-        i_in <= 0;
-        #12;
-        i_reset = 0;
-
-        for (i = 0; i < 10; i = i + 1) begin
-            @(posedge i_clk);
-            i_in <= in_sequence[i];
-        end
-
-        #20;
-        $fclose(file); 
-        $finish;
+  initial begin
+    fd_log = $fopen("output.txt", "w");
+    if (!fd_log) begin
+      $display("Error: Failed to open output.txt");
+      $finish;
     end
 
-    // ==========================================
-    // Checker and Display
-    // ==========================================
-    reg [3:0] cycle_count = 0;
+    // 리셋 초기화 시퀀스
+    tb_rst_n_inv = 1'b1;
+    tb_serial_in <= 1'b0;
+    #12;
+    tb_rst_n_inv = 1'b0;
 
-    always @(posedge i_clk) begin
-        cycle_count <= cycle_count + 1;
-        $fdisplay(file, "Cycle %0d: in = %b, out = %b", cycle_count, i_in, o_out);
+    // 10비트 패턴 순차 인가
+    for (bit_idx = 0; bit_idx < 10; bit_idx = bit_idx + 1) begin
+      @(posedge tb_clk);
+      tb_serial_in <= PATTERN_SEQ[bit_idx];
     end
+
+    #20;
+    $fclose(fd_log);
+    $finish;
+  end
+
+  // ==========================================
+  // 사이클 카운터 및 로깅 블록
+  // ==========================================
+  reg [3:0] tb_tick_cnt = 4'd0;
+
+  always @(posedge tb_clk) begin
+    tb_tick_cnt <= tb_tick_cnt + 4'd1;
+    // 원본과 100% 동일한 문자열 서식으로 출력
+    $fdisplay(fd_log, "Cycle %0d: in = %b, out = %b", tb_tick_cnt, tb_serial_in, tb_fsm_out);
+  end
 
 endmodule

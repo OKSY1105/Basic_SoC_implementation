@@ -1,110 +1,125 @@
 `timescale 1ns / 1ps
+
 module testbench;
- 
-    // 파라미터
-    parameter DEPTH = 256;
 
-    // clog2 함수 정의
-    function integer clog2;
-        input integer value;
-        integer i;
-        begin
-            clog2 = 0;
-            for (i = value - 1; i > 0; i = i >> 1) begin
-                clog2 = clog2 + 1;
-            end
-        end
-    endfunction
+  // 파라미터 정의
+  parameter MEM_DEPTH  = 256;
+  parameter DATA_WIDTH = 8;
 
-    // 테스트벤치 신호
-    reg clk;
-    reg rst;
-    reg we;
-    reg [clog2(DEPTH)-1:0] addr;
-    reg [7:0] din;
-    wire [7:0] dout;
-    integer file;  
+  // 비트 폭 계산 함수 (while문 기반으로 재구성)
+  function integer get_addr_width;
+    input integer depth_val;
+    integer temp;
+    begin
+      get_addr_width = 0;
+      temp = depth_val - 1;
+      while (temp > 0) begin
+        get_addr_width = get_addr_width + 1;
+        temp = temp >> 1;
+      end
+    end
+  endfunction
 
-    // 테스트 결과 확인을 위한 변수
-    integer errors;
+  localparam ADDR_WIDTH = get_addr_width(MEM_DEPTH);
 
-    // DUT 인스턴스화 (수정된 포트명에 맞게 매핑)
-    clog2 #(
-        .DEPTH(DEPTH)
-    ) dut (
-        .i_clk(clk),
-        .i_rst(rst),
-        .i_we(we),
-        .i_addr(addr),
-        .i_din(din),
-        .o_dout(dout)
-    );
+  // 테스트 신호 선언
+  reg                    tb_clk;
+  reg                    tb_rst;
+  reg                    tb_we;
+  reg  [ADDR_WIDTH-1:0]  tb_addr;
+  reg  [DATA_WIDTH-1:0]  tb_din;
+  wire [DATA_WIDTH-1:0]  tb_dout;
 
-    // 클록 생성
-    initial begin
-        clk = 0;
-        forever #5 clk = ~clk;
+  integer log_fd;
+  integer err_cnt;
+
+  // DUT 인스턴스화
+  clog2 #(
+    .DEPTH(MEM_DEPTH)
+  ) u_dut (
+    .i_clk   (tb_clk),
+    .i_rst   (tb_rst),
+    .i_we    (tb_we),
+    .i_addr  (tb_addr),
+    .i_din   (tb_din),
+    .o_dout  (tb_dout)
+  );
+
+  // 100MHz 클럭 생성 (5ns 반주기)
+  initial begin
+    tb_clk = 1'b0;
+    forever #5 tb_clk = ~tb_clk;
+  end
+
+  // 검증용 Task
+  task check_data;
+    input [ADDR_WIDTH-1:0] target_addr;
+    input [DATA_WIDTH-1:0] exp_val;
+    begin
+      @(posedge tb_clk);
+      tb_addr <= target_addr;
+      tb_we   <= 1'b0;
+      @(posedge tb_clk);
+      #1;
+      if (tb_dout !== exp_val) begin
+        $fdisplay(log_fd, "Error: Address %0d, Expected %0h, Got %0h", target_addr, exp_val, tb_dout);
+        err_cnt = err_cnt + 1;
+      end else begin
+        $fdisplay(log_fd, "Success: Address %0d, Data %0h", target_addr, tb_dout);
+      end
+    end
+  endtask
+
+  // 메인 테스트 시퀀스
+  initial begin
+    log_fd = $fopen("output.txt", "w");
+
+    // 신호 초기화
+    err_cnt = 0;
+    tb_rst  = 1'b1;
+    tb_we   = 1'b0;
+    tb_addr = {ADDR_WIDTH{1'b0}};
+    tb_din  = {DATA_WIDTH{1'b0}};
+
+    // 리셋 해제 및 초기 상태 확인
+    #10 tb_rst = 1'b0;
+    check_data(0, 8'h00);
+    check_data(MEM_DEPTH - 1, 8'h00);
+
+    // 데이터 쓰기 동작
+    @(posedge tb_clk) begin
+      tb_we   <= 1'b1;
+      tb_addr <= 5;
+      tb_din  <= 8'hA5;
+    end
+    @(posedge tb_clk) begin
+      tb_we   <= 1'b1;
+      tb_addr <= 10;
+      tb_din  <= 8'h5A;
+    end
+    @(posedge tb_clk) begin
+      tb_we   <= 1'b0;
     end
 
-    // 체커 태스크
-    task check_data;
-        input [clog2(DEPTH)-1:0] check_addr;
-        input [7:0] expected;
-        begin
-            @(posedge clk);
-            addr <= check_addr;
-            we <= 0;
-            @(posedge clk);
-            #1;
-            if (dout !== expected) begin
-                $fdisplay(file,"Error: Address %0d, Expected %0h, Got %0h", check_addr, expected, dout);
-                errors = errors + 1;
-            end else begin
-                $fdisplay(file,"Success: Address %0d, Data %0h", check_addr, dout);
-            end
-        end
-    endtask
+    // 데이터 읽기 검증
+    check_data(5, 8'hA5);
+    check_data(10, 8'h5A);
 
-    // 테스트 시퀀스
-    initial begin
-        file = $fopen("output.txt", "w");
-        // 초기화
-        errors = 0;
-        rst = 1;
-        we = 0;
-        addr = 0;
-        din = 0;
+    // 미기록 영역 확인 (기본값 0x00)
+    check_data(15, 8'h00);
 
-        // 리셋 및 리셋 후 상태 확인
-        #10 rst = 0;
-        check_data(0, 8'h00);
-        check_data(DEPTH-1, 8'h00);
+    // 주소 비트 수 출력
+    $fdisplay(log_fd, "Address width: %0d bits", get_addr_width(MEM_DEPTH));
 
-        // 쓰기 테스트
-        @(posedge clk) we <= 1; addr <= 5; din <= 8'hA5;
-        @(posedge clk) we <= 1; addr <= 10; din <= 8'h5A;
-        @(posedge clk) we <= 0;
+    // 최종 결과 집계
+    if (err_cnt == 0)
+      $fdisplay(log_fd, "All tests passed successfully!");
+    else
+      $fdisplay(log_fd, "Tests completed with %0d errors.", err_cnt);
 
-        // 읽기 테스트
-        check_data(5, 8'hA5);
-        check_data(10, 8'h5A);
-
-        // 존재하지 않는 데이터 체크 (초기값 0 예상)
-        check_data(15, 8'h00);
-
-        // 주소 범위 확인
-        $fdisplay(file,"Address width: %0d bits", clog2(DEPTH));
-
-        // 테스트 결과 보고
-        if (errors == 0)
-            $fdisplay(file,"All tests passed successfully!");
-        else
-            $fdisplay(file,"Tests completed with %0d errors.", errors);
-
-        // 종료
-        #10 
-        $fclose(file);  
-        $finish;
-    end
+    #10;
+    $fclose(log_fd);
+    $finish;
+  end
 
 endmodule

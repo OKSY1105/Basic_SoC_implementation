@@ -1,1 +1,0 @@
-"testbench" --debug "wave" 

@@ -24,3 +24,4 @@
 start_gui
 source xsim.dir/work.testbench/xsim_script.tcl
 source sean_sim.tcl
+close_sim
