@@ -1,6 +1,6 @@
 xvlog -sv ./*.sv ./testbench.sv 
 #xvlog -sv ./design/*.sv ./testbench/testbench.sv -d SV_STYLE
-#xelab testbench -s testbench
-#xsim testbench -R
-xelab testbench --debug wave
-xsim testbench -gui -wdb sim_tb.wdb -tclbatch sgdh_sim.tcl & 
+xelab testbench -s testbench
+xsim testbench -R
+#xelab testbench --debug wave
+#xsim testbench -gui -wdb sim_tb.wdb -tclbatch sean_sim.tcl & 

@@ -1,421 +1,401 @@
 `timescale 1ns / 1ps
+
 module testbench;
-  //------------------------------------------
-  // Global Clock & Reset
-  //------------------------------------------
-  reg clk;
-  reg reset;
-  
+
+  //----------------------------------------------------------------------------
+  // Global Clock & Async Reset Generator
+  //----------------------------------------------------------------------------
+  reg tb_clk;
+  reg tb_rst;
+
   initial begin
-    clk = 0;
-    forever #5 clk = ~clk; // 100MHz
-  end
-  
-  initial begin
-    reset = 1;
-    #22 reset = 0; // 비동기 리셋 해제
+    tb_clk = 1'b0;
+    forever #5 tb_clk = ~tb_clk; // 100MHz 주파수
   end
 
   initial begin
-    $timeformat(-9, 0, "ns", 10); // -9: ns, 0: decimal place, "ns": unit, 10:minimum field width
+    tb_rst = 1'b1;
+    #22 tb_rst = 1'b0; // 22ns 비동기 리셋 해제
   end
-  
 
-  //1. L1_P1 Parity------------------------------------------
-  integer f1;
-  wire parity_error; 
-  reg  [7:0] p1_data_in;
-  
+  initial begin
+    $timeformat(-9, 0, "ns", 10);
+  end
+
+  //----------------------------------------------------------------------------
+  // 1. Parity Checker (output_1.txt)
+  //----------------------------------------------------------------------------
+  integer fd_p1;
+  reg  [7:0] p1_stim_data;
+  wire       w_parity_err;
+
   parity_checker u_parity_checker (
-    .data_in      (  p1_data_in      ),
-    .parity_bit   (  1'b1         ),
-    .parity_error (  parity_error )
+    .data_in      (p1_stim_data),
+    .parity_bit   (1'b1),
+    .parity_error (w_parity_err)
   );
 
   initial begin
     forever begin
-      @(p1_data_in);
-        $fdisplay(f1,"data_in = %b, parity_bit = %d, parity_error = %d ", p1_data_in, 1'b1, parity_error);
+      @(p1_stim_data);
+      $fdisplay(fd_p1, "data_in = %b, parity_bit = %d, parity_error = %d ", p1_stim_data, 1'b1, w_parity_err);
     end
   end
+
   initial begin
-    f1 = $fopen("output_1.txt", "w");
-    p1_data_in = 0;
+    fd_p1 = $fopen("output_1.txt", "w");
+    p1_stim_data = 8'h00;
     #5;
-    repeat(255) #1 p1_data_in = p1_data_in + 8'd1;
+    repeat(255) #1 p1_stim_data = p1_stim_data + 8'd1;
     #5;
-    $fclose(f1);
+    $fclose(fd_p1);
   end
 
+  //----------------------------------------------------------------------------
+  // 2. FSM Sequence Detector (output_2.txt)
+  //----------------------------------------------------------------------------
+  reg        fsm_stim_in;
+  wire       w_fsm_out;
+  integer    fd_p2;
+  integer    p2_active;
+  integer    p2_step;
+  reg  [3:0] p2_cycle_cnt;
 
-  //2. L1_P6 FSM ------------------------------------------
-    reg in;
-    wire out;
-    integer f2;  
-    integer f2_flag;  
-  integer f2_i;
-    // Instantiate the FSM
-    fsm u_fsm (
-        .clk(clk),
-        .reset(reset),
-        .in(in),
-        .out(out)
-    );
+  fsm u_fsm (
+    .clk   (tb_clk),
+    .reset (tb_rst),
+    .in    (fsm_stim_in),
+    .out   (w_fsm_out)
+  );
 
-    reg [9:0] in_sequence = 10'b0111101110; // 원하는 입력 시퀀스
-    // Test stimulus
-    initial begin
-      f2_flag = 1;
-      f2 = $fopen("output_2.txt", "w");
-      in = 0;
-      #32;
-      for (f2_i = 0; f2_i < 10; f2_i = f2_i + 1) begin
-          @(posedge clk);
-          in <= in_sequence[f2_i];
-      end
+  // 10비트 패턴: 0111101110
+  reg [9:0] fsm_pattern;
 
-      #20;
-      f2_flag = 0;
-      $fclose(f2);  
+  initial begin
+    p2_active   = 1;
+    p2_cycle_cnt = 4'd0;
+    fsm_pattern = 10'b0111101110;
+    fd_p2       = $fopen("output_2.txt", "w");
+    fsm_stim_in = 1'b0;
+
+    #32;
+    for (p2_step = 0; p2_step < 10; p2_step = p2_step + 1) begin
+      @(posedge tb_clk);
+      fsm_stim_in <= fsm_pattern[p2_step];
     end
 
-    // Checker and display
-    reg [3:0] cycle_count = 0;
-    always @(posedge clk) begin
-        if(f2_flag) begin
-          cycle_count <= cycle_count + 1;
-          $fdisplay(f2,"Cycle %0d: in = %b, out = %b", cycle_count, in, out);
-        end
+    #20;
+    p2_active = 0;
+    $fclose(fd_p2);
+  end
+
+  always @(posedge tb_clk) begin
+    if (p2_active) begin
+      p2_cycle_cnt <= p2_cycle_cnt + 1'b1;
+      $fdisplay(fd_p2, "Cycle %0d: in = %b, out = %b", p2_cycle_cnt, fsm_stim_in, w_fsm_out);
     end
+  end
 
-  //3. L1_P7 counter ------------------------------------------
-    wire [7:0] out_decade;   
-    integer f3;  
-    integer f3_flag;  
-
+  //----------------------------------------------------------------------------
+  // 3. Decade Counter (output_3.txt)
+  //----------------------------------------------------------------------------
+  wire [7:0] w_decade_cnt;
+  integer    fd_p3;
+  integer    p3_active;
 
   counter u_counter (
-    .clk              (  clk          ),
-    .areset           (  reset        ),
-    .out_decade       (  out_decade   )   
+    .clk        (tb_clk),
+    .areset     (tb_rst),
+    .out_decade (w_decade_cnt)
   );
 
   initial begin
-    f3_flag = 1;
-    f3 = $fopen("output_3.txt", "w");
+    p3_active = 1;
+    fd_p3     = $fopen("output_3.txt", "w");
     #1100;
-    f3_flag = 0;
-    $fclose(f3);  
-  end
-  
-  always @(posedge clk) begin
-    if(f3_flag) begin
-      $fdisplay(f3,"o_decade = %2h", out_decade);
-    end
+    p3_active = 0;
+    $fclose(fd_p3);
   end
 
-  //4. L1_P8 bin2gray ------------------------------------------
-    reg [3:0] binary_in;
-    wire [3:0] gray_out;
-    integer f4;  
+  always @(posedge tb_clk) begin
+    if (p3_active) begin
+      $fdisplay(fd_p3, "o_decade = %2h", w_decade_cnt);
+    end
+  end
 
-    bin_2_gray #(.WIDTH(4)) u_bin_2_gray (
-        .binary_in(binary_in),
-        .gray_out(gray_out)
-    );
+  //----------------------------------------------------------------------------
+  // 4. Binary to Gray Converter (output_4.txt)
+  //----------------------------------------------------------------------------
+  reg  [3:0] bin_stim;
+  wire [3:0] w_gray_code;
+  integer    fd_p4;
+  integer    p4_iter;
 
-    initial begin
-        f4 = $fopen("output_4.txt", "w");
-        $fmonitor(f4,"binary_in=%b gray_out=%b", binary_in, gray_out);
-        binary_in = 4'b0000; #10;
-        binary_in = 4'b0001; #10;
-        binary_in = 4'b0010; #10;
-        binary_in = 4'b0011; #10;
-        binary_in = 4'b0100; #10;
-        binary_in = 4'b0101; #10;
-        binary_in = 4'b0110; #10;
-        binary_in = 4'b0111; #10;
-        binary_in = 4'b1000; #10;
-        binary_in = 4'b1001; #10;
-        binary_in = 4'b1010; #10;
-        binary_in = 4'b1011; #10;
-        binary_in = 4'b1100; #10;
-        binary_in = 4'b1101; #10;
-        binary_in = 4'b1110; #10;
-        binary_in = 4'b1111; #10;
-        $fclose(f4);  
+  bin_2_gray #(.WIDTH(4)) u_bin_2_gray (
+    .binary_in (bin_stim),
+    .gray_out  (w_gray_code)
+  );
+
+  initial begin
+    fd_p4 = $fopen("output_4.txt", "w");
+    $fmonitor(fd_p4, "binary_in=%b gray_out=%b", bin_stim, w_gray_code);
+    
+    for (p4_iter = 0; p4_iter < 16; p4_iter = p4_iter + 1) begin
+      bin_stim = p4_iter[3:0];
+      #10;
+    end
+    $fclose(fd_p4);
+  end
+
+  //----------------------------------------------------------------------------
+  // 5. Clock Gating Unit (output_5.txt)
+  //----------------------------------------------------------------------------
+  reg        cg_enable;
+  reg  [7:0] cg_stim_data;
+  wire [7:0] w_cg_dout;
+  integer    fd_p5;
+  integer    p5_active;
+
+  clock_gating u_clock_gating (
+    .clk_in   (tb_clk),
+    .rst_n    (~tb_rst),
+    .enable   (cg_enable),
+    .data_in  (cg_stim_data),
+    .data_out (w_cg_dout)
+  );
+
+  initial begin
+    p5_active    = 1;
+    cg_enable    = 1'b0;
+    cg_stim_data = 8'h00;
+    fd_p5        = $fopen("output_5.txt", "w");
+
+    #22;
+    #7  cg_stim_data = 8'hAA;
+    #20;
+
+    cg_enable    = 1'b1;
+    #20 cg_stim_data = 8'h55;
+    #20;
+
+    cg_enable    = 1'b0;
+    #20 cg_stim_data = 8'hFF;
+    #20;
+
+    cg_enable    = 1'b1;
+    #20;
+
+    p5_active    = 0;
+    $fclose(fd_p5);
+  end
+
+  always @(posedge tb_clk) begin
+    if (p5_active) begin
+      $fdisplay(fd_p5, "Enable=%b, Data_in=%h, Data_out=%h", cg_enable, cg_stim_data, w_cg_dout);
+    end
+  end
+
+  //----------------------------------------------------------------------------
+  // 6. Interrupt Controller (output_6.txt)
+  //----------------------------------------------------------------------------
+  parameter INT_COUNT = 8;
+  reg  [INT_COUNT-1:0] irq_reqs;
+  reg                  irq_ack;
+  wire [INT_COUNT-1:0] w_irq_svc;
+  wire                 w_irq_act;
+  integer              fd_p6;
+  integer              p6_active;
+
+  interrupt_ctrl #(
+    .INT_COUNT(INT_COUNT)
+  ) u_interrupt_ctrl (
+    .clk                (tb_clk),
+    .rst_n              (~tb_rst),
+    .interrupt_requests (irq_reqs),
+    .interrupt_ack      (irq_ack),
+    .interrupt_service  (w_irq_svc),
+    .interrupt_active   (w_irq_act)
+  );
+
+  initial begin
+    p6_active = 1;
+    fd_p6     = $fopen("output_6.txt", "w");
+    irq_reqs  = {INT_COUNT{1'b0}};
+    irq_ack   = 1'b0;
+
+    #22;
+    #10 irq_reqs = 8'b00000001;
+    #20 irq_reqs = 8'b00000011;
+    #20 irq_reqs = 8'b10000011;
+    #20 irq_ack  = 1'b1;
+    #10 irq_ack  = 1'b0;
+    #20 irq_ack  = 1'b1;
+    #10 irq_ack  = 1'b0;
+    #20 irq_ack  = 1'b1;
+    #10 irq_ack  = 1'b0;
+    #10;
+    
+    p6_active = 0;
+    $fclose(fd_p6);
+  end
+
+  always @(posedge tb_clk) begin
+    if (p6_active) begin
+      $fdisplay(fd_p6, "Requests=%b, Active=%b, Service=%b", irq_reqs, w_irq_act, w_irq_svc);
+    end
+  end
+
+  //----------------------------------------------------------------------------
+  // 7. MSB One Extractor (output_7.txt)
+  //----------------------------------------------------------------------------
+  reg  [7:0] msb_stim_data;
+  wire [7:0] w_msb_one_out;
+  integer    fd_p7;
+
+  msb_one_extractor dut (
+    .data_in  (msb_stim_data),
+    .data_out (w_msb_one_out)
+  );
+
+  task check_msb_pattern;
+    input [7:0]     pattern;
+    input integer   case_idx;
+    begin
+      msb_stim_data = pattern;
+      #10;
+      $fdisplay(fd_p7, "Test Case %0d: Input = %b, Output = %b", case_idx, msb_stim_data, w_msb_one_out);
+    end
+  endtask
+
+  initial begin
+    fd_p7 = $fopen("output_7.txt", "w");
+    check_msb_pattern(8'b01100001, 1);
+    check_msb_pattern(8'b00100101, 2);
+    check_msb_pattern(8'b10000000, 3);
+    check_msb_pattern(8'b00000001, 4);
+    check_msb_pattern(8'b00000000, 5);
+    $fclose(fd_p7);
+  end
+
+  //----------------------------------------------------------------------------
+  // 8. Rising Edge Detector (output_8.txt)
+  //----------------------------------------------------------------------------
+  reg     edge_raw_sig;
+  wire    w_edge_pulse;
+  integer fd_p8;
+  integer p8_active;
+
+  rising_edge_detector uut (
+    .clk           (tb_clk),
+    .signal        (edge_raw_sig),
+    .edge_detected (w_edge_pulse)
+  );
+
+  initial begin
+    p8_active    = 0;
+    fd_p8        = $fopen("output_8.txt", "w");
+    edge_raw_sig = 1'b0;
+
+    #30;
+    p8_active = 1;
+
+    #10 edge_raw_sig = 1'b1;
+    #10 edge_raw_sig = 1'b0;
+
+    #20 edge_raw_sig = 1'b1;
+    #20 edge_raw_sig = 1'b1;
+    #10 edge_raw_sig = 1'b0;
+
+    #11 edge_raw_sig = 1'b1;
+    #5  edge_raw_sig = 1'b0;
+    #5  edge_raw_sig = 1'b1;
+    #5  edge_raw_sig = 1'b0;
+
+    #31 edge_raw_sig = 1'b1;
+    #20;
+
+    #10;
+    p8_active = 0;
+    $fclose(fd_p8);
+  end
+
+  always @(posedge tb_clk) begin
+    if (p8_active) begin
+      $fdisplay(fd_p8, "Time=%6t, Signal=%b, Edge Detected=%b", $time, edge_raw_sig, w_edge_pulse);
+    end
+  end
+
+  //----------------------------------------------------------------------------
+  // 9. Parameterized Memory (output_9.txt)
+  //----------------------------------------------------------------------------
+  parameter MEM_N1          = 4;
+  parameter MEM_DATA_WIDTH1 = 8;
+
+  reg  [MEM_N1-1:0]          mem_addr;
+  reg  [MEM_DATA_WIDTH1-1:0] mem_wdata;
+  reg                        mem_wr_en;
+  wire [MEM_DATA_WIDTH1-1:0] w_mem_rdata;
+
+  param_mem #(
+    .N          (MEM_N1),
+    .DATA_WIDTH (MEM_DATA_WIDTH1)
+  ) rom1 (
+    .clk          (tb_clk),
+    .addr         (mem_addr),
+    .data_in      (mem_wdata),
+    .write_enable (mem_wr_en),
+    .data_out     (w_mem_rdata)
+  );
+
+  integer fd_p9;
+  integer p9_w_idx;
+  integer p9_r_idx;
+  integer p9_chk_idx;
+
+  initial begin
+    fd_p9     = $fopen("output_9.txt", "w");
+    mem_addr  = {MEM_N1{1'b0}};
+    mem_wdata = {MEM_DATA_WIDTH1{1'b0}};
+    mem_wr_en = 1'b0;
+
+    #22;
+    @(posedge tb_clk);
+    mem_wr_en <= 1'b1;
+
+    for (p9_w_idx = 0; p9_w_idx < (1<<MEM_N1); p9_w_idx = p9_w_idx + 1) begin
+      @(posedge tb_clk);
+      mem_addr  <= p9_w_idx[MEM_N1-1:0];
+      mem_wdata <= p9_w_idx * 2;
+    end
+    @(posedge tb_clk);
+    mem_wr_en <= 1'b0;
+
+    for (p9_r_idx = 0; p9_r_idx < (1<<MEM_N1); p9_r_idx = p9_r_idx + 1) begin
+      mem_addr <= p9_r_idx[MEM_N1-1:0];
+      @(posedge tb_clk);
     end
 
-// 5. L1_P11 clock gating ===========================================================
-    reg enable;
-    reg [7:0] p11_data_in;
-    wire [7:0] p11_data_out;
-    integer f5;  
-    integer f5_flag;  
+    @(posedge tb_clk);
+    $fclose(fd_p9);
+  end
 
-    // 모듈 인스턴스화
-    clock_gating u_clock_gating (
-        .clk_in(clk),
-        .rst_n(~reset),
-        .enable(enable),
-        .data_in(p11_data_in),
-        .data_out(p11_data_out)
-    );
-
-    initial begin
-        // 초기화
-        f5_flag = 1;
-        enable = 0;
-        p11_data_in = 8'h00;
-        f5 = $fopen("output_5.txt", "w");
-
-        // 리셋 해제
-        #22 ;
-
-        // 테스트 1: enable이 0일 때
-        #7 p11_data_in = 8'hAA;
-        #20;
-
-        // 테스트 2: enable을 1로 설정
-        enable = 1;
-        #20 p11_data_in = 8'h55;
-        #20;
-
-        // 테스트 3: enable을 다시 0으로 설정
-        enable = 0;
-        #20 p11_data_in = 8'hFF;
-        #20;
-
-        // 테스트 4: enable을 다시 1로 설정
-        enable = 1;
-        #20;
-
-        // 시뮬레이션 종료
-        f5_flag = 0;
-        $fclose(f5);  
+  initial begin
+    wait (mem_wr_en == 1'b1);
+    wait (mem_wr_en == 1'b0);
+    $fdisplay(fd_p9, "MEM1 (4-bit address, 8-bit data) Test:");
+    for (p9_chk_idx = 0; p9_chk_idx < (1<<MEM_N1); p9_chk_idx = p9_chk_idx + 1) begin
+      @(posedge tb_clk);
+      #1;
+      $fdisplay(fd_p9, "Address: %d, Data: %d", p9_chk_idx, w_mem_rdata);
     end
+  end
 
-    // 결과 모니터링
-    always @(posedge clk) begin
-        if(f5_flag) begin
-          $fdisplay(f5,"Enable=%b, Data_in=%h, Data_out=%h", 
-                   enable, p11_data_in, p11_data_out);
-        end
-    end
-
-
-// 6. L1_P12 interrupt_ctrl ===========================================================
-   parameter INT_COUNT = 8;
-    reg [INT_COUNT-1:0] interrupt_requests;
-    reg interrupt_ack;
-    wire [INT_COUNT-1:0] interrupt_service;
-    wire interrupt_active;
-    integer f6;  
-    integer f6_flag;  
-
-    interrupt_ctrl #(
-        .INT_COUNT(INT_COUNT)
-    ) u_interrupt_ctrl (
-        .clk(clk),
-        .rst_n(~reset),
-        .interrupt_requests(interrupt_requests),
-        .interrupt_ack(interrupt_ack),
-        .interrupt_service(interrupt_service),
-        .interrupt_active(interrupt_active)
-    );
-
-    initial begin
-        f6_flag = 1;
-        f6 = $fopen("output_6.txt", "w");
-        interrupt_requests = 0;
-        interrupt_ack = 0;
-
-        #22; 
-        // 테스트 시나리오
-        #10 interrupt_requests = 8'b00000001; // 낮은 우선순위 인터럽트
-        #20 interrupt_requests = 8'b00000011; // 두 개의 인터럽트
-        #20 interrupt_requests = 8'b10000011; // 높은 우선순위 인터럽트 추가
-        #20 interrupt_ack = 1; // 첫 번째 인터럽트 처리 완료
-        #10 interrupt_ack = 0;
-        #20 interrupt_ack = 1; // 두 번째 인터럽트 처리 완료
-        #10 interrupt_ack = 0;
-        #20 interrupt_ack = 1; // 세 번째 인터럽트 처리 완료
-        #10 interrupt_ack = 0;
-        #10;
-        f6_flag = 0;
-        $fclose(f6);  
-    end
-
-    // 결과 모니터링
-    always @(posedge clk) begin
-        if(f6_flag) begin
-          $fdisplay(f6,"Requests=%b, Active=%b, Service=%b", 
-                    interrupt_requests, interrupt_active, interrupt_service);
-        end
-    end
-
-// 7. L1_P20 msb_one_extractor ===========================================================
-  // 입력과 출력 신호 정의
-    reg [7:0] p20_data_in;
-    wire [7:0] p20_data_out;
-    integer f7;  
-
-    // DUT (Device Under Test) 인스턴스화
-    msb_one_extractor dut (
-        .data_in(p20_data_in),
-        .data_out(p20_data_out)
-    );
-
-    // 테스트 시나리오
-    initial begin
-        f7 = $fopen("output_7.txt", "w");
-        // 테스트 케이스 1
-        p20_data_in = 8'b01100001;
-        #10;
-        $fdisplay(f7,"Test Case 1: Input = %b, Output = %b", p20_data_in, p20_data_out);
-
-        // 테스트 케이스 2
-        p20_data_in = 8'b00100101;
-        #10;
-        $fdisplay(f7,"Test Case 2: Input = %b, Output = %b", p20_data_in, p20_data_out);
-
-        // 테스트 케이스 3
-        p20_data_in = 8'b10000000;
-        #10;
-        $fdisplay(f7,"Test Case 3: Input = %b, Output = %b", p20_data_in, p20_data_out);
-
-        // 테스트 케이스 4
-        p20_data_in = 8'b00000001;
-        #10;
-        $fdisplay(f7,"Test Case 4: Input = %b, Output = %b", p20_data_in, p20_data_out);
-
-        // 테스트 케이스 5
-        p20_data_in = 8'b00000000;
-        #10;
-        $fdisplay(f7,"Test Case 5: Input = %b, Output = %b", p20_data_in, p20_data_out);
-
-        // 시뮬레이션 종료
-        $fclose(f7);  
-    end
-
-// 8. L1_P21 edge_detector ===========================================================
-    // 테스트 대상 모듈의 입출력 신호 정의
-    reg signal;
-    wire edge_detected;
-    integer f8;  
-    integer f8_flag;  
-
-    // 테스트 대상 모듈 인스턴스화
-    rising_edge_detector uut (
-        .clk(clk),
-        .signal(signal),
-        .edge_detected(edge_detected)
-    );
-
-    // 테스트 시나리오
-    initial begin
-        f8_flag = 0;
-        f8 = $fopen("output_8.txt", "w");
-        signal = 0;
-        #30;
-        f8_flag = 1;
-        // 테스트 케이스 1: 단일 상승 에지
-        #10 signal = 1;
-        #10 signal = 0;
-
-        // 테스트 케이스 2: 연속된 1
-        #20 signal = 1;
-        #20 signal = 1;
-        #10 signal = 0;
-
-        // 테스트 케이스 3: 빠른 토글
-        #11 signal = 1;
-        #5  signal = 0;
-        #5  signal = 1;
-        #5  signal = 0;
-
-        // 테스트 케이스 4: 긴 0 상태 후 상승
-        #31 signal = 1;
-        #20
-        // 시뮬레이션 종료
-        #10;
-        f8_flag = 0;
-        $fclose(f8);  
-    end
-
-    // 결과 모니터링
-    always @(posedge clk) begin
-        if(f8_flag) begin
-          $fdisplay(f8,"Time=%6t, Signal=%b, Edge Detected=%b", $time, signal, edge_detected);
-        end
-    end
-
-// 9. L1_P24 param_mem ===========================================================
-    // 첫 번째 MEM (4-bit 주소, 8-bit 데이터)
-    parameter MEM_N1 = 4;
-    parameter MEM_DATA_WIDTH1 = 8;
-    reg [MEM_N1-1:0] addr1;
-    reg [MEM_DATA_WIDTH1-1:0] data_in1;
-    reg write_enable1;
-    wire [MEM_DATA_WIDTH1-1:0] data_out1;
-
-    param_mem #(
-        .N(MEM_N1),
-        .DATA_WIDTH(MEM_DATA_WIDTH1)
-    ) rom1 (
-        .clk(clk),
-        .addr(addr1),
-        .data_in(data_in1),
-        .write_enable(write_enable1),
-        .data_out(data_out1)
-    );
-
-    integer f9;  
-    integer f9_i;  
-    integer f9_i_check;  
-
-    // 테스트 시나리오
-    initial begin
-        f9 = $fopen("output_9.txt", "w");
-        addr1 = 0;
-        data_in1 = 0;
-        write_enable1 = 0;
-        #22;
-        @(posedge clk);
-        write_enable1 <= 1;
-        for (f9_i = 0; f9_i < 2**MEM_N1; f9_i = f9_i + 1) begin
-            @(posedge clk);
-            addr1 <= f9_i;
-            data_in1 <= f9_i * 2;
-        end
-            @(posedge clk);
-        write_enable1 <= 0;
-
-        for (f9_i = 0; f9_i < 2**MEM_N1; f9_i = f9_i + 1) begin
-            addr1 <= f9_i;
-            @(posedge clk);
-        end
-
-        @(posedge clk);
-        $fclose(f9);  
-    end
-
-    initial begin
-      wait (write_enable1 == 1);
-      wait (write_enable1 == 0);
-        $fdisplay(f9,"MEM1 (4-bit address, 8-bit data) Test:");
-        for (f9_i_check = 0; f9_i_check < 2**MEM_N1; f9_i_check = f9_i_check + 1) begin
-            @(posedge clk);
-            #1;
-            $fdisplay(f9,"Address: %d, Data: %d", f9_i_check, data_out1);
-        end
-    end
-
-  //------------------------------------------
-  // 시뮬레이션 종료
-  //------------------------------------------
+  //----------------------------------------------------------------------------
+  // Total Simulation Termination
+  //----------------------------------------------------------------------------
   initial begin
     #1200;
     $finish;
   end
+
 endmodule

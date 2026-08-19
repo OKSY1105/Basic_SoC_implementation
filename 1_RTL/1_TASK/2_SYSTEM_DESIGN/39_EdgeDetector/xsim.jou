@@ -3,25 +3,23 @@
 # SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
 # IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
 # SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-# Start of session at: Fri Aug  7 14:02:31 2026
-# Process ID         : 1343
+# Start of session at: Thu Aug 20 01:05:55 2026
+# Process ID         : 1110
 # Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/39_EdgeDetector
-# Command line       : xsim -source {xsim.dir/work.testbench/xsim_script.tcl}
+# Command line       : xsim -mode tcl -source {xsim.dir/testbench/xsim_script.tcl}
 # Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/39_EdgeDetector/xsim.log
 # Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/39_EdgeDetector/xsim.jou
 # Running On         : BOOK-3GSAOKNJKI
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 22.04.5 LTS
 # Processor Detail   : 12th Gen Intel(R) Core(TM) i7-1255U
-# CPU Frequency      : 2611.209 MHz
+# CPU Frequency      : 2611.211 MHz
 # CPU Physical cores : 6
 # CPU Logical cores  : 12
 # Host memory        : 12386 MB
 # Swap memory        : 3221 MB
 # Total Virtual      : 15607 MB
-# Available Virtual  : 15010 MB
+# Available Virtual  : 15058 MB
 #-----------------------------------------------------------
-start_gui
-source xsim.dir/work.testbench/xsim_script.tcl
-source sgdh_sim.tcl
-close_sim
+source xsim.dir/testbench/xsim_script.tcl
+run -all

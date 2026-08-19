@@ -9,9 +9,9 @@ module param_mux #(
     o_out        
 );
 
-input [N*WIDTH-1:0] inputs;        //Input that flattens a two-dimensional array into one dimension
-input [$clog2(N)-1:0] select;
-output [WIDTH-1:0] out; 
+input [N*WIDTH-1:0] i_inputs;        //Input that flattens a two-dimensional array into one dimension
+input [$clog2(N)-1:0] i_select;
+output [WIDTH-1:0] o_out; 
 
 reg [WIDTH-1:0] o_out;
 reg [WIDTH-1:0] r_inputs_array [N-1:0];

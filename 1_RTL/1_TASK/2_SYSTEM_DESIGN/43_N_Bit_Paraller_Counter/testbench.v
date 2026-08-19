@@ -1,72 +1,88 @@
 `timescale 1ns / 1ps
+
 module testbench;
+
     // 파라미터 정의
-    parameter N = 4;  // 카운터의 개수
-    parameter M = 8;  // 각 카운터의 비트 수
+    parameter NUM_COUNTERS = 4;
+    parameter COUNTER_BITS = 8;
 
-    // 테스트 대상 모듈의 입출력 신호 정의
-    reg clk;
-    reg rst;
-    reg [N-1:0] enable;
-    wire [M-1:0] count [N-1:0];
-    integer file;  
+    // 테스트 신호 선언
+    reg                      tb_clk;
+    reg                      tb_rst;
+    reg  [NUM_COUNTERS-1:0]  tb_enable;
+    wire [COUNTER_BITS-1:0]  w_count [NUM_COUNTERS-1:0];
 
-    // 테스트 대상 모듈 인스턴스화
+    integer log_fd;
+    integer loop_idx;
+
+    // DUT 인스턴스화
     parallel_counters #(
-        .N(N),
-        .M(M)
-    ) uut (
-        .i_clk(clk),
-        .i_rst(rst),
-        .i_enable(enable),
-        .o_count(count)
+        .N(NUM_COUNTERS),
+        .M(COUNTER_BITS)
+    ) u_parallel_cnt (
+        .i_clk    (tb_clk),
+        .i_rst    (tb_rst),
+        .i_enable (tb_enable),
+        .o_count  (w_count)
     );
 
-    // 클럭 생성
-    always #5 clk = ~clk;
+    // 100MHz 클럭 생성 (5ns 토글)
+    initial tb_clk = 1'b0;
+    always #5 tb_clk = ~tb_clk;
 
-    // 테스트 시나리오
+    // 활성화/비활성화 비트 제어 Task
+    task update_enable_bit;
+        input integer delay_step;
+        input integer bit_idx;
+        input         bit_val;
+        begin
+            #(delay_step);
+            tb_enable[bit_idx] = bit_val;
+        end
+    endtask
+
+    // 메인 시뮬레이션 제어 시퀀스
     initial begin
-        $timeformat(-9, 0, "ns", 6); // -9: ns, 0: decimal place, "ns": unit, 10:minimum field width
-        file = $fopen("output.txt", "w");
-        // 초기화
-        clk = 0;
-        rst = 1;
-        enable = 4'b0000;
+        $timeformat(-9, 0, "ns", 6);
+        log_fd = $fopen("output.txt", "w");
 
-        // 리셋 해제
-        #10 rst = 0;
+        // 초기화 및 리셋 (10ns 유지)
+        tb_rst    = 1'b1;
+        tb_enable = {NUM_COUNTERS{1'b0}};
+        #10 tb_rst = 1'b0;
 
-        // 각 카운터를 다른 시점에 활성화
-        #20 enable[0] = 1;  // 20ns에 첫 번째 카운터 활성화
-        #30 enable[1] = 1;  // 50ns에 두 번째 카운터 활성화
-        #40 enable[2] = 1;  // 90ns에 세 번째 카운터 활성화
-        #50 enable[3] = 1;  // 140ns에 네 번째 카운터 활성화
+        // 순차적 카운터 활성화 시퀀스
+        update_enable_bit(20, 0, 1'b1);  // 20ns 후 카운터 0 활성화
+        update_enable_bit(30, 1, 1'b1);  // 50ns 후 카운터 1 활성화
+        update_enable_bit(40, 2, 1'b1);  // 90ns 후 카운터 2 활성화
+        update_enable_bit(50, 3, 1'b1);  // 140ns 후 카운터 3 활성화
 
-        // 100 클럭 사이클 동안 카운팅
-        repeat(20) @(posedge clk);
+        // 20 클럭 사이클 동안 카운팅 동작 수행
+        repeat(20) @(posedge tb_clk);
         #5;
-        // 각 카운터를 다른 시점에 비활성화
-        #10 enable[1] = 0;  // 첫 번째로 두 번째 카운터 비활성화
-        #20 enable[3] = 0;  // 그 다음 네 번째 카운터 비활성화
-        #30 enable[0] = 0;  // 그 다음 첫 번째 카운터 비활성화
-        #40 enable[2] = 0;  // 마지막으로 세 번째 카운터 비활성화
 
-        // 추가로 5 클럭 사이클 동안 대기
-        repeat(5) @(posedge clk);
+        // 순차적 카운터 비활성화 시퀀스
+        update_enable_bit(10, 1, 1'b0);  // 카운터 1 비활성화
+        update_enable_bit(20, 3, 1'b0);  // 카운터 3 비활성화
+        update_enable_bit(30, 0, 1'b0);  // 카운터 0 비활성화
+        update_enable_bit(40, 2, 1'b0);  // 카운터 2 비활성화
+
+        // 추가 5 클럭 사이클 대기
+        repeat(5) @(posedge tb_clk);
         #5;
+
         // 시뮬레이션 종료
-        $fclose(file);  
+        $fclose(log_fd);
         $finish;
     end
 
-    // 결과 모니터링
-    always @(posedge clk) begin
-        $fwrite(file,"Time=%4t, Enable=%b", $time, enable);
-        for (int i = 0; i < N; i = i + 1) begin
-            $fwrite(file," Counter[%0d]=%2d", i, count[i]);
+    // 결과 로깅 (원본 출력 포맷 100% 일치)
+    always @(posedge tb_clk) begin
+        $fwrite(log_fd, "Time=%4t, Enable=%b", $time, tb_enable);
+        for (loop_idx = 0; loop_idx < NUM_COUNTERS; loop_idx = loop_idx + 1) begin
+            $fwrite(log_fd, " Counter[%0d]=%2d", loop_idx, w_count[loop_idx]);
         end
-        $fwrite(file,"\n");
+        $fwrite(log_fd, "\n");
     end
 
 endmodule
