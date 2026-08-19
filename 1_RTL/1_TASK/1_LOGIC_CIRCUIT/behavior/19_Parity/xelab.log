@@ -5,9 +5,11 @@ Running: /home/sean/Vivado/2024.2/bin/unwrapped/lnx64.o/xelab testbench -s testb
 Multi-threading is on. Using 10 slave threads.
 Starting static elaboration
 Pass Through NonSizing Optimizer
-ERROR: [VRFC 10-3180] cannot find port 'parity_bit' on this module [/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/testbench.v:53]
-ERROR: [VRFC 10-3180] cannot find port 'data_in' on this module [/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/testbench.v:52]
-ERROR: [VRFC 10-3180] cannot find port 'parity_error' on this module [/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/testbench.v:59]
-ERROR: [VRFC 10-3180] cannot find port 'parity_bit' on this module [/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/testbench.v:58]
-ERROR: [VRFC 10-3180] cannot find port 'data_in' on this module [/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/19_Parity/testbench.v:57]
-ERROR: [XSIM 43-3322] Static elaboration of top level Verilog design unit(s) in library work failed.
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling module work.parity_bit
+Compiling module work.parity_checker
+Compiling module work.testbench
+Built simulation snapshot testbench

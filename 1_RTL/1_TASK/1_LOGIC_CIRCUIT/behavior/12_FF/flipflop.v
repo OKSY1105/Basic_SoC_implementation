@@ -15,7 +15,7 @@ output o_out;
 
 reg o_out;
 
-always @(posedge i_clk| posedge i_reset) begin
+always @(posedge i_clk or posedge i_reset) begin
 	if(i_reset) o_out <=0;
 	else o_out<= i_in;
 

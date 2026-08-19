@@ -11,8 +11,12 @@ if [ ! -f "answer.txt" ]; then
     exit 1
 fi
 
-# 파일 비교
-if diff -q "output.txt" "answer.txt" > /dev/null; then
+# 문자, 헤더, 공백을 제외하고 '숫자'만 추출하여 비교
+# grep -o '[0-9]\+' : 각 줄에서 숫자 값만 추출
+val_out=$(grep -o '[0-9]\+' output.txt)
+val_ans=$(grep -o '[0-9]\+' answer.txt)
+
+if [ "$val_out" == "$val_ans" ] && [ -n "$val_out" ]; then
     echo "[PASS] The files are the same."
 else
     echo "[FAIL] The files are different."

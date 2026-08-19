@@ -1,53 +1,41 @@
 `timescale 1ns / 1ps
 
 module testbench;
-    parameter WIDTH = 4;
-    
-    // ==========================================
-    // Signal Declarations
-    // ==========================================
-    reg  [WIDTH-1:0] i_binary_in; // 신호명 수정 (binary_in -> i_binary_in)
-    wire [WIDTH-1:0] o_gray_out;  // 신호명 수정 (gray_out   -> o_gray_out)
-    integer file;   
 
-    // ==========================================
-    // Module Instantiation (DU)
-    // ==========================================
-    bin_2_gray #(WIDTH) u_bin_2_gray (
-        .i_binary_in ( i_binary_in ), // 변경된 포트명 연결
-        .o_gray_out  ( o_gray_out  )  // 변경된 포트명 연결
-    );
+  // 테스트 신호 선언
+  reg  [3:0] tb_bin_data;
+  wire [3:0] tb_gray_data;
+  integer    fd_out;
+  integer    idx;
 
-    // ==========================================
-    // Stimulus & File Output
-    // ==========================================
-    initial begin
-        file = $fopen("output.txt", "w");
-        
-        // 데이터 변화 감지 및 출력을 포맷에 맞게 수정
-        $fmonitor(file, "i_binary_in=%b o_gray_out=%b", i_binary_in, o_gray_out);
-        
-        // 입력 값 자극 (Stimulus)
-        i_binary_in = 4'b0000; #10;
-        i_binary_in = 4'b0001; #10;
-        i_binary_in = 4'b0010; #10;
-        i_binary_in = 4'b0011; #10;
-        i_binary_in = 4'b0100; #10;
-        i_binary_in = 4'b0101; #10;
-        i_binary_in = 4'b0110; #10;
-        i_binary_in = 4'b0111; #10;
-        i_binary_in = 4'b1000; #10;
-        i_binary_in = 4'b1001; #10;
-        i_binary_in = 4'b1010; #10;
-        i_binary_in = 4'b1011; #10;
-        i_binary_in = 4'b1100; #10;
-        i_binary_in = 4'b1101; #10;
-        i_binary_in = 4'b1110; #10;
-        i_binary_in = 4'b1111; #10;
-        
-        $fflush(file); // 버퍼에 남아있는 출력 기록 비우기 (파일 잘림 방지)
-        $fclose(file);  
-        $finish;
+  // DUT 인스턴스화 (파라미터 전달 구문 제거)
+  bin_2_gray dut_b2g (
+    .i_binary_in ( tb_bin_data  ),
+    .o_gray_out  ( tb_gray_data )
+  );
+
+  // ==========================================
+  // 시뮬레이션 및 파일 로깅
+  // ==========================================
+  initial begin
+    fd_out = $fopen("output.txt", "w");
+    if (!fd_out) begin
+      $display("Error: Failed to open output.txt");
+      $finish;
     end
+
+    // 원본과 동일한 포맷으로 모니터링
+    $fmonitor(fd_out, "i_binary_in=%b o_gray_out=%b", tb_bin_data, tb_gray_data);
+
+    // 0부터 15까지 10ns 간격 인가
+    for (idx = 0; idx < 16; idx = idx + 1) begin
+      tb_bin_data = idx[3:0];
+      #10;
+    end
+
+    $fflush(fd_out);
+    $fclose(fd_out);
+    $finish;
+  end
 
 endmodule

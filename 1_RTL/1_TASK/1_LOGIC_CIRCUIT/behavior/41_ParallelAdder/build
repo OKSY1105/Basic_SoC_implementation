@@ -2,4 +2,4 @@ xvlog ./*.v ./testbench.sv
 #xelab testbench -s testbench
 #xsim testbench -R
 xelab testbench --debug wave
-xsim testbench -gui -wdb sim_tb.wdb -tclbatch sgdh_sim.tcl & 
+xsim testbench -gui -wdb sim_tb.wdb -tclbatch sean_sim.tcl & 

@@ -2,73 +2,72 @@
 
 module testbench;
 
-    reg        clk;
-    reg        areset;
-    reg        count_down_start;
-    wire [3:0] out_count_up;   
-    wire [3:0] out_count_down;   
-    integer file;  
+  // 신호 선언 (tb_ prefix 적용)
+  reg        tb_clk;
+  reg        tb_rst;
+  reg        tb_cd_start;
+  wire [3:0] tb_cnt_up;
+  wire [3:0] tb_cnt_down;
 
-    // 새 포트 이름(i_*, o_*)에 맞춰 매핑 수정
-    counter u_counter (
-        .i_clk               ( clk              ),
-        .i_reset             ( areset           ),
-        .i_counter_down_start( count_down_start ),
-        .o_counter_up        ( out_count_up     ),
-        .o_counter_down      ( out_count_down   )
-    );
+  integer    fd_out;
 
-    // 클록 생성
-    initial begin
-        clk = 0;
-        forever clk = #5 ~clk;
+  // DUT 인스턴스화 (포트 연결 유지)
+  counter u_counter (
+    .i_clk                (tb_clk),
+    .i_reset              (tb_rst),
+    .i_counter_down_start (tb_cd_start),
+    .o_counter_up         (tb_cnt_up),
+    .o_counter_down       (tb_cnt_down)
+  );
+
+  // 100MHz 클록 생성 (10ns 주기, 반주기 5ns)
+  initial begin
+    tb_clk = 1'b0;
+    forever #5 tb_clk = ~tb_clk;
+  end
+
+  // 비동기 리셋 펄스 인가
+  initial begin
+    tb_rst = 1'b0;
+    #6 tb_rst = 1'b1;
+    #6 tb_rst = 1'b0;
+  end
+
+  // 결과 모니터링 및 파일 기록
+  initial begin
+    fd_out = $fopen("output.txt", "w");
+    if (!fd_out) begin
+      $display("Error: Failed to open output.txt");
+      $finish;
     end
 
-    // 리셋 인과
-    initial begin
-        areset = 0;
-        #6;
-        areset = 1;
-        #6;
-        areset = 0;
+    while (1) begin
+      @(posedge tb_clk);
+      $display("start = %d, count_up = %d count_down = %d", tb_cd_start, tb_cnt_up, tb_cnt_down);
+      $fdisplay(fd_out, "start = %d, count_up = %d count_down = %d", tb_cd_start, tb_cnt_up, tb_cnt_down);
     end
+  end
 
-    // 파일 출력 및 콘솔 디스플레이
-    initial begin
-        file = $fopen("output.txt", "w");
-        forever begin
-            @(posedge clk);
-            $display("start = %d, count_up = %d count_down = %d", count_down_start, out_count_up, out_count_down);
-            $fdisplay(file, "start = %d, count_up = %d count_down = %d", count_down_start, out_count_up, out_count_down);
-        end
-    end
+  // 자극(Stimulus) 시퀀스
+  initial begin
+    tb_cd_start <= 1'b0;
+    repeat (3) @(posedge tb_clk);
 
-    // 테스트 시퀀스
-    initial begin
-        count_down_start <= 0;
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        
-        count_down_start <= 0;
-        @(posedge clk);
-        count_down_start <= 1;
-        @(posedge clk);
-        count_down_start <= 0;
-        @(posedge clk);
-        
-        wait(out_count_down == 4'd0);
-        
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        @(posedge clk);
-        
-        #5;
-        $fclose(file);
-        $finish;
-    end
+    tb_cd_start <= 1'b0;
+    @(posedge tb_clk);
+    tb_cd_start <= 1'b1;
+    @(posedge tb_clk);
+    tb_cd_start <= 1'b0;
+    @(posedge tb_clk);
+
+    // 카운트다운 완료 대기
+    wait (tb_cnt_down == 4'd0);
+
+    repeat (6) @(posedge tb_clk);
+
+    #5;
+    $fclose(fd_out);
+    $finish;
+  end
 
 endmodule

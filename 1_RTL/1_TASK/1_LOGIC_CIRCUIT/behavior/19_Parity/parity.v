@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module parity(
+module parity_bit(
 
 i_data_in,
 o_parity_bit

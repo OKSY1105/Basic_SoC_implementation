@@ -56,7 +56,7 @@ module adder
 
     //====== Full Adder ===============
     assign o_full_sum = i_full_a ^ i_full_b ^ i_full_carry;
-    assign o_full_carry = (i_full_a & i_full_b) | (~i_full_b ^i_full_carry);
+    assign o_full_carry = (i_full_a & i_full_b) | (i_full_b &i_full_carry) | (i_full_a &i_full_carry);
 
     //====== BCD Adder ================
     wire [4:0] sum;

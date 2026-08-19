@@ -1,77 +1,80 @@
 `timescale 1ns / 1ps
+
 module testbench;
- 
-    // 테스트할 모듈의 입출력 신호
-    reg [7:0] input1;
-    reg [7:0] input2;
-    reg [7:0] input3;
-    wire [7:0] result;
-    integer file;  
 
+  // 테스트 신호 정의 (tb_ Prefix 적용)
+  reg  [7:0] tb_data_1;
+  reg  [7:0] tb_data_2;
+  reg  [7:0] tb_data_3;
+  wire [7:0] tb_maj_out;
 
-    // 테스트할 모듈 인스턴스화
-    bit_majority_analyzer uut (
-        .i_in1(input1),
-        .i_in2(input2),
-        .i_in3(input3),
-        .o_result(result)
-    );
+  integer    fd_log;
 
-    // 테스트 케이스를 저장할 배열
-    reg [7:0] test_inputs [0:2][0:4];  // 5개의 테스트 케이스, 각각 3개의 입력
-    reg [7:0] expected_results [0:4];  // 5개의 테스트 케이스에 대한 예상 결과
+  // DUT 인스턴스화 (포트명 유지)
+  bit_majority_analyzer dut_maj (
+    .i_in1    ( tb_data_1  ),
+    .i_in2    ( tb_data_2  ),
+    .i_in3    ( tb_data_3  ),
+    .o_result ( tb_maj_out )
+  );
 
-    integer i;
+  // ==========================================
+  // 테스트 케이스 실행 및 로깅 태스크
+  // ==========================================
+  task run_test_case;
+    input integer tc_num;
+    input [7:0]   in1, in2, in3, exp_out;
+    begin
+      tb_data_1 = in1;
+      tb_data_2 = in2;
+      tb_data_3 = in3;
+      #10; // 결과 안정화 대기
 
-    initial begin
-        file = $fopen("output.txt", "w");
-        // 테스트 케이스 초기화
-        // 테스트 케이스 1
-        test_inputs[0][0] = 8'b10101010; test_inputs[1][0] = 8'b11001100; test_inputs[2][0] = 8'b11110000;
-        expected_results[0] = 8'b11101000;
+      // 원본과 100% 동일한 문자열 및 들여쓰기 구조로 기록
+      $fdisplay(fd_log, "Test Case %0d:", tc_num);
+      $fdisplay(fd_log, "  Input1: %b", tb_data_1);
+      $fdisplay(fd_log, "  Input2: %b", tb_data_2);
+      $fdisplay(fd_log, "  Input3: %b", tb_data_3);
+      $fdisplay(fd_log, "  Result: %b", tb_maj_out);
+      $fdisplay(fd_log, "  Expected: %b", exp_out);
 
-        // 테스트 케이스 2
-        test_inputs[0][1] = 8'b00000000; test_inputs[1][1] = 8'b11111111; test_inputs[2][1] = 8'b10101010;
-        expected_results[1] = 8'b10101010;
+      if (tb_maj_out === exp_out) begin
+        $fdisplay(fd_log, "  Test Passed");
+      end else begin
+        $fdisplay(fd_log, "  Test Failed");
+      end
 
-        // 테스트 케이스 3
-        test_inputs[0][2] = 8'b11111111; test_inputs[1][2] = 8'b11111111; test_inputs[2][2] = 8'b00000000;
-        expected_results[2] = 8'b11111111;
-
-        // 테스트 케이스 4
-        test_inputs[0][3] = 8'b10101010; test_inputs[1][3] = 8'b01010101; test_inputs[2][3] = 8'b00000000;
-        expected_results[3] = 8'b00000000;
-
-        // 테스트 케이스 5
-        test_inputs[0][4] = 8'b11001100; test_inputs[1][4] = 8'b00110011; test_inputs[2][4] = 8'b10101010;
-        expected_results[4] = 8'b10101010;
-
-        // 테스트 실행
-        for (i = 0; i < 5; i = i + 1) begin
-            input1 = test_inputs[0][i];
-            input2 = test_inputs[1][i];
-            input3 = test_inputs[2][i];
-
-            #10; // 결과가 안정화될 시간을 줍니다.
-
-            // 결과 확인 및 출력
-            $fdisplay(file,"Test Case %0d:", i+1);
-            $fdisplay(file,"  Input1: %b", input1);
-            $fdisplay(file,"  Input2: %b", input2);
-            $fdisplay(file,"  Input3: %b", input3);
-            $fdisplay(file,"  Result: %b", result);
-            $fdisplay(file,"  Expected: %b", expected_results[i]);
-            
-            if (result === expected_results[i])
-                $fdisplay(file,"  Test Passed");
-            else
-                $fdisplay(file,"  Test Failed");
-            
-            $fdisplay(file,"");
-        end
-
-        $fclose(file);  
-        $finish;
+      $fdisplay(fd_log, "");
     end
+  endtask
+
+  // ==========================================
+  // 시뮬레이션 시퀀스
+  // ==========================================
+  initial begin
+    fd_log = $fopen("output.txt", "w");
+    if (!fd_log) begin
+      $display("Error: Failed to open output.txt");
+      $finish;
+    end
+
+    // 테스트 케이스 1
+    run_test_case(1, 8'b10101010, 8'b11001100, 8'b11110000, 8'b11101000);
+
+    // 테스트 케이스 2
+    run_test_case(2, 8'b00000000, 8'b11111111, 8'b10101010, 8'b10101010);
+
+    // 테스트 케이스 3
+    run_test_case(3, 8'b11111111, 8'b11111111, 8'b00000000, 8'b11111111);
+
+    // 테스트 케이스 4
+    run_test_case(4, 8'b10101010, 8'b01010101, 8'b00000000, 8'b00000000);
+
+    // 테스트 케이스 5
+    run_test_case(5, 8'b11001100, 8'b00110011, 8'b10101010, 8'b10101010);
+
+    $fclose(fd_log);
+    $finish;
+  end
 
 endmodule

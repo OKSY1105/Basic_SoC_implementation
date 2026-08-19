@@ -3,26 +3,26 @@
 # SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
 # IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
 # SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-# Start of session at: Mon Jul 20 15:54:40 2026
-# Process ID         : 1634
+# Start of session at: Wed Aug 19 13:32:14 2026
+# Process ID         : 10481
 # Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/12_FF
-# Command line       : xsim -source {xsim.dir/work.testbench/xsim_script.tcl}
+# Command line       : xsim -source {xsim.dir/work.tb_flip_flop/xsim_script.tcl}
 # Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/12_FF/xsim.log
 # Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/12_FF/xsim.jou
 # Running On         : BOOK-3GSAOKNJKI
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 22.04.5 LTS
 # Processor Detail   : 12th Gen Intel(R) Core(TM) i7-1255U
-# CPU Frequency      : 2611.202 MHz
+# CPU Frequency      : 2611.211 MHz
 # CPU Physical cores : 6
 # CPU Logical cores  : 12
 # Host memory        : 12386 MB
 # Swap memory        : 3221 MB
 # Total Virtual      : 15607 MB
-# Available Virtual  : 15011 MB
+# Available Virtual  : 14930 MB
 #-----------------------------------------------------------
 start_gui
-source xsim.dir/work.testbench/xsim_script.tcl
+source xsim.dir/work.tb_flip_flop/xsim_script.tcl
 # set_param project.enableReportConfiguration 0
 WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu208ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu208ld/production/2.0/board.xml as part xczu58dr-fsvg1517-2-i specified in board_part file is either invalid or not available
 WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu216ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu216ld/production/2.0/board.xml as part xczu59dr-ffvf1760-2-i specified in board_part file is either invalid or not available
@@ -32,9 +32,9 @@ WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu670ld:part0:1.0 avail
 INFO: [IP_Flow 19-234] Refreshing IP repositories
 INFO: [IP_Flow 19-1704] No user IP repositories specified
 INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/sean/Vivado/2024.2/data/ip'.
-# xsim {work.testbench} -wdb {sim_tb.wdb} -autoloadwcfg -tclbatch {sgdh_sim.tcl}
+# xsim {work.tb_flip_flop} -wdb {sim_tb.wdb} -autoloadwcfg -tclbatch {sean_sim.tcl}
 Time resolution is 1 ps
-source sgdh_sim.tcl
+source sean_sim.tcl
 ## set curr_wave [current_wave_config]
 ## if { [string length $curr_wave] == 0 } {
 ##   if { [llength [get_objects]] > 0} {
@@ -44,10 +44,7 @@ source sgdh_sim.tcl
 ##      send_msg_id Add_Wave-1 WARNING "No top level signals found. Simulator will start without a wave window. If you want to open a wave window go to 'File->New Waveform Configuration' or type 'create_wave_config' in the TCL console."
 ##   }
 ## }
-INFO: [Common 17-41] Interrupt caught. Command should exit soon.
-/testbench/clk /testbench/reset /testbench/d /testbench/q /testbench/file
-INFO: [Common 17-344] 'source' was cancelled
-run all
+## run 10000ns
 reset = 1, d=0, q=0 
 reset = 0, d=0, q=0 
 reset = 0, d=1, q=0 
@@ -56,8 +53,8 @@ reset = 1, d=0, q=0
 reset = 1, d=1, q=0 
 reset = 0, d=1, q=0 
 reset = 0, d=0, q=1 
-$finish called at time : 85 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/12_FF/testbench.v" Line 61
+$finish called at time : 85 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/12_FF/testbench.v" Line 72
 close_sim
 INFO: [Simtcl 6-16] Simulation closed
 exit
-INFO: [Common 17-206] Exiting xsim at Mon Jul 20 15:55:14 2026...
+INFO: [Common 17-206] Exiting xsim at Wed Aug 19 13:32:58 2026...

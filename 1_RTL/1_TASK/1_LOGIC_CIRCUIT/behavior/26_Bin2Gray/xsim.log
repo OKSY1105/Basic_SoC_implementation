@@ -3,23 +3,23 @@
 # SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
 # IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
 # SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-# Start of session at: Tue Jul 28 13:52:54 2026
-# Process ID         : 1308
-# Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/26_Bin2Gray
+# Start of session at: Wed Aug 19 15:30:33 2026
+# Process ID         : 17483
+# Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/26_Bin2Gray
 # Command line       : xsim -source {xsim.dir/work.testbench/xsim_script.tcl}
-# Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/26_Bin2Gray/xsim.log
-# Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/26_Bin2Gray/xsim.jou
+# Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/26_Bin2Gray/xsim.log
+# Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/26_Bin2Gray/xsim.jou
 # Running On         : BOOK-3GSAOKNJKI
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 22.04.5 LTS
 # Processor Detail   : 12th Gen Intel(R) Core(TM) i7-1255U
-# CPU Frequency      : 2611.202 MHz
+# CPU Frequency      : 2611.211 MHz
 # CPU Physical cores : 6
 # CPU Logical cores  : 12
 # Host memory        : 12386 MB
 # Swap memory        : 3221 MB
 # Total Virtual      : 15607 MB
-# Available Virtual  : 15022 MB
+# Available Virtual  : 15017 MB
 #-----------------------------------------------------------
 start_gui
 WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu208ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu208ld/production/2.0/board.xml as part xczu58dr-fsvg1517-2-i specified in board_part file is either invalid or not available
@@ -32,9 +32,9 @@ source xsim.dir/work.testbench/xsim_script.tcl
 INFO: [IP_Flow 19-234] Refreshing IP repositories
 INFO: [IP_Flow 19-1704] No user IP repositories specified
 INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/sean/Vivado/2024.2/data/ip'.
-# xsim {work.testbench} -wdb {sim_tb.wdb} -autoloadwcfg -tclbatch {sgdh_sim.tcl}
+# xsim {work.testbench} -wdb {sim_tb.wdb} -autoloadwcfg -tclbatch {sean_sim.tcl}
 Time resolution is 1 ps
-source sgdh_sim.tcl
+source sean_sim.tcl
 ## set curr_wave [current_wave_config]
 ## if { [string length $curr_wave] == 0 } {
 ##   if { [llength [get_objects]] > 0} {
@@ -45,8 +45,8 @@ source sgdh_sim.tcl
 ##   }
 ## }
 ## run 10000ns
-$finish called at time : 160 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/26_Bin2Gray/testbench.v" Line 50
+$finish called at time : 160 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/26_Bin2Gray/testbench.v" Line 38
 close_sim
 INFO: [Simtcl 6-16] Simulation closed
 exit
-INFO: [Common 17-206] Exiting xsim at Tue Jul 28 13:54:12 2026...
+INFO: [Common 17-206] Exiting xsim at Wed Aug 19 15:31:05 2026...

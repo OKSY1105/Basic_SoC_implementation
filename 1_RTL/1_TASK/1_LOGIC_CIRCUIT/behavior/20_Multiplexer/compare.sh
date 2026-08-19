@@ -11,8 +11,11 @@ if [ ! -f "answer.txt" ]; then
     exit 1
 fi
 
-# 파일 비교
-if diff -q "output.txt" "answer.txt" > /dev/null; then
+# 값만 비교 (공백/줄바꿈 무시 옵션 추가)
+# -w : 모든 공백(스페이스, 탭) 무시
+# -B : 빈 줄 무시
+# --strip-trailing-cr : 윈도우 개행문자(\r) 무시
+if diff -w -B --strip-trailing-cr -q "output.txt" "answer.txt" > /dev/null 2>&1; then
     echo "[PASS] The files are the same."
 else
     echo "[FAIL] The files are different."

@@ -1,4 +1,4 @@
 INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/12_FF/flipflop.v" into library work
 INFO: [VRFC 10-311] analyzing module flipflop
 INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/12_FF/testbench.v" into library work
-INFO: [VRFC 10-311] analyzing module testbench
+INFO: [VRFC 10-311] analyzing module tb_flip_flop
