@@ -78,18 +78,19 @@ u_uart_tx(
 	.i_clk(i_ck),
 	.i_rst_n(i_rst_n),
 
-	.baud_tick(baud_tick),
+	.w_baud_tick(w_baud_tick),
 
 	.o_uart_txd(o_uart_txd),
 	
 	.i_thr_we(i_thr_we),
-	.i_rhr_wdata(i_thr_wdata),
+	.i_thr_rdata(i_thr_wdata),
+
 
 	.o_tx_fifo_full(o_tx_fifo_full),
 	
-	.o_lsr_fe(o_lsr_fe),
-	.o_lsr_pe(o_lsr_pe),
-	.o_lsr_oe(o_lsr_oe),
+	.o_lsr_thre(o_lsr_thre),
+	.o_lsr_temt(o_lsr_temt)
+	
 );
 
 
@@ -106,11 +107,11 @@ u_uart_rx(
         .i_clk(i_ck),
         .i_rst_n(i_rst_n),
 
-        .os_tick(os_tick),
+        .w_os_tick(w_os_tick),
         .i_uart_rxd(i_uart_rxd),
 
 	.o_rhr_re(o_rhr_re),
-        .o_rhr_rdata(o_thr_rdata),
+        .o_rhr_rdata(o_rhr_rdata),
        
        	.o_rx_fifo_full(o_rx_fifo_full),
 	
