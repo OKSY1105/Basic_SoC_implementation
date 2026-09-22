@@ -39,22 +39,6 @@ localparam S_DATA   = 3'd2;
 localparam S_PARITY = 3'd3;
 localparam S_STOP   = 3'd4;
 
-reg [2:0] r_state;
-reg [7:0] r_tx_shift;
-reg 	  fifo_rd_en; //there is data in fifo
-
-
-/********************************
-*  fifo_tx
-********************************/
-
-fifo #(
-	.WIDTH(DATA_BITS),
-	.DEPTH(FIDO_DEPTH)
-)
-u_tx_fifo(
-	.i_clk(i_clk),
-
 always @(posedge i_clk or negedge i_rst_n) begin
 	if(!i_rst_n)
 
