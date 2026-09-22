@@ -58,12 +58,17 @@ assign hit_read = hit  & ~(i_cpu_write);
 assign hit_write = hit  & i_cpu_write;
 
 reg [7:0] r_dirty;
-always @(posedge i_clk or negedge i_rstn) begin 
+always @(posedge i_clk or negedge i_rstn) begin  
 	if(!i_rstn) begin 
-		valid_mem <=8'b0;
+		valid_mem <=8'b0;      // when empty?
 		o_cpu_rdata <= 32'd0;
                 o_cpu_ack <= 1'b0;
 		r_dirty <=1'b0;
+
+		o_mem_wdata <=32'd0;  // when miss?
+		o_mem_req<=1'b0;
+		o_mem_write <=1'b0;
+		o_mem_address <=8'd0;
 
 	end
 
@@ -90,5 +95,7 @@ always @(posedge i_clk or negedge i_rstn) begin
 	end
 
 end
+
+
 
 endmodule
