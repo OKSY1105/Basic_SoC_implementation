@@ -29,11 +29,11 @@ module uart_top #(
 	o_lsr_pe, // parity bit is different
 	o_lsr_oe, //  RX overrun error: new data was lost because RX FIFO was full(to tell cpu there was overflow)
 	o_tx_fifo_full, // tx fifo is full
-	o_rx_fifo_ful // rx fifo is full
+	o_rx_fifo_full // rx fifo is full
 );
 
 input i_clk;
-input i_rstn;
+input i_rst_n;
 input i_uart_rxd;
 input i_thr_we;
 input [DATA_BIT-1:0] i_thr_wdata;
@@ -51,11 +51,26 @@ wire w_os_tick;
 wire w_baud_tick;
 
 
+
+wire w_uart_rxd;
+wire w_uart_txd;
+
+
+PADDI u_pad_uart_rx (
+    .PAD(i_uart_rxd),
+    .Y  (w_uart_rxd)
+);
+
+PADDO u_pad_uart_tx(
+    .PAD(o_uart_txd),
+    .A (w_uart_txd)
+);
+`ifdef PED_TEST	
 /*****************************
 * Baud Rate Generator
 ***************************/
 baud_rate_gen #(
-	.CLK_FREQ_HZ(CLK_FRE_HZ),
+	.CLK_FREQ_HZ(CLK_FREQ_HZ),
 	.BAUD_RATE(BAUD_RATE)
 )
 u_baud_rate_gen(
@@ -80,7 +95,7 @@ u_uart_tx(
 
 	.w_baud_tick(w_baud_tick),
 
-	.o_uart_txd(o_uart_txd),
+	.o_uart_txd(w_uart_txd),
 	
 	.i_thr_we(i_thr_we),
 	.i_thr_rdata(i_thr_wdata),
@@ -108,7 +123,7 @@ u_uart_rx(
         .i_rst_n(i_rst_n),
 
         .w_os_tick(w_os_tick),
-        .i_uart_rxd(i_uart_rxd),
+        .i_uart_rxd(w_uart_rxd),
 
 	.o_rhr_re(o_rhr_re),
         .o_rhr_rdata(o_rhr_rdata),
@@ -122,6 +137,6 @@ u_uart_rx(
 );
 
 
-
+`endif
 
 endmodule
