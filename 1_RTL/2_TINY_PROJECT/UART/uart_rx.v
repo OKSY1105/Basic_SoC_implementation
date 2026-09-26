@@ -12,7 +12,7 @@ module uart_rx #(
 	o_lsr_fe, // there was no stop bit
 	o_lsr_pe, // parity bit is worng
 	o_rx_fifo_full, //rx_fifo is full but not data loss
-	o_lsr_oe // ther (was/is) data loss when rx_fifo (was/is) full
+	o_lsr_oe // there (was/is) data loss when rx_fifo (was/is) full
 );
 
 input i_clk;
@@ -60,13 +60,15 @@ always(posedge i_clk or negedge i_rst_n)begin
 end
 
 wire falling_edge;
-assign fallin_edge = r_rxd_prev & !(r_rxd_ff2);
+assign fallin_edge = r_rxd_prev & !(r_rxd_ff2); //start bit 검출 
 
 reg [3:0] r_os_cnt;
 
 reg sample7;
 reg sample8;
 reg sample9;
+
+wire majority_bit;
 
 assign majority_bit =
        (sample7 & sample8)
@@ -124,12 +126,114 @@ always @(posedge i_clk or negedge i_rst_n) begin
 					state <= S_IDLE;
 				end
 			end
+			S_START : begin
+				if(i_os_tick)begin
+					if(r_os_cnt ==4'd7)
+						sample7 <=r_rxd_ff2;
+					if(r_os_cnt == 4'd8)
+						sample8 <= r_rxd_ff2;
+					if(r_os_cnt == 4'd9)
+						sample9 <=r_rxd_ff2;
+					if(r_os_cnt == 4'd15) begin
+						r_os_cnt <=4'd0;
 
+						if(majority_bit == 1'b0) begin
+							r_bit_cnt <=3'd0;
+							state  <= S_DATA;
+						end
+						else begin
+							state <= S_IDLE;
+						end
+					end
+					else begin
+						r_os_cnt <= r_os_cnt +1'b1;
+					end
+				end
+			end
+			S_DATA : begin
+				if(os_tick)begin
+					if(r_os_cnt ==4'd7)
+                                                sample7 <=r_rxd_ff2;
+                                        if(r_os_cnt == 4'd8)
+                                                sample8 <= r_rxd_ff2;
+                                        if(r_os_cnt == 4'd9)
+                                                sample9 <=r_rxd_ff2;
 
-		end
+                                        if(r_os_cnt == 4'd15) begin
+                                                r_os_cnt <=4'd0;
+
+                                               r_rx_shift[r_bit_cnt] <= majority_bit;
+					       if(r_bit_cnt == DATA_BITS-1) begin
+						       r_bit_cnt <=3'd0;
+						       state <=S_PARITY;
+					       end
+					       else begin
+						       r_bit_cnt < r_bit_cnt +1'b1;
+					       end
+				       end
+				       else begin
+					      r_os_cnt <=r_os_cnt+1'b1;
+				      end
+			      end
+		      end
+		      S_PARITY : begin
+			     if(os_tick)begin
+                                        if(r_os_cnt ==4'd7)
+                                                sample7 <=r_rxd_ff2;
+                                        if(r_os_cnt == 4'd8)
+                                                sample8 <= r_rxd_ff2;
+                                        if(r_os_cnt == 4'd9)
+                                                sample9 <=r_rxd_ff2;
+
+                                        if(r_os_cnt == 4'd15) begin
+                                                r_os_cnt <=4'd0;
+
+                                               if(majority_bit !=(^r_rx_shift))
+						       o_lsr_pe <=1'b1;
+					       state <=S_STOP
+                                       end
+                                       else begin
+                                              r_os_cnt <=r_os_cnt+1'b1;
+                                      end
+                              end
+                      end
+
+		      S_STOP : begin
+			      if(os_tick)begin
+                                        if(r_os_cnt ==4'd7)
+                                                sample7 <=r_rxd_ff2;
+                                        if(r_os_cnt == 4'd8)
+                                                sample8 <= r_rxd_ff2;
+                                        if(r_os_cnt == 4'd9)
+                                                sample9 <=r_rxd_ff2;
+
+                                        if(r_os_cnt == 4'd15) begin
+                                                r_os_cnt <=4'd0;
+
+                                               if(majority_bit !=1)
+						       o_lsr_fe <=1'b1;
+					       if(!o_rx_fifo_full) begin
+						       r_fifo_w_en <=1'b1;
+					       end
+					       else begin
+						       o_lsr_oe <=1'b1;
+					       end
+					       state <= S_IDLE;
+                                       end
+                                       else begin
+                                              r_os_cnt <=r_os_cnt+1'b1;
+                                      end
+                              end
+                      end
+		      
+		      default : begin
+			      state <= S_IDLE;
+		      end
+		      
+		endcase
 end	
 
-
+endmodule
 
 
 
