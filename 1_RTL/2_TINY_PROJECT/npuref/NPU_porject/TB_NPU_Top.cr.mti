@@ -1,0 +1,88 @@
+C:/npuref/NPU_porject/maxFinder.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/maxFinder.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module maxFinder
+
+Top level modules:
+	maxFinder
+
+} {} {}} C:/npuref/NPU_porject/ReLU.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/ReLU.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module ReLU
+
+Top level modules:
+	ReLU
+
+} {} {}} C:/npuref/NPU_porject/Systolic_Array.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/Systolic_Array.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module Systolic_Array
+
+Top level modules:
+	Systolic_Array
+
+} {} {}} C:/npuref/NPU_porject/Weight_Memory.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/Weight_Memory.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module Weight_Memory
+
+Top level modules:
+	Weight_Memory
+
+} {} {}} C:/npuref/NPU_porject/include.v {1 {vlog -work work -stats=none C:/npuref/NPU_porject/include.v
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+
+} {} {}} C:/npuref/NPU_porject/Global_Buffer.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/Global_Buffer.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module Global_Buffer
+
+Top level modules:
+	Global_Buffer
+
+} {} {}} C:/npuref/NPU_porject/PE.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/PE.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module PE
+
+Top level modules:
+	PE
+
+} {} {}} C:/npuref/NPU_porject/Sig_ROM.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/Sig_ROM.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module Sig_ROM
+
+Top level modules:
+	Sig_ROM
+
+} {} {}} C:/npuref/NPU_porject/Activation_Unit.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/Activation_Unit.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module Activation_Unit
+
+Top level modules:
+	Activation_Unit
+
+} {} {}} C:/npuref/NPU_porject/TB_NPU_Top.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/TB_NPU_Top.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module TB_NPU_Top
+
+Top level modules:
+	TB_NPU_Top
+
+} {} {}} C:/npuref/NPU_porject/Bias_Bank.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/Bias_Bank.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module Bias_Bank
+
+Top level modules:
+	Bias_Bank
+
+} {} {}} C:/npuref/NPU_porject/Weight_Bank.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/Weight_Bank.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module Weight_Bank
+
+Top level modules:
+	Weight_Bank
+
+} {} {}} C:/npuref/NPU_porject/NPU_Top.sv {1 {vlog -work work -sv -stats=none C:/npuref/NPU_porject/NPU_Top.sv
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module NPU_Top
+
+Top level modules:
+	NPU_Top
+
+} {} {}}

@@ -1,0 +1,61 @@
+#-----------------------------------------------------------
+# xsim v2024.2 (64-bit)
+# SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
+# IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
+# SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
+# Start of session at: Wed Jul 15 00:59:16 2026
+# Process ID         : 3531
+# Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/dataflow/4_if_case
+# Command line       : xsim -source {xsim.dir/work.testbench/xsim_script.tcl}
+# Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/dataflow/4_if_case/xsim.log
+# Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/dataflow/4_if_case/xsim.jou
+# Running On         : BOOK-3GSAOKNJKI
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-1255U
+# CPU Frequency      : 2611.211 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 12386 MB
+# Swap memory        : 3221 MB
+# Total Virtual      : 15607 MB
+# Available Virtual  : 14602 MB
+#-----------------------------------------------------------
+start_gui
+WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu208ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu208ld/production/2.0/board.xml as part xczu58dr-fsvg1517-2-i specified in board_part file is either invalid or not available
+WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu216ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu216ld/production/2.0/board.xml as part xczu59dr-ffvf1760-2-i specified in board_part file is either invalid or not available
+WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu670ld:part0:1.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu670ld/1.0/board.xml as part xczu57dr-fsve1156-2-i specified in board_part file is either invalid or not available
+source xsim.dir/work.testbench/xsim_script.tcl
+# set_param project.enableReportConfiguration 0
+# load_feature core
+# current_fileset
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/sean/Vivado/2024.2/data/ip'.
+# xsim {work.testbench} -wdb {sim_tb.wdb} -autoloadwcfg -tclbatch {sgdh_sim.tcl}
+Time resolution is 1 ps
+source sgdh_sim.tcl
+## set curr_wave [current_wave_config]
+## if { [string length $curr_wave] == 0 } {
+##   if { [llength [get_objects]] > 0} {
+##     add_wave /
+##     set_property needs_save false [current_wave_config]
+##   } else {
+##      send_msg_id Add_Wave-1 WARNING "No top level signals found. Simulator will start without a wave window. If you want to open a wave window go to 'File->New Waveform Configuration' or type 'create_wave_config' in the TCL console."
+##   }
+## }
+INFO: [Common 17-365] Interrupt caught but 'source' cannot be canceled. Please wait for command to finish.
+INFO: [Common 17-681] Processing pending cancel.
+run all
+sel = 1, normal_if = 2, normal_case = 0, normal_ternary = 3, latch_if = x, latch_case = 0
+sel = 2, normal_if = 3, normal_case = 1, normal_ternary = 0, latch_if = 1, latch_case = 1
+sel = 3, normal_if = 0, normal_case = 2, normal_ternary = 1, latch_if = 1, latch_case = 1
+sel = 0, normal_if = 1, normal_case = 3, normal_ternary = 2, latch_if = 1, latch_case = 3
+sel = 1, normal_if = 2, normal_case = 0, normal_ternary = 3, latch_if = 1, latch_case = 0
+sel = 2, normal_if = 3, normal_case = 1, normal_ternary = 0, latch_if = 1, latch_case = 1
+sel = 3, normal_if = 0, normal_case = 2, normal_ternary = 1, latch_if = 1, latch_case = 1
+sel = 0, normal_if = 1, normal_case = 3, normal_ternary = 2, latch_if = 1, latch_case = 3
+$finish called at time : 90 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/dataflow/4_if_case/testbench.v" Line 45
+close_sim
+INFO: [Simtcl 6-16] Simulation closed
+exit

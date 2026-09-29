@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenRun Id="synth_1" LaunchPart="xc7z020clg400-1" LaunchTime="1772638106">
+  <File Type="VDS-TIMINGSUMMARY" Name="zyNet_timing_summary_synth.rpt"/>
+  <File Type="RDS-DCP" Name="zyNet.dcp"/>
+  <File Type="RDS-UTIL-PB" Name="zyNet_utilization_synth.pb"/>
+  <File Type="RDS-UTIL" Name="zyNet_utilization_synth.rpt"/>
+  <File Type="VDS-TIMING-PB" Name="zyNet_timing_summary_synth.pb"/>
+  <File Type="PA-TCL" Name="zyNet.tcl"/>
+  <File Type="REPORTS-TCL" Name="zyNet_reports.tcl"/>
+  <File Type="RDS-RDS" Name="zyNet.vds"/>
+  <File Type="RDS-PROPCONSTRS" Name="zyNet_drc_synth.rpt"/>
+  <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
+    <Filter Type="Srcs"/>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Layer_1.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Layer_2.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Layer_3.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Sig_ROM.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/include.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Weight_Memory.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/axi_lite_wrapper.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/maxFinder.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/neuron.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/relu.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/zynet.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <Config>
+      <Option Name="DesignMode" Val="RTL"/>
+      <Option Name="TopModule" Val="zyNet"/>
+      <Option Name="TopAutoSet" Val="TRUE"/>
+    </Config>
+  </FileSet>
+  <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
+    <Filter Type="Constrs"/>
+    <Config>
+      <Option Name="ConstrsType" Val="XDC"/>
+    </Config>
+  </FileSet>
+  <FileSet Name="utils" Type="Utils" RelSrcDir="$PSRCDIR/utils_1">
+    <Filter Type="Utils"/>
+    <Config>
+      <Option Name="TopAutoSet" Val="TRUE"/>
+    </Config>
+  </FileSet>
+  <Strategy Version="1" Minor="2">
+    <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2022">
+      <Desc>Vivado Synthesis Defaults</Desc>
+    </StratHandle>
+    <Step Id="synth_design"/>
+  </Strategy>
+</GenRun>

@@ -1,0 +1,14 @@
+Op: 0000, A: 0000000a, B: 00000014, Result: 0000001e, Expected: 0000001e, Zero: 0, Overflow: 0
+Op: 0001, A: 0000001e, B: 0000000f, Result: 0000000f, Expected: 0000000f, Zero: 0, Overflow: 0
+Op: 0010, A: ff00ff00, B: 0f0f0f0f, Result: 0f000f00, Expected: 0f000f00, Zero: 0, Overflow: 0
+Op: 0011, A: ff00ff00, B: 0f0f0f0f, Result: ff0fff0f, Expected: ff0fff0f, Zero: 0, Overflow: 0
+Op: 0100, A: ff00ff00, B: 0f0f0f0f, Result: f00ff00f, Expected: f00ff00f, Zero: 0, Overflow: 0
+Op: 0101, A: ff00ff00, B: 0f0f0f0f, Result: 00ff00ff, Expected: 00ff00ff, Zero: 0, Overflow: 0
+Op: 0110, A: 0000ffff, B: 00000004, Result: 000ffff0, Expected: 000ffff0, Zero: 0, Overflow: 0
+Op: 0111, A: ff000000, B: 00000004, Result: 0ff00000, Expected: 0ff00000, Zero: 0, Overflow: 0
+Op: 1000, A: 80000000, B: 00000001, Result: c0000000, Expected: c0000000, Zero: 0, Overflow: 0
+Op: 1001, A: fffffff6, B: 00000005, Result: 00000001, Expected: 00000001, Zero: 0, Overflow: 0
+Op: 1010, A: ffffffff, B: 00000001, Result: 00000000, Expected: 00000000, Zero: 1, Overflow: 0
+Op: 0000, A: 7fffffff, B: 00000001, Result: 80000000, Expected: 80000000, Zero: 0, Overflow: 1
+Op: 0001, A: 80000000, B: 00000001, Result: 7fffffff, Expected: 7fffffff, Zero: 0, Overflow: 1
+Op: 0000, A: 00000000, B: 00000000, Result: 00000000, Expected: 00000000, Zero: 1, Overflow: 0

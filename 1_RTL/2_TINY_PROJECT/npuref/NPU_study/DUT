@@ -1,0 +1,214 @@
+module systolic_controller #(
+  parameter DATA_W = 4,
+  parameter K_DIM  = 2,  // Common dimension
+  parameter ROWS   = 2,
+  parameter COLS   = 2,
+  parameter ACC_W  = 10  // 2*DATA_W + $clog2(K_DIM)
+)(
+  input                         clk,
+  input                         rst_n,
+
+  // --- Control Interface ---
+  input                         i_start,
+  output                        o_done,
+  output                        o_busy,
+
+  // --- Data Interface - Matrix A (flattened) ---
+  input  [DATA_W-1:0]           i_mat_a_00,
+  input  [DATA_W-1:0]           i_mat_a_01,
+  input  [DATA_W-1:0]           i_mat_a_10,
+  input  [DATA_W-1:0]           i_mat_a_11,
+
+  // --- Data Interface - Matrix B (flattened) ---
+  input  [DATA_W-1:0]           i_mat_b_00,
+  input  [DATA_W-1:0]           i_mat_b_01,
+  input  [DATA_W-1:0]           i_mat_b_10,
+  input  [DATA_W-1:0]           i_mat_b_11,
+
+  // --- Data Interface - Matrix C (flattened) ---
+  output [ACC_W-1:0]            o_mat_c_00,
+  output [ACC_W-1:0]            o_mat_c_01,
+  output [ACC_W-1:0]            o_mat_c_10,
+  output [ACC_W-1:0]            o_mat_c_11
+);
+
+  //==========================================================
+  // 1. FSM States
+  //==========================================================
+  localparam [1:0] IDLE       = 2'b00;
+  localparam [1:0] RUN        = 2'b01;
+  localparam [1:0] DONE_STATE = 2'b10;
+
+  reg [1:0] state, next_state;
+  reg [7:0] cnt;
+
+  // Input Buffer: 시작 시 입력 데이터를 래치
+  reg [DATA_W-1:0] latched_mat_a_00, latched_mat_a_01;
+  reg [DATA_W-1:0] latched_mat_a_10, latched_mat_a_11;
+  reg [DATA_W-1:0] latched_mat_b_00, latched_mat_b_01;
+  reg [DATA_W-1:0] latched_mat_b_10, latched_mat_b_11;
+
+  // Array Interface
+  reg [DATA_W-1:0] array_a_in_0, array_a_in_1;
+  reg [DATA_W-1:0] array_b_in_0, array_b_in_1;
+  wire             array_en;
+  wire             array_clr;
+
+  // 계산 사이클 수: ROWS + COLS + K_DIM + 2
+  localparam CALC_CYCLES = 2 + 2 + 2 + 2;  // = 8
+
+  //==========================================================
+  // 2. FSM & Counter
+  //==========================================================
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      state <= IDLE;
+      cnt   <= 0;
+    end else begin
+      state <= next_state;
+      if (state == RUN) 
+        cnt <= cnt + 1;
+      else              
+        cnt <= 0;
+    end
+  end
+
+  always @(*) begin
+    next_state = state;
+    case (state)
+      IDLE: begin
+        if (i_start) next_state = RUN;
+      end
+      RUN: begin
+        if (cnt >= CALC_CYCLES) next_state = DONE_STATE;
+      end
+      DONE_STATE: begin
+        if (!i_start) next_state = IDLE;
+      end
+      default: next_state = IDLE;
+    endcase
+  end
+
+  // Output Assignments
+  assign o_busy   = (state == RUN);
+  assign o_done   = (state == DONE_STATE);
+
+  // Array Control Signals
+  assign array_en  = (state == RUN);
+  assign array_clr = (state == IDLE) && i_start;
+
+  //==========================================================
+  // 3. Input Buffer Latching
+  //==========================================================
+  always @(posedge clk) begin
+    if (state == IDLE && i_start) begin
+      latched_mat_a_00 <= i_mat_a_00;
+      latched_mat_a_01 <= i_mat_a_01;
+      latched_mat_a_10 <= i_mat_a_10;
+      latched_mat_a_11 <= i_mat_a_11;
+      
+      latched_mat_b_00 <= i_mat_b_00;
+      latched_mat_b_01 <= i_mat_b_01;
+      latched_mat_b_10 <= i_mat_b_10;
+      latched_mat_b_11 <= i_mat_b_11;
+    end
+  end
+
+  //==========================================================
+  // 4. Data Skewing Logic - Row Input (A)
+  //==========================================================
+  // Row 0: array_a_in_0
+  always @(*) begin
+    array_a_in_0 = 0;  // Default padding
+    if (state == RUN) begin
+      // k = cnt - row_index(0) = cnt
+      if (cnt == 0)
+        array_a_in_0 = latched_mat_a_00;  // A[0][0]
+      else if (cnt == 1)
+        array_a_in_0 = latched_mat_a_01;  // A[0][1]
+      else
+        array_a_in_0 = 0;
+    end
+  end
+
+  // Row 1: array_a_in_1
+  always @(*) begin
+    array_a_in_1 = 0;  // Default padding
+    if (state == RUN) begin
+      // k = cnt - row_index(1) = cnt - 1
+      if (cnt == 1)
+        array_a_in_1 = latched_mat_a_10;  // A[1][0]
+      else if (cnt == 2)
+        array_a_in_1 = latched_mat_a_11;  // A[1][1]
+      else
+        array_a_in_1 = 0;
+    end
+  end
+
+  //==========================================================
+  // 5. Data Skewing Logic - Column Input (B)
+  //==========================================================
+  // Col 0: array_b_in_0
+  always @(*) begin
+    array_b_in_0 = 0;  // Default padding
+    if (state == RUN) begin
+      // k = cnt - col_index(0) = cnt
+      if (cnt == 0)
+        array_b_in_0 = latched_mat_b_00;  // B[0][0]
+      else if (cnt == 1)
+        array_b_in_0 = latched_mat_b_10;  // B[1][0]
+      else
+        array_b_in_0 = 0;
+    end
+  end
+
+  // Col 1: array_b_in_1
+  always @(*) begin
+    array_b_in_1 = 0;  // Default padding
+    if (state == RUN) begin
+      // k = cnt - col_index(1) = cnt - 1
+      if (cnt == 1)
+        array_b_in_1 = latched_mat_b_01;  // B[0][1]
+      else if (cnt == 2)
+        array_b_in_1 = latched_mat_b_11;  // B[1][1]
+      else
+        array_b_in_1 = 0;
+    end
+  end
+
+  //==========================================================
+  // 6. Systolic Array Instantiation
+  //==========================================================
+  systolic_array_2d #(
+    .DATA_W (DATA_W),
+    .ACC_W  (ACC_W),
+    .ROWS   (ROWS),
+    .COLS   (COLS)
+  ) u_core_array (
+    .clk          (clk),
+    .rst_n        (rst_n),
+    .clr          (array_clr),
+    .en           (array_en),
+    
+    // A inputs
+    .a_in_row_0   (array_a_in_0),
+    .a_in_row_1   (array_a_in_1),
+    
+    // B inputs
+    .b_in_col_0   (array_b_in_0),
+    .b_in_col_1   (array_b_in_1),
+    
+    // Unused mul outputs
+    .pe_mul_00    (),
+    .pe_mul_01    (),
+    .pe_mul_10    (),
+    .pe_mul_11    (),
+    
+    // C outputs (final result)
+    .pe_acc_sum_00(o_mat_c_00),
+    .pe_acc_sum_01(o_mat_c_01),
+    .pe_acc_sum_10(o_mat_c_10),
+    .pe_acc_sum_11(o_mat_c_11)
+  );
+
+endmodule

@@ -1,0 +1,40 @@
+Test Case 1:
+  Input1: 10101010
+  Input2: 11001100
+  Input3: 11110000
+  Result: 11101000
+  Expected: 11101000
+  Test Passed
+
+Test Case 2:
+  Input1: 00000000
+  Input2: 11111111
+  Input3: 10101010
+  Result: 10101010
+  Expected: 10101010
+  Test Passed
+
+Test Case 3:
+  Input1: 11111111
+  Input2: 11111111
+  Input3: 00000000
+  Result: 11111111
+  Expected: 11111111
+  Test Passed
+
+Test Case 4:
+  Input1: 10101010
+  Input2: 01010101
+  Input3: 00000000
+  Result: 00000000
+  Expected: 00000000
+  Test Passed
+
+Test Case 5:
+  Input1: 11001100
+  Input2: 00110011
+  Input3: 10101010
+  Result: 10101010
+  Expected: 10101010
+  Test Passed
+

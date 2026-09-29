@@ -1,0 +1,17 @@
+MEM1 (4-bit address, 8-bit data) Test:
+Address:           0, Data:   0
+Address:           1, Data:   2
+Address:           2, Data:   4
+Address:           3, Data:   6
+Address:           4, Data:   8
+Address:           5, Data:  10
+Address:           6, Data:  12
+Address:           7, Data:  14
+Address:           8, Data:  16
+Address:           9, Data:  18
+Address:          10, Data:  20
+Address:          11, Data:  22
+Address:          12, Data:  24
+Address:          13, Data:  26
+Address:          14, Data:  28
+Address:          15, Data:  30

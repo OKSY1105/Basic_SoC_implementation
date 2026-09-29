@@ -1,0 +1,5 @@
+Test Case 1: Left shift 2 bits - Input: 10101010, Output: 10101000
+Test Case 2: Right shift 3 bits - Input: 10101010, Output: 00010101
+Test Case 3: Left shift 8 bits - Input: 10101010, Output: 00000000
+Test Case 4: Right shift 1 bit - Input: 10101010, Output: 01010101
+Test Case 5: No shift - Input: 10101010, Output: 10101010

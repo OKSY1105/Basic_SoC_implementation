@@ -1,0 +1,15 @@
+Enable=0, Data_in=00, Data_out=00
+Enable=0, Data_in=00, Data_out=00
+Enable=0, Data_in=00, Data_out=00
+Enable=0, Data_in=aa, Data_out=00
+Enable=0, Data_in=aa, Data_out=00
+Enable=1, Data_in=aa, Data_out=00
+Enable=1, Data_in=aa, Data_out=aa
+Enable=1, Data_in=55, Data_out=aa
+Enable=1, Data_in=55, Data_out=55
+Enable=0, Data_in=55, Data_out=55
+Enable=0, Data_in=55, Data_out=55
+Enable=0, Data_in=ff, Data_out=55
+Enable=0, Data_in=ff, Data_out=55
+Enable=1, Data_in=ff, Data_out=55
+Enable=1, Data_in=ff, Data_out=ff

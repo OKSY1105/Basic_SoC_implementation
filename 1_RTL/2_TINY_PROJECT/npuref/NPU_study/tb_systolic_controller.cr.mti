@@ -1,0 +1,15 @@
+{C:/npuref/NPU_study/Systolic Array + Controller/testbench} {1 {vlog -work work -stats=none {C:\npuref\NPU_study\Systolic Array + Controller\testbench}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module tb_systolic_controller
+
+Top level modules:
+	tb_systolic_controller
+
+} {} {}} {C:/npuref/NPU_study/Systolic Array + Controller/DUT} {1 {vlog -work work -stats=none {C:\npuref\NPU_study\Systolic Array + Controller\DUT}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module systolic_controller
+
+Top level modules:
+	systolic_controller
+
+} {} {}}

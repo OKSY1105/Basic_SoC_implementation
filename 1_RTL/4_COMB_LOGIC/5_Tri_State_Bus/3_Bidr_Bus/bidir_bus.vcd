@@ -1,0 +1,66 @@
+$date
+    Jul  2, 2026  00:37:58
+$end
+$version
+    TOOL:	xmsim(64)	22.03-s012
+$end
+$timescale
+    1 ns
+$end
+
+$scope module tb_bidir_bus $end
+$var reg       8 !    i_data_to_bus [7:0] $end
+$var reg       1 "    i_send $end
+$var reg       1 #    i_rcv $end
+$var wire      8 $    io_bus_data [7:0] $end
+$var wire      8 %    o_data_from_bus [7:0] $end
+$var reg       8 &    r_bus_drive_data [7:0] $end
+
+$scope module uut $end
+$var wire      8 '    i_data_to_bus [7:0] $end
+$var wire      1 (    i_send  $end
+$var wire      1 )    i_rcv  $end
+$var wire      8 $    io_bus_data [7:0] $end
+$var reg       8 *    o_data_from_bus [7:0] $end
+$upscope $end
+
+$upscope $end
+
+$enddefinitions $end
+$dumpvars
+b0 !
+0"
+0#
+bz $
+bz %
+b0 &
+b0 '
+0(
+0)
+bz *
+$end
+#10
+1"
+b10101010 !
+b10101010 '
+1(
+b10101010 $
+#20
+0"
+1#
+b11001100 &
+1)
+0(
+b1xx01xx0 $
+b1xx01xx0 *
+b1xx01xx0 %
+b11001100 $
+b11001100 *
+b11001100 %
+#30
+0#
+0)
+bz $
+bz *
+bz %
+#40

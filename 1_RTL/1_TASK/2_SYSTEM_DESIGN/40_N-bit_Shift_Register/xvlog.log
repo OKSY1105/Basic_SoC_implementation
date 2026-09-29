@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/40_N-bit_Shift_Register/shift_register.v" into library work
+INFO: [VRFC 10-311] analyzing module shift_register
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/40_N-bit_Shift_Register/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench

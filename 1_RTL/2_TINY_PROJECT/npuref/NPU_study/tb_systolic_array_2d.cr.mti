@@ -1,0 +1,33 @@
+C:/npuref/NPU_study/systolic_array_2d {1 {vlog -work work -stats=none C:/npuref/NPU_study/systolic_array_2d
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module systolic_array_2d
+-- Compiling module pe_systolic_cell
+-- Compiling module mac_pe
+
+Top level modules:
+	systolic_array_2d
+
+} {} {}} C:/npuref/NPU_study/Systolic_Array_2D/systolic_array_2d {1 {vlog -work work -stats=none {C:\npuref\NPU_study\Systolic_Array_2D\systolic_array_2d}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module systolic_array_2d
+-- Compiling module pe_systolic_cell
+-- Compiling module mac_pe
+
+Top level modules:
+	systolic_array_2d
+
+} {} {}} C:/npuref/NPU_study/tb_systolic_array_2d {1 {vlog -work work -stats=none C:/npuref/NPU_study/tb_systolic_array_2d
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module tb_systolic_array_2d
+
+Top level modules:
+	tb_systolic_array_2d
+
+} {} {}} C:/npuref/NPU_study/Systolic_Array_2D/tb_systolic_array_2d {1 {vlog -work work -stats=none {C:\npuref\NPU_study\Systolic_Array_2D\tb_systolic_array_2d}
+Model Technology ModelSim - Intel FPGA Edition vlog 10.5b Compiler 2016.10 Oct  5 2016
+-- Compiling module tb_systolic_array_2d
+
+Top level modules:
+	tb_systolic_array_2d
+
+} {} {}}

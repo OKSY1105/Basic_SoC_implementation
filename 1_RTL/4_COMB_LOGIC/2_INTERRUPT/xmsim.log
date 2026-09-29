@@ -1,0 +1,22 @@
+xmsim(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
+TOOL:	xmsim(64)	22.03-s012: Started on Jul 01, 2026 at 02:45:40 KST
+xmsim
+    -MESS
+    tb_interrupt
+
+Loading snapshot work_lib.tb_interrupt:module .................... Done
+xcelium> run
+Time=0 | i_int_address=00000000 | i_int_ack=0 | o_int_id=000 | o_int_req=0
+Time=10 | i_int_address=00000001 | i_int_ack=0 | o_int_id=000 | o_int_req=1
+Time=20 | i_int_address=00100000 | i_int_ack=0 | o_int_id=101 | o_int_req=1
+Time=30 | i_int_address=10000000 | i_int_ack=0 | o_int_id=111 | o_int_req=1
+Time=40 | i_int_address=10000000 | i_int_ack=1 | o_int_id=000 | o_int_req=0
+Time=50 | i_int_address=10000000 | i_int_ack=0 | o_int_id=111 | o_int_req=1
+Time=60 | i_int_address=01000010 | i_int_ack=0 | o_int_id=110 | o_int_req=1
+Time=70 | i_int_address=01000010 | i_int_ack=1 | o_int_id=000 | o_int_req=0
+Time=80 | i_int_address=01000010 | i_int_ack=0 | o_int_id=110 | o_int_req=1
+Time=90 | i_int_address=00000000 | i_int_ack=0 | o_int_id=000 | o_int_req=0
+Simulation complete via $finish(1) at time 110 NS + 0
+./tb_interrupt.v:45      #20 $finish;             
+xcelium> exit
+TOOL:	xmsim(64)	22.03-s012: Exiting on Jul 01, 2026 at 02:45:40 KST  (total: 00:00:00)

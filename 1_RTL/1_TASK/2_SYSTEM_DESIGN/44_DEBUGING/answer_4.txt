@@ -1,0 +1,16 @@
+binary_in=0000 gray_out=0000
+binary_in=0001 gray_out=0001
+binary_in=0010 gray_out=0011
+binary_in=0011 gray_out=0010
+binary_in=0100 gray_out=0110
+binary_in=0101 gray_out=0111
+binary_in=0110 gray_out=0101
+binary_in=0111 gray_out=0100
+binary_in=1000 gray_out=1100
+binary_in=1001 gray_out=1101
+binary_in=1010 gray_out=1111
+binary_in=1011 gray_out=1110
+binary_in=1100 gray_out=1010
+binary_in=1101 gray_out=1011
+binary_in=1110 gray_out=1001
+binary_in=1111 gray_out=1000

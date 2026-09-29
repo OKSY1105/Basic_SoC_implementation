@@ -1,0 +1,12 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/44_DEBUGING/bug_code.v" into library work
+INFO: [VRFC 10-311] analyzing module parity_checker
+INFO: [VRFC 10-311] analyzing module fsm
+INFO: [VRFC 10-311] analyzing module counter
+INFO: [VRFC 10-311] analyzing module bin_2_gray
+INFO: [VRFC 10-311] analyzing module clock_gating
+INFO: [VRFC 10-311] analyzing module interrupt_ctrl
+INFO: [VRFC 10-311] analyzing module msb_one_extractor
+INFO: [VRFC 10-311] analyzing module rising_edge_detector
+INFO: [VRFC 10-311] analyzing module param_mem
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/44_DEBUGING/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench

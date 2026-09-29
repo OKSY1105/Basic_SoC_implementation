@@ -1,0 +1,18 @@
+xmvlog(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
+TOOL:	xmvlog(64)	22.03-s012: Started on Jun 30, 2026 at 22:43:12 KST
+xmvlog
+    -MESS
+    -linedebug
+    ./pipeline.v
+    ./tb_pipeline.v
+
+file: ./pipeline.v
+reg [11:0] o_out;
+               |
+xmvlog: *W,ILLPDX (./pipeline.v,13|15): Multiple declarations for a port not allowed in module with ANSI list of port declarations (port 'o_out') [12.3.4(IEEE-2001)].
+	module work_lib.pipeline
+		errors: 0, warnings: 1
+file: ./tb_pipeline.v
+	module work_lib.tb_pipeline
+		errors: 0, warnings: 0
+TOOL:	xmvlog(64)	22.03-s012: Exiting on Jun 30, 2026 at 22:43:12 KST  (total: 00:00:00)

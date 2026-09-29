@@ -1,0 +1,228 @@
+//[5] systolic_array_2d + controller + Activation(ReLu)
+`timescale 1ns/1ps
+
+module tb_systolic_controller_relu;
+  parameter DATA_W = 4;
+  parameter K_DIM  = 4;
+  parameter ROWS   = 1;
+  parameter COLS   = 4;
+  // [??] Bias? 50?? ?? (?? ? ??? 50?? ??? 0? ?)
+  parameter BIAS   = 50; 
+  parameter ACC_W  = 11;  // 2*DATA_W + $clog2(K_DIM) = 8+2 = 10, ???? 11
+  
+  reg clk, rst_n;
+  reg start;
+  wire done, busy;
+  
+  // ?? ?? A [1x4]
+  reg [DATA_W-1:0] tb_mat_a_00, tb_mat_a_01, tb_mat_a_02, tb_mat_a_03;
+  
+  // ?? ?? B [4x4]
+  reg [DATA_W-1:0] tb_mat_b_00, tb_mat_b_01, tb_mat_b_02, tb_mat_b_03;
+  reg [DATA_W-1:0] tb_mat_b_10, tb_mat_b_11, tb_mat_b_12, tb_mat_b_13;
+  reg [DATA_W-1:0] tb_mat_b_20, tb_mat_b_21, tb_mat_b_22, tb_mat_b_23;
+  reg [DATA_W-1:0] tb_mat_b_30, tb_mat_b_31, tb_mat_b_32, tb_mat_b_33;
+  
+  // ?? ?? C [1x4]
+  wire [ACC_W-1:0] tb_mat_c_00, tb_mat_c_01, tb_mat_c_02, tb_mat_c_03;
+  
+  // Reference Model
+  integer C_ref_00, C_ref_01, C_ref_02, C_ref_03;
+  integer err_cnt;
+  integer iter;
+  integer temp_sum;
+  
+  // DUT Instantiation
+  systolic_controller_relu #(
+    .DATA_W(DATA_W), 
+    .K_DIM(K_DIM), 
+    .ROWS(ROWS), 
+    .COLS(COLS),
+    .BIAS(BIAS)
+  ) dut (
+    .clk        (clk),
+    .rst_n      (rst_n),
+    
+    // Control Interface
+    .i_start    (start),
+    .o_done     (done),
+    .o_busy     (busy),
+    
+    // Matrix A inputs [1x4]
+    .i_mat_a_00 (tb_mat_a_00),
+    .i_mat_a_01 (tb_mat_a_01),
+    .i_mat_a_02 (tb_mat_a_02),
+    .i_mat_a_03 (tb_mat_a_03),
+    
+    // Matrix B inputs [4x4]
+    .i_mat_b_00 (tb_mat_b_00),
+    .i_mat_b_01 (tb_mat_b_01),
+    .i_mat_b_02 (tb_mat_b_02),
+    .i_mat_b_03 (tb_mat_b_03),
+    .i_mat_b_10 (tb_mat_b_10),
+    .i_mat_b_11 (tb_mat_b_11),
+    .i_mat_b_12 (tb_mat_b_12),
+    .i_mat_b_13 (tb_mat_b_13),
+    .i_mat_b_20 (tb_mat_b_20),
+    .i_mat_b_21 (tb_mat_b_21),
+    .i_mat_b_22 (tb_mat_b_22),
+    .i_mat_b_23 (tb_mat_b_23),
+    .i_mat_b_30 (tb_mat_b_30),
+    .i_mat_b_31 (tb_mat_b_31),
+    .i_mat_b_32 (tb_mat_b_32),
+    .i_mat_b_33 (tb_mat_b_33),
+    
+    // Matrix C outputs [1x4]
+    .o_mat_c_00 (tb_mat_c_00),
+    .o_mat_c_01 (tb_mat_c_01),
+    .o_mat_c_02 (tb_mat_c_02),
+    .o_mat_c_03 (tb_mat_c_03)
+  );
+  
+  // Clock Gen
+  initial begin
+    clk = 0;
+    forever #5 clk = ~clk;
+  end
+  
+  initial begin
+    rst_n = 0;
+    start = 0;
+    
+    // ???
+    tb_mat_a_00 = 0; tb_mat_a_01 = 0; tb_mat_a_02 = 0; tb_mat_a_03 = 0;
+    
+    tb_mat_b_00 = 0; tb_mat_b_01 = 0; tb_mat_b_02 = 0; tb_mat_b_03 = 0;
+    tb_mat_b_10 = 0; tb_mat_b_11 = 0; tb_mat_b_12 = 0; tb_mat_b_13 = 0;
+    tb_mat_b_20 = 0; tb_mat_b_21 = 0; tb_mat_b_22 = 0; tb_mat_b_23 = 0;
+    tb_mat_b_30 = 0; tb_mat_b_31 = 0; tb_mat_b_32 = 0; tb_mat_b_33 = 0;
+    
+    #20 rst_n = 1;
+    
+    $display("=== Controller Verification with ReLU (Bias=%0d) ===", BIAS);
+    
+    for (iter = 0; iter < 5; iter = iter + 1) begin
+      // 1. Data Setup (Random)
+      tb_mat_a_00 = $random & ((1<<DATA_W)-1);
+      tb_mat_a_01 = $random & ((1<<DATA_W)-1);
+      tb_mat_a_02 = $random & ((1<<DATA_W)-1);
+      tb_mat_a_03 = $random & ((1<<DATA_W)-1);
+      
+      tb_mat_b_00 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_01 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_02 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_03 = $random & ((1<<DATA_W)-1);
+      
+      tb_mat_b_10 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_11 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_12 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_13 = $random & ((1<<DATA_W)-1);
+      
+      tb_mat_b_20 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_21 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_22 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_23 = $random & ((1<<DATA_W)-1);
+      
+      tb_mat_b_30 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_31 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_32 = $random & ((1<<DATA_W)-1);
+      tb_mat_b_33 = $random & ((1<<DATA_W)-1);
+      
+      // 2. Calculate Reference (ReLU Logic ??)
+      // C[0][0] = A[0][0]*B[0][0] + A[0][1]*B[1][0] + A[0][2]*B[2][0] + A[0][3]*B[3][0]
+      temp_sum = tb_mat_a_00 * tb_mat_b_00 + tb_mat_a_01 * tb_mat_b_10 + 
+                 tb_mat_a_02 * tb_mat_b_20 + tb_mat_a_03 * tb_mat_b_30;
+      temp_sum = temp_sum - BIAS;
+      C_ref_00 = (temp_sum < 0) ? 0 : temp_sum;
+      
+      // C[0][1]
+      temp_sum = tb_mat_a_00 * tb_mat_b_01 + tb_mat_a_01 * tb_mat_b_11 + 
+                 tb_mat_a_02 * tb_mat_b_21 + tb_mat_a_03 * tb_mat_b_31;
+      temp_sum = temp_sum - BIAS;
+      C_ref_01 = (temp_sum < 0) ? 0 : temp_sum;
+      
+      // C[0][2]
+      temp_sum = tb_mat_a_00 * tb_mat_b_02 + tb_mat_a_01 * tb_mat_b_12 + 
+                 tb_mat_a_02 * tb_mat_b_22 + tb_mat_a_03 * tb_mat_b_32;
+      temp_sum = temp_sum - BIAS;
+      C_ref_02 = (temp_sum < 0) ? 0 : temp_sum;
+      
+      // C[0][3]
+      temp_sum = tb_mat_a_00 * tb_mat_b_03 + tb_mat_a_01 * tb_mat_b_13 + 
+                 tb_mat_a_02 * tb_mat_b_23 + tb_mat_a_03 * tb_mat_b_33;
+      temp_sum = temp_sum - BIAS;
+      C_ref_03 = (temp_sum < 0) ? 0 : temp_sum;
+      
+      // 3. Start Operation
+      @(posedge clk);
+      start = 1;
+      @(posedge clk);
+      start = 0;
+      
+      // 4. Wait for Done
+      wait(done == 1);
+      
+      // 5. Check Result
+      err_cnt = 0;
+      $display("--------------------------------------------------");
+      $display("[Iter %0d] Checking Result...", iter);
+      
+      // C[0][0]
+      if (tb_mat_c_00 !== C_ref_00) begin
+        $display("ERROR! [0][0]: DUT=%0d, REF=%0d", tb_mat_c_00, C_ref_00);
+        err_cnt = err_cnt + 1;
+      end else begin
+        if (tb_mat_c_00 == 0)
+          $display("PASS!  [0][0]: DUT=%0d (ReLU Activated)", tb_mat_c_00);
+        else
+          $display("PASS!  [0][0]: DUT=%0d", tb_mat_c_00);
+      end
+      
+      // C[0][1]
+      if (tb_mat_c_01 !== C_ref_01) begin
+        $display("ERROR! [0][1]: DUT=%0d, REF=%0d", tb_mat_c_01, C_ref_01);
+        err_cnt = err_cnt + 1;
+      end else begin
+        if (tb_mat_c_01 == 0)
+          $display("PASS!  [0][1]: DUT=%0d (ReLU Activated)", tb_mat_c_01);
+        else
+          $display("PASS!  [0][1]: DUT=%0d", tb_mat_c_01);
+      end
+      
+      // C[0][2]
+      if (tb_mat_c_02 !== C_ref_02) begin
+        $display("ERROR! [0][2]: DUT=%0d, REF=%0d", tb_mat_c_02, C_ref_02);
+        err_cnt = err_cnt + 1;
+      end else begin
+        if (tb_mat_c_02 == 0)
+          $display("PASS!  [0][2]: DUT=%0d (ReLU Activated)", tb_mat_c_02);
+        else
+          $display("PASS!  [0][2]: DUT=%0d", tb_mat_c_02);
+      end
+      
+      // C[0][3]
+      if (tb_mat_c_03 !== C_ref_03) begin
+        $display("ERROR! [0][3]: DUT=%0d, REF=%0d", tb_mat_c_03, C_ref_03);
+        err_cnt = err_cnt + 1;
+      end else begin
+        if (tb_mat_c_03 == 0)
+          $display("PASS!  [0][3]: DUT=%0d (ReLU Activated)", tb_mat_c_03);
+        else
+          $display("PASS!  [0][3]: DUT=%0d", tb_mat_c_03);
+      end
+      
+      if (err_cnt == 0) 
+        $display("[Iter %0d] FINAL RESULT: PASS!", iter);
+      else              
+        $display("[Iter %0d] FINAL RESULT: FAIL! (%0d errors)", iter, err_cnt);
+      $display("--------------------------------------------------");
+      
+      // 6. Wait a bit before next run
+      @(posedge clk);
+    end
+    
+    $display("=== All Tests Finished ===");
+    $finish;
+  end
+  
+endmodule

@@ -1,0 +1,12 @@
+Cycle 0: in = 0, out = 0
+Cycle 1: in = 0, out = 0
+Cycle 2: in = 0, out = 0
+Cycle 3: in = 1, out = 0
+Cycle 4: in = 1, out = 0
+Cycle 5: in = 1, out = 1
+Cycle 6: in = 0, out = 0
+Cycle 7: in = 1, out = 0
+Cycle 8: in = 1, out = 0
+Cycle 9: in = 1, out = 1
+Cycle 10: in = 1, out = 1
+Cycle 11: in = 0, out = 0

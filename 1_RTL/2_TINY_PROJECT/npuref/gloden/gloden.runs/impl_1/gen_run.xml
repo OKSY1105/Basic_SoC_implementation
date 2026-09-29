@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenRun Id="impl_1" LaunchPart="xc7z020clg400-1" LaunchTime="1772638193">
+  <File Type="POSTROUTE-PHYSOPT-RQS-RPT" Name="postroute_physopt_report_qor_suggestions_0.rpt"/>
+  <File Type="ROUTE-RQS-RPT" Name="route_report_qor_suggestions_0.rpt"/>
+  <File Type="POSTROUTE-PHYSOPT-RQS" Name="zyNet_postroute_physopted.rqs"/>
+  <File Type="ROUTE-RQS" Name="zyNet_routed.rqs"/>
+  <File Type="WBT-USG" Name="usage_statistics_webtalk.html"/>
+  <File Type="BG-DRC" Name="zyNet.drc"/>
+  <File Type="BG-BGN" Name="zyNet.bgn"/>
+  <File Type="BITSTR-SYSDEF" Name="zyNet.sysdef"/>
+  <File Type="BITSTR-LTX" Name="debug_nets.ltx"/>
+  <File Type="BITSTR-LTX" Name="zyNet.ltx"/>
+  <File Type="RBD_FILE" Name="zyNet.rbd"/>
+  <File Type="NPI_FILE" Name="zyNet.npi"/>
+  <File Type="RNPI_FILE" Name="zyNet.rnpi"/>
+  <File Type="CFI_FILE" Name="zyNet.cfi"/>
+  <File Type="RCFI_FILE" Name="zyNet.rcfi"/>
+  <File Type="RDI-RDI" Name="zyNet.vdi"/>
+  <File Type="PDI-FILE" Name="zyNet.pdi"/>
+  <File Type="BITSTR-MMI" Name="zyNet.mmi"/>
+  <File Type="BITSTR-BMM" Name="zyNet_bd.bmm"/>
+  <File Type="BITSTR-NKY" Name="zyNet.nky"/>
+  <File Type="BITSTR-RBT" Name="zyNet.rbt"/>
+  <File Type="BITSTR-MSK" Name="zyNet.msk"/>
+  <File Type="BG-BIN" Name="zyNet.bin"/>
+  <File Type="BG-BIT" Name="zyNet.bit"/>
+  <File Type="POSTROUTE-PHYSOPT-BUS-SKEW-RPX" Name="zyNet_bus_skew_postroute_physopted.rpx"/>
+  <File Type="POSTROUTE-PHYSOPT-BUS-SKEW-PB" Name="zyNet_bus_skew_postroute_physopted.pb"/>
+  <File Type="POSTROUTE-PHYSOPT-BUS-SKEW" Name="zyNet_bus_skew_postroute_physopted.rpt"/>
+  <File Type="POSTROUTE-PHYSOPT-TIMING-RPX" Name="zyNet_timing_summary_postroute_physopted.rpx"/>
+  <File Type="POSTROUTE-PHYSOPT-TIMING-PB" Name="zyNet_timing_summary_postroute_physopted.pb"/>
+  <File Type="POSTROUTE-PHYSOPT-TIMING" Name="zyNet_timing_summary_postroute_physopted.rpt"/>
+  <File Type="POSTROUTE-PHYSOPT-BLACKBOX-DCP" Name="zyNet_postroute_physopt_bb.dcp"/>
+  <File Type="POSTROUTE-PHYSOPT-DCP" Name="zyNet_postroute_physopt.dcp"/>
+  <File Type="ROUTE-BUS-SKEW-RPX" Name="zyNet_bus_skew_routed.rpx"/>
+  <File Type="POSTPLACE-PWROPT-DCP" Name="zyNet_postplace_pwropt.dcp"/>
+  <File Type="PLACE-UTIL-PB" Name="zyNet_utilization_placed.pb"/>
+  <File Type="OPT-METHODOLOGY-DRC" Name="zyNet_methodology_drc_opted.rpt"/>
+  <File Type="PLACE-UTIL" Name="zyNet_utilization_placed.rpt"/>
+  <File Type="PLACE-CLK" Name="zyNet_clock_utilization_placed.rpt"/>
+  <File Type="POSTPLACE-PWROPT-TIMING" Name="zyNet_timing_summary_postplace_pwropted.rpt"/>
+  <File Type="OPT-HWDEF" Name="zyNet.hwdef"/>
+  <File Type="PLACE-IO" Name="zyNet_io_placed.rpt"/>
+  <File Type="PHYSOPT-TIMING" Name="zyNet_timing_summary_physopted.rpt"/>
+  <File Type="PLACE-SIMILARITY" Name="zyNet_incremental_reuse_placed.rpt"/>
+  <File Type="ROUTE-METHODOLOGY-DRC-PB" Name="zyNet_methodology_drc_routed.pb"/>
+  <File Type="PLACE-DCP" Name="zyNet_placed.dcp"/>
+  <File Type="PWROPT-TIMING" Name="zyNet_timing_summary_pwropted.rpt"/>
+  <File Type="OPT-DRC" Name="zyNet_drc_opted.rpt"/>
+  <File Type="PLACE-TIMING" Name="zyNet_timing_summary_placed.rpt"/>
+  <File Type="PWROPT-DRC" Name="zyNet_drc_pwropted.rpt"/>
+  <File Type="INIT-TIMING" Name="zyNet_timing_summary_init.rpt"/>
+  <File Type="PA-TCL" Name="zyNet.tcl"/>
+  <File Type="PLACE-CTRL" Name="zyNet_control_sets_placed.rpt"/>
+  <File Type="ROUTE-METHODOLOGY-DRC" Name="zyNet_methodology_drc_routed.rpt"/>
+  <File Type="OPT-DCP" Name="zyNet_opt.dcp"/>
+  <File Type="REPORTS-TCL" Name="zyNet_reports.tcl"/>
+  <File Type="OPT-TIMING" Name="zyNet_timing_summary_opted.rpt"/>
+  <File Type="PLACE-PRE-SIMILARITY" Name="zyNet_incremental_reuse_pre_placed.rpt"/>
+  <File Type="ROUTE-DRC-RPX" Name="zyNet_drc_routed.rpx"/>
+  <File Type="PWROPT-DCP" Name="zyNet_pwropt.dcp"/>
+  <File Type="PHYSOPT-DCP" Name="zyNet_physopt.dcp"/>
+  <File Type="PHYSOPT-DRC" Name="zyNet_drc_physopted.rpt"/>
+  <File Type="ROUTE-ERROR-DCP" Name="zyNet_routed_error.dcp"/>
+  <File Type="ROUTE-DCP" Name="zyNet_routed.dcp"/>
+  <File Type="ROUTE-BLACKBOX-DCP" Name="zyNet_routed_bb.dcp"/>
+  <File Type="ROUTE-DRC" Name="zyNet_drc_routed.rpt"/>
+  <File Type="ROUTE-METHODOLOGY-DRC-RPX" Name="zyNet_methodology_drc_routed.rpx"/>
+  <File Type="ROUTE-DRC-PB" Name="zyNet_drc_routed.pb"/>
+  <File Type="ROUTE-PWR" Name="zyNet_power_routed.rpt"/>
+  <File Type="ROUTE-PWR-SUM" Name="zyNet_power_summary_routed.pb"/>
+  <File Type="ROUTE-PWR-RPX" Name="zyNet_power_routed.rpx"/>
+  <File Type="ROUTE-STATUS" Name="zyNet_route_status.rpt"/>
+  <File Type="ROUTE-STATUS-PB" Name="zyNet_route_status.pb"/>
+  <File Type="ROUTE-TIMINGSUMMARY" Name="zyNet_timing_summary_routed.rpt"/>
+  <File Type="ROUTE-TIMING-PB" Name="zyNet_timing_summary_routed.pb"/>
+  <File Type="ROUTE-TIMING-RPX" Name="zyNet_timing_summary_routed.rpx"/>
+  <File Type="ROUTE-SIMILARITY" Name="zyNet_incremental_reuse_routed.rpt"/>
+  <File Type="ROUTE-CLK" Name="zyNet_clock_utilization_routed.rpt"/>
+  <File Type="ROUTE-BUS-SKEW" Name="zyNet_bus_skew_routed.rpt"/>
+  <File Type="ROUTE-BUS-SKEW-PB" Name="zyNet_bus_skew_routed.pb"/>
+  <FileSet Name="sources" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
+    <Filter Type="Srcs"/>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Layer_1.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Layer_2.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Layer_3.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Sig_ROM.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/include.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/Weight_Memory.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/axi_lite_wrapper.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/maxFinder.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/neuron.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/relu.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <File Path="$PPRDIR/../CNN-Handwritten-Digit-MNIST-main/CNN-Handwritten-Digit-MNIST-main/Network/Vivado/src/fpga/rtl/zynet.v">
+      <FileInfo>
+        <Attr Name="UsedIn" Val="synthesis"/>
+        <Attr Name="UsedIn" Val="implementation"/>
+        <Attr Name="UsedIn" Val="simulation"/>
+      </FileInfo>
+    </File>
+    <Config>
+      <Option Name="DesignMode" Val="RTL"/>
+      <Option Name="TopModule" Val="zyNet"/>
+      <Option Name="TopAutoSet" Val="TRUE"/>
+    </Config>
+  </FileSet>
+  <FileSet Name="constrs_in" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
+    <Filter Type="Constrs"/>
+    <Config>
+      <Option Name="ConstrsType" Val="XDC"/>
+    </Config>
+  </FileSet>
+  <FileSet Name="utils" Type="Utils" RelSrcDir="$PSRCDIR/utils_1">
+    <Filter Type="Utils"/>
+    <Config>
+      <Option Name="TopAutoSet" Val="TRUE"/>
+    </Config>
+  </FileSet>
+  <Strategy Version="1" Minor="2">
+    <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2022">
+      <Desc>Default settings for Implementation.</Desc>
+    </StratHandle>
+    <Step Id="init_design"/>
+    <Step Id="opt_design"/>
+    <Step Id="power_opt_design"/>
+    <Step Id="place_design"/>
+    <Step Id="post_place_power_opt_design"/>
+    <Step Id="phys_opt_design"/>
+    <Step Id="route_design"/>
+    <Step Id="post_route_phys_opt_design"/>
+    <Step Id="write_bitstream"/>
+  </Strategy>
+</GenRun>

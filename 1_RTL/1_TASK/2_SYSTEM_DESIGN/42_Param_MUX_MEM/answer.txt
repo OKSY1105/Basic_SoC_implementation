@@ -1,0 +1,120 @@
+4:1 MUX - Select: 0, Output:   1
+4:1 MUX - Select: 1, Output:  11
+4:1 MUX - Select: 2, Output:  21
+4:1 MUX - Select: 3, Output:  31
+ 
+8:1 MUX - Select: 0, Output:   5
+8:1 MUX - Select: 1, Output:  25
+8:1 MUX - Select: 2, Output:  45
+8:1 MUX - Select: 3, Output:  65
+8:1 MUX - Select: 4, Output:  85
+8:1 MUX - Select: 5, Output: 105
+8:1 MUX - Select: 6, Output: 125
+8:1 MUX - Select: 7, Output: 145
+ 
+Random Test - 4:1 MUX Select: 0, Output:   1
+Random Test - 8:1 MUX Select: 1, Output:  25
+Random Test - 4:1 MUX Select: 1, Output:  11
+Random Test - 8:1 MUX Select: 3, Output:  65
+Random Test - 4:1 MUX Select: 1, Output:  11
+Random Test - 8:1 MUX Select: 5, Output: 105
+Random Test - 4:1 MUX Select: 1, Output:  11
+Random Test - 8:1 MUX Select: 2, Output:  45
+Random Test - 4:1 MUX Select: 1, Output:  11
+Random Test - 8:1 MUX Select: 5, Output: 105
+
+MEM1 (4-bit address, 8-bit data) Test:
+Address:  0, Data:   0
+Address:  1, Data:   2
+Address:  2, Data:   4
+Address:  3, Data:   6
+Address:  4, Data:   8
+Address:  5, Data:  10
+Address:  6, Data:  12
+Address:  7, Data:  14
+Address:  8, Data:  16
+Address:  9, Data:  18
+Address: 10, Data:  20
+Address: 11, Data:  22
+Address: 12, Data:  24
+Address: 13, Data:  26
+Address: 14, Data:  28
+Address: 15, Data:  30
+
+MEM2 (6-bit address, 16-bit data) Test:
+Address:  0, Data:     0
+Address:  1, Data:     3
+Address:  2, Data:     6
+Address:  3, Data:     9
+Address:  4, Data:    12
+Address:  5, Data:    15
+Address:  6, Data:    18
+Address:  7, Data:    21
+Address:  8, Data:    24
+Address:  9, Data:    27
+Address: 10, Data:    30
+Address: 11, Data:    33
+Address: 12, Data:    36
+Address: 13, Data:    39
+Address: 14, Data:    42
+Address: 15, Data:    45
+Address: 16, Data:    48
+Address: 17, Data:    51
+Address: 18, Data:    54
+Address: 19, Data:    57
+Address: 20, Data:    60
+Address: 21, Data:    63
+Address: 22, Data:    66
+Address: 23, Data:    69
+Address: 24, Data:    72
+Address: 25, Data:    75
+Address: 26, Data:    78
+Address: 27, Data:    81
+Address: 28, Data:    84
+Address: 29, Data:    87
+Address: 30, Data:    90
+Address: 31, Data:    93
+Address: 32, Data:    96
+Address: 33, Data:    99
+Address: 34, Data:   102
+Address: 35, Data:   105
+Address: 36, Data:   108
+Address: 37, Data:   111
+Address: 38, Data:   114
+Address: 39, Data:   117
+Address: 40, Data:   120
+Address: 41, Data:   123
+Address: 42, Data:   126
+Address: 43, Data:   129
+Address: 44, Data:   132
+Address: 45, Data:   135
+Address: 46, Data:   138
+Address: 47, Data:   141
+Address: 48, Data:   144
+Address: 49, Data:   147
+Address: 50, Data:   150
+Address: 51, Data:   153
+Address: 52, Data:   156
+Address: 53, Data:   159
+Address: 54, Data:   162
+Address: 55, Data:   165
+Address: 56, Data:   168
+Address: 57, Data:   171
+Address: 58, Data:   174
+Address: 59, Data:   177
+Address: 60, Data:   180
+Address: 61, Data:   183
+Address: 62, Data:   186
+Address: 63, Data:   189
+
+Random Address Test:
+MEM1 - Address:  6, Data:  12
+MEM2 - Address: 61, Data: 183
+MEM1 - Address: 13, Data:  26
+MEM2 - Address: 12, Data:  36
+MEM1 - Address:  9, Data:  18
+MEM2 - Address:  6, Data:  18
+MEM1 - Address:  5, Data:  10
+MEM2 - Address: 42, Data: 126
+MEM1 - Address:  5, Data:  10
+MEM2 - Address: 55, Data: 165

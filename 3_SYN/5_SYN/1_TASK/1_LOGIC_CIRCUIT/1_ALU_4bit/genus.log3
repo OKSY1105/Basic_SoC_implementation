@@ -1,0 +1,55 @@
+Cadence Genus(TM) Synthesis Solution.
+Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+Cadence and the Cadence logo are registered trademarks and Genus is a trademark
+of Cadence Design Systems, Inc. in the United States and other countries.
+
+[23:55:54.163265] Configured Lic search path (22.01-s003): 5280@172.31.52.241
+
+Version: 22.17-s071_1, built Wed Sep 11 20:37:05 PDT 2024
+Options: -files my_syn.tcl 
+Date:    Tue Jul 14 23:55:54 2026
+Host:    kopo-seongnam (x86_64 w/Linux 3.10.0-1160.el7.x86_64) (20cores*80cpus*2physical cpus*Intel(R) Xeon(R) Gold 5218R CPU @ 2.10GHz 28160KB) (394624392KB)
+PID:     167736
+OS:      CentOS Linux release 7.9.2009 (Core)
+
+Checking out license: Genus_Synthesis
+[23:55:54.329353] Periodic Lic check successful
+[23:55:54.329362] Feature usage summary:
+[23:55:54.329362] Genus_Synthesis
+
+
+
+***********************************************************************************************************
+***********************************************************************************************************
+
+
+
+Finished executable startup (0 seconds elapsed).
+
+Loading tool scripts...
+Finished loading tool scripts (15 seconds elapsed).
+
+#@ Processing -files option
+@genus 1> source my_syn.tcl
+#@ Begin verbose source ./my_syn.tcl
+@file(my_syn.tcl) 2: set_db init_hdl_search_path /home/hah010/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/1_4bit_ALU 
+  Setting attribute of root '/': 'init_hdl_search_path' = /home/hah010/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/behavior/1_4bit_ALU
+@file(my_syn.tcl) 5: read_hdl ALU_4bit.v 
+@file(my_syn.tcl) 7: elaborate
+Error   : Failed to execute command. [LBR-163] [elaborate]
+        : No target technology library was loaded.
+        : Specify libraries using read_libs or read_mmmc.
+UM:   flow.cputime  flow.realtime  timing.setup.tns  timing.setup.wns  snapshot
+UM:*                                                                   elaborate
+#@ End verbose source ./my_syn.tcl
+1
+Encountered problems processing file: my_syn.tcl
+WARNING: This version of the tool is 670 days old.
+@genus:root: 2> exit
+
+Lic Summary:
+[23:56:18.123554] Cdslmd servers: kopo-seongnam
+[23:56:18.123578] Feature usage summary:
+[23:56:18.123578] Genus_Synthesis
+
+Normal exit.

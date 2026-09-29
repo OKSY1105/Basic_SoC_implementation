@@ -1,0 +1,53 @@
+#-----------------------------------------------------------
+# xsim v2024.2 (64-bit)
+# SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
+# IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
+# SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
+# Start of session at: Tue Jul  7 01:19:04 2026
+# Process ID         : 2457
+# Current directory  : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder
+# Command line       : xsim -source {xsim.dir/tb_FA_4bit_sim/xsim_script.tcl}
+# Log file           : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/xsim.log
+# Journal file       : /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/xsim.jou
+# Running On         : BOOK-3GSAOKNJKI
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-1255U
+# CPU Frequency      : 2611.211 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 12386 MB
+# Swap memory        : 3221 MB
+# Total Virtual      : 15607 MB
+# Available Virtual  : 15021 MB
+#-----------------------------------------------------------
+start_gui
+WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu208ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu208ld/production/2.0/board.xml as part xczu58dr-fsvg1517-2-i specified in board_part file is either invalid or not available
+WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu216ld:part0:2.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu216ld/production/2.0/board.xml as part xczu59dr-ffvf1760-2-i specified in board_part file is either invalid or not available
+WARNING: [Board 49-26] cannot add Board Part xilinx.com:zcu670ld:part0:1.0 available at /home/sean/Vivado/2024.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx/zcu670ld/1.0/board.xml as part xczu57dr-fsve1156-2-i specified in board_part file is either invalid or not available
+source xsim.dir/tb_FA_4bit_sim/xsim_script.tcl
+# set_param project.enableReportConfiguration 0
+# load_feature core
+# current_fileset
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/sean/Vivado/2024.2/data/ip'.
+# xsim {tb_FA_4bit_sim} -autoloadwcfg
+Time resolution is 1 ps
+create_wave_config; add_wave /; set_property needs_save false [current_wave_config]
+run all
+A=0000 B=1000 | o_out=1000 o_over_flow = 0
+A=0111 B=1000 | o_out=1111 o_over_flow = 0
+A=1100 B=0101 | o_out=0001 o_over_flow = 1
+A=0110 B=1011 | o_out=0001 o_over_flow = 1
+A=0100 B=1000 | o_out=1100 o_over_flow = 0
+A=0101 B=1001 | o_out=1110 o_over_flow = 0
+A=1111 B=1000 | o_out=0111 o_over_flow = 1
+$finish called at time : 70 ns : File "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/tb_FA_4bit.v" Line 28
+save_wave_config {/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/tb_FA_4bit_sim.wcfg}
+add_files -fileset sim_1 -norecurse /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/tb_FA_4bit_sim.wcfg
+set_property xsim.view /home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_GateLevel/2_4bit_Full_Adder/tb_FA_4bit_sim.wcfg [get_filesets sim_1]
+close_sim
+INFO: [Simtcl 6-16] Simulation closed
+exit
+INFO: [Common 17-206] Exiting xsim at Tue Jul  7 01:22:13 2026...

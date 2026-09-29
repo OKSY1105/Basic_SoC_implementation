@@ -1,0 +1,16 @@
+i_binary_in=0000 o_gray_out=0000
+i_binary_in=0001 o_gray_out=0001
+i_binary_in=0010 o_gray_out=0011
+i_binary_in=0011 o_gray_out=0010
+i_binary_in=0100 o_gray_out=0110
+i_binary_in=0101 o_gray_out=0111
+i_binary_in=0110 o_gray_out=0101
+i_binary_in=0111 o_gray_out=0100
+i_binary_in=1000 o_gray_out=1100
+i_binary_in=1001 o_gray_out=1101
+i_binary_in=1010 o_gray_out=1111
+i_binary_in=1011 o_gray_out=1110
+i_binary_in=1100 o_gray_out=1010
+i_binary_in=1101 o_gray_out=1011
+i_binary_in=1110 o_gray_out=1001
+i_binary_in=1111 o_gray_out=1000

@@ -1,0 +1,20 @@
+Time=  15ns , Fibonacci( 0) =     1
+Time=  25ns , Fibonacci( 1) =     1
+Time=  35ns , Fibonacci( 2) =     2
+Time=  45ns , Fibonacci( 3) =     3
+Time=  55ns , Fibonacci( 4) =     5
+Time=  65ns , Fibonacci( 5) =     8
+Time=  75ns , Fibonacci( 6) =    13
+Time=  85ns , Fibonacci( 7) =    21
+Time=  95ns , Fibonacci( 8) =    34
+Time= 105ns , Fibonacci( 9) =    55
+Time= 115ns , Fibonacci(10) =    89
+Time= 125ns , Fibonacci(11) =   144
+Time= 135ns , Fibonacci(12) =   233
+Time= 145ns , Fibonacci(13) =   377
+Time= 155ns , Fibonacci(14) =   610
+Time= 165ns , Fibonacci(15) =   987
+Time= 175ns , Fibonacci(16) =  1597
+Time= 185ns , Fibonacci(17) =  2584
+Time= 195ns , Fibonacci(18) =  4181
+Time= 205ns , Fibonacci(19) =  6765

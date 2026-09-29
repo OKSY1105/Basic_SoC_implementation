@@ -1,0 +1,23 @@
+8-bit  Test Case 1: a =      0, b =    255, sum =    255
+16-bit Test Case 1: a =      0, b =    255, sum =    255
+8-bit  Test Case 2: a =    255, b =      0, sum =    255
+16-bit Test Case 2: a =    255, b =  65280, sum =  65535
+8-bit  Test Case 3: a =      0, b =    255, sum =    255
+16-bit Test Case 3: a =  65280, b =  65535, sum = 130815
+8-bit  Test Case 4: a =    255, b =     85, sum =    340
+16-bit Test Case 4: a =  65535, b =  21845, sum =  87380
+8-bit  Test Case 5: a =     85, b =    170, sum =    255
+16-bit Test Case 5: a =  21845, b =  43690, sum =  65535
+8-bit  Test Case 6: a =    170, b =     52, sum =    222
+16-bit Test Case 6: a =  43690, b =   4660, sum =  48350
+8-bit  Test Case 7: a =     52, b =    255, sum =    307
+16-bit Test Case 7: a =   4660, b =  32767, sum =  37427
+8-bit  Test Case 8: a =    255, b =      0, sum =    255
+16-bit Test Case 8: a =  32767, b =      0, sum =  32767
+8-bit  Large + Small: a =    254, b =      1, sum =    255
+16-bit Large + Small: a =  65534, b =      1, sum =  65535
+8-bit  Near Max: a =    127, b =    126, sum =    253
+16-bit Near Max: a =  32766, b =  32766, sum =  65532
+8-bit  Overflow Test: a =    255, b =      1, sum =    256
+16-bit Overflow Test: a =  65535, b =      1, sum =  65536
+Test completed

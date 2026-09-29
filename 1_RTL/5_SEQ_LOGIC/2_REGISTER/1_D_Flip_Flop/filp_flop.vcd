@@ -1,0 +1,79 @@
+$date
+    Jul  2, 2026  01:59:35
+$end
+$version
+    TOOL:	xmsim(64)	22.03-s012
+$end
+$timescale
+    1 ns
+$end
+
+$scope module tb_filp_flop $end
+$var reg       1 !    i_clk $end
+$var reg       1 "    i_rstn $end
+$var reg      32 #    i_data [31:0] $end
+$var wire     32 $    o_data [31:0] $end
+
+$scope module uut $end
+$var wire      1 %    i_clk  $end
+$var wire      1 &    i_rstn  $end
+$var wire     32 '    i_data [31:0] $end
+$var reg      32 (    o_data [31:0] $end
+$upscope $end
+
+$upscope $end
+
+$enddefinitions $end
+$dumpvars
+0!
+0"
+b0 #
+bx $
+0%
+0&
+b0 '
+bx (
+$end
+#5
+1!
+b10000000000 #
+b10000000000 '
+1%
+b0 (
+b0 $
+#10
+0!
+0%
+#15
+b10011011000 #
+1!
+1%
+b10011011000 '
+#20
+0!
+0%
+#25
+b11111101000 #
+1!
+1%
+b11111101000 '
+#30
+0!
+0%
+#35
+b10110010000 #
+1!
+1%
+b10110010000 '
+#40
+0!
+0%
+#45
+b101111010000 #
+1!
+1%
+b101111010000 '
+#50
+0!
+0%
+#55

@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/dataflow/4_if_case/ifcase.v" into library work
+INFO: [VRFC 10-311] analyzing module ifcase
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/1_LOGIC_CIRCUIT/dataflow/4_if_case/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench

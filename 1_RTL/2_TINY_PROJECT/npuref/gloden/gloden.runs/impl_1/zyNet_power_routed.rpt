@@ -1,0 +1,279 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version     : Vivado v.2022.2 (lin64) Build 3671981 Fri Oct 14 04:59:54 MDT 2022
+| Date             : Thu Mar  5 00:31:08 2026
+| Host             : BOOK-3GSAOKNJKI running 64-bit Ubuntu 22.04.5 LTS
+| Command          : report_power -file zyNet_power_routed.rpt -pb zyNet_power_summary_routed.pb -rpx zyNet_power_routed.rpx
+| Design           : zyNet
+| Device           : xc7z020clg400-1
+| Design State     : routed
+| Grade            : commercial
+| Process          : typical
+| Characterization : Production
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Power Report
+
+Table of Contents
+-----------------
+1. Summary
+1.1 On-Chip Components
+1.2 Power Supply Summary
+1.3 Confidence Level
+2. Settings
+2.1 Environment
+2.2 Clock Constraints
+3. Detailed Reports
+3.1 By Hierarchy
+
+1. Summary
+----------
+
++--------------------------+----------------------------------+
+| Total On-Chip Power (W)  | 73.965 (Junction temp exceeded!) |
+| Design Power Budget (W)  | Unspecified*                     |
+| Power Budget Margin (W)  | NA                               |
+| Dynamic (W)              | 72.865                           |
+| Device Static (W)        | 1.101                            |
+| Effective TJA (C/W)      | 11.5                             |
+| Max Ambient (C)          | 0.0                              |
+| Junction Temperature (C) | 125.0                            |
+| Confidence Level         | Low                              |
+| Setting File             | ---                              |
+| Simulation Activity File | ---                              |
+| Design Nets Matched      | NA                               |
++--------------------------+----------------------------------+
+* Specify Design Power Budget using, set_operating_conditions -design_power_budget <value in Watts>
+
+
+1.1 On-Chip Components
+----------------------
+
++----------------+-----------+----------+-----------+-----------------+
+| On-Chip        | Power (W) | Used     | Available | Utilization (%) |
++----------------+-----------+----------+-----------+-----------------+
+| Slice Logic    |    35.532 |    14252 |       --- |             --- |
+|   LUT as Logic |    30.847 |     7473 |     53200 |           14.05 |
+|   CARRY4       |     3.856 |      895 |     13300 |            6.73 |
+|   Register     |     0.748 |     3777 |    106400 |            3.55 |
+|   F7/F8 Muxes  |     0.075 |      390 |     53200 |            0.73 |
+|   BUFG         |     0.006 |        1 |        32 |            3.13 |
+|   Others       |     0.000 |      267 |       --- |             --- |
+| Signals        |    29.991 |    10367 |       --- |             --- |
+| Block RAM      |     4.071 |     26.5 |       140 |           18.93 |
+| I/O            |     3.270 |       97 |       125 |           77.60 |
+| Static Power   |     1.101 |          |           |                 |
+| Total          |    73.965 |          |           |                 |
++----------------+-----------+----------+-----------+-----------------+
+
+
+1.2 Power Supply Summary
+------------------------
+
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Vccint    |       1.000 |    69.816 |      69.486 |      0.330 |       NA    | Unspecified | NA         |
+| Vccaux    |       1.800 |     0.351 |       0.251 |      0.100 |       NA    | Unspecified | NA         |
+| Vcco33    |       3.300 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco18    |       1.800 |     1.451 |       1.450 |      0.001 |       NA    | Unspecified | NA         |
+| Vcco15    |       1.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco135   |       1.350 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco12    |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccaux_io |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccbram   |       1.000 |     0.373 |       0.317 |      0.056 |       NA    | Unspecified | NA         |
+| MGTAVcc   |       1.000 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| MGTAVtt   |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| MGTVccaux |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccpint   |       1.000 |     0.473 |       0.000 |      0.473 |       NA    | Unspecified | NA         |
+| Vccpaux   |       1.800 |     0.010 |       0.000 |      0.010 |       NA    | Unspecified | NA         |
+| Vccpll    |       1.800 |     0.003 |       0.000 |      0.003 |       NA    | Unspecified | NA         |
+| Vcco_ddr  |       1.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco_mio0 |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco_mio1 |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccadc    |       1.800 |     0.020 |       0.000 |      0.020 |       NA    | Unspecified | NA         |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+
+
+1.3 Confidence Level
+--------------------
+
++-----------------------------+------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| User Input Data             | Confidence | Details                                                | Action                                                                                                             |
++-----------------------------+------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+| Design implementation state | High       | Design is routed                                       |                                                                                                                    |
+| Clock nodes activity        | Low        | User specified less than 75% of clocks                 | Provide missing clock activity with a constraint file, simulation results or by editing the "By Clock Domain" view |
+| I/O nodes activity          | Low        | More than 75% of inputs are missing user specification | Provide missing input activity with simulation results or by editing the "By Resource Type -> I/Os" view           |
+| Internal nodes activity     | Medium     | User specified less than 25% of internal nodes         | Provide missing internal nodes activity with simulation results or by editing the "By Resource Type" views         |
+| Device models               | High       | Device models are Production                           |                                                                                                                    |
+|                             |            |                                                        |                                                                                                                    |
+| Overall confidence level    | Low        |                                                        |                                                                                                                    |
++-----------------------------+------------+--------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------+
+
+
+2. Settings
+-----------
+
+2.1 Environment
+---------------
+
++-----------------------+------------------------+
+| Ambient Temp (C)      | 25.0                   |
+| ThetaJA (C/W)         | 11.5                   |
+| Airflow (LFM)         | 250                    |
+| Heat Sink             | none                   |
+| ThetaSA (C/W)         | 0.0                    |
+| Board Selection       | medium (10"x10")       |
+| # of Board Layers     | 8to11 (8 to 11 Layers) |
+| Board Temperature (C) | 25.0                   |
++-----------------------+------------------------+
+
+
+2.2 Clock Constraints
+---------------------
+
++-------+--------+-----------------+
+| Clock | Domain | Constraint (ns) |
++-------+--------+-----------------+
+
+
+3. Detailed Reports
+-------------------
+
+3.1 By Hierarchy
+----------------
+
++------------------+-----------+
+| Name             | Power (W) |
++------------------+-----------+
+| zyNet            |    72.865 |
+|   alw            |     0.231 |
+|   l1             |    58.731 |
+|     n_0          |     8.440 |
+|       WM         |     0.740 |
+|       siginst.s1 |     0.282 |
+|     n_1          |     1.537 |
+|     n_10         |     1.828 |
+|       siginst.s1 |     0.270 |
+|     n_11         |     2.034 |
+|     n_12         |     1.844 |
+|       siginst.s1 |     0.312 |
+|     n_13         |     1.512 |
+|     n_14         |     1.857 |
+|       siginst.s1 |     0.272 |
+|     n_15         |     1.574 |
+|       WM         |     0.422 |
+|     n_16         |     1.861 |
+|       siginst.s1 |     0.279 |
+|     n_17         |     1.537 |
+|     n_18         |     1.885 |
+|       siginst.s1 |     0.299 |
+|     n_19         |     1.597 |
+|     n_2          |     1.885 |
+|       siginst.s1 |     0.293 |
+|     n_20         |     1.904 |
+|       siginst.s1 |     0.338 |
+|     n_21         |     1.599 |
+|     n_22         |     1.845 |
+|       siginst.s1 |     0.311 |
+|     n_23         |     1.553 |
+|     n_24         |     2.006 |
+|       WM         |     0.572 |
+|       siginst.s1 |     0.283 |
+|     n_25         |     1.538 |
+|     n_26         |     2.068 |
+|       WM         |     0.563 |
+|       siginst.s1 |     0.286 |
+|     n_27         |     1.562 |
+|     n_28         |     1.748 |
+|       siginst.s1 |     0.210 |
+|     n_29         |     1.574 |
+|     n_3          |     1.527 |
+|     n_4          |     1.782 |
+|       siginst.s1 |     0.317 |
+|     n_5          |     1.569 |
+|     n_6          |     1.839 |
+|       siginst.s1 |     0.286 |
+|     n_7          |     1.654 |
+|       WM         |     0.455 |
+|     n_8          |     1.885 |
+|       WM         |     0.419 |
+|       siginst.s1 |     0.312 |
+|     n_9          |     1.689 |
+|       WM         |     0.450 |
+|   l2             |     5.530 |
+|     n_0          |     0.360 |
+|       WM         |     0.003 |
+|       siginst.s1 |     0.090 |
+|     n_1          |     0.226 |
+|       WM         |     0.003 |
+|     n_10         |     0.330 |
+|       WM         |     0.003 |
+|       siginst.s1 |     0.087 |
+|     n_11         |     0.237 |
+|       WM         |     0.003 |
+|     n_12         |     0.316 |
+|       WM         |     0.003 |
+|       siginst.s1 |     0.059 |
+|     n_13         |     0.258 |
+|       WM         |     0.003 |
+|     n_14         |     0.355 |
+|       WM         |     0.002 |
+|       siginst.s1 |     0.088 |
+|     n_15         |     0.214 |
+|     n_16         |     0.342 |
+|       WM         |     0.002 |
+|       siginst.s1 |     0.118 |
+|     n_17         |     0.253 |
+|       WM         |     0.003 |
+|     n_18         |     0.290 |
+|       WM         |     0.003 |
+|       siginst.s1 |     0.057 |
+|     n_19         |     0.253 |
+|       WM         |     0.003 |
+|     n_2          |     0.301 |
+|       siginst.s1 |     0.060 |
+|     n_3          |     0.263 |
+|       WM         |     0.003 |
+|     n_4          |     0.283 |
+|       WM         |     0.002 |
+|       siginst.s1 |     0.059 |
+|     n_5          |     0.232 |
+|       WM         |     0.003 |
+|     n_6          |     0.246 |
+|       WM         |     0.002 |
+|       siginst.s1 |     0.058 |
+|     n_7          |     0.175 |
+|       WM         |     0.003 |
+|     n_8          |     0.336 |
+|       WM         |     0.003 |
+|       siginst.s1 |     0.088 |
+|     n_9          |     0.260 |
+|   l3             |     3.079 |
+|     n_0          |     0.461 |
+|       WM         |     0.012 |
+|       siginst.s1 |     0.159 |
+|     n_1          |     0.322 |
+|       WM         |     0.013 |
+|     n_2          |     0.258 |
+|       WM         |     0.005 |
+|     n_3          |     0.254 |
+|       WM         |     0.005 |
+|     n_4          |     0.309 |
+|       WM         |     0.011 |
+|       siginst.s1 |     0.001 |
+|     n_5          |     0.285 |
+|       WM         |     0.013 |
+|     n_6          |     0.283 |
+|       WM         |     0.013 |
+|     n_7          |     0.309 |
+|       WM         |     0.013 |
+|     n_8          |     0.324 |
+|       WM         |     0.011 |
+|     n_9          |     0.275 |
+|       WM         |     0.005 |
+|   mFind          |     1.227 |
++------------------+-----------+
+
+

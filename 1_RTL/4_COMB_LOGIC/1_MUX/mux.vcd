@@ -1,0 +1,60 @@
+$date
+    Jul  1, 2026  00:38:09
+$end
+$version
+    TOOL:	xmsim(64)	22.03-s012
+$end
+$timescale
+    1 ns
+$end
+
+$scope module tb_MUX $end
+$var reg       1 !    i_in1 $end
+$var reg       1 "    i_in2 $end
+$var reg       1 #    i_in3 $end
+$var reg       1 $    i_in4 $end
+$var reg       2 %    i_sel [1:0] $end
+$var wire      1 &    o_out  $end
+
+$scope module uut $end
+$var wire      1 '    i_in1  $end
+$var wire      1 (    i_in2  $end
+$var wire      1 )    i_in3  $end
+$var wire      1 *    i_in4  $end
+$var wire      2 +    i_sel [1:0] $end
+$var reg       3 ,    o_out [2:0] $end
+$upscope $end
+
+$upscope $end
+
+$enddefinitions $end
+$dumpvars
+0!
+1"
+0#
+1$
+b0 %
+0&
+0'
+1(
+0)
+1*
+b0 +
+b0 ,
+$end
+#10
+b1 %
+b1 +
+b1 ,
+1&
+#20
+b11 %
+b11 +
+b0 ,
+0&
+#30
+b10 %
+b10 +
+b1 ,
+1&
+#40

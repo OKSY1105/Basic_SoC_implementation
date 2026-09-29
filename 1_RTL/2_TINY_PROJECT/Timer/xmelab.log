@@ -1,0 +1,49 @@
+xmelab(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
+TOOL:	xmelab(64)	22.03-s012: Started on Jul 09, 2026 at 06:21:55 KST
+xmelab
+    -MESS
+    -access rwc
+    tb_timer
+
+	Elaborating the design hierarchy:
+		Caching library 'work_lib' ....... Done
+digtimer dut(.clk(tb_clk),.rst(tb_rst),.o_sec(tb_sec),.o_min(tb_min),.o_hour(tb_hour));
+           |
+xmelab: *W,CUVWSP (./tb_timer.v,10|11): 6 output ports were not connected:
+xmelab: (./digtimer.v,165): seg1_data
+xmelab: (./digtimer.v,166): seg1_sel
+xmelab: (./digtimer.v,167): seg2_data
+xmelab: (./digtimer.v,168): seg2_sel
+xmelab: (./digtimer.v,169): seg3_data
+xmelab: (./digtimer.v,170): seg3_sel
+
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		work_lib.seven_seg:module <0x1abaf261>
+			streams:   1, words:  2598
+		work_lib.digit_ctrl:module <0x1a8713b0>
+			streams:  11, words:  3874
+		work_lib.hour:module <0x56484e2a>
+			streams:   7, words:  2769
+		work_lib.minute:module <0x54d3aaa9>
+			streams:   7, words:  2769
+		work_lib.second:module <0x1887b913>
+			streams:   8, words:  3009
+		work_lib.digtimer:module <0x5285f66d>
+			streams:   4, words:   640
+		work_lib.tb_timer:module <0x4a18063a>
+			streams:   3, words:  1663
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		              Instances  Unique
+		Modules:             14       7
+		Registers:           23      12
+		Scalar wires:         2       -
+		Vectored wires:      25       -
+		Always blocks:       12       5
+		Initial blocks:       4       4
+		Cont. assignments:    9       5
+		Pseudo assignments:   3       3
+	Writing initial simulation snapshot: work_lib.tb_timer:module
+TOOL:	xmelab(64)	22.03-s012: Exiting on Jul 09, 2026 at 06:21:55 KST  (total: 00:00:00)

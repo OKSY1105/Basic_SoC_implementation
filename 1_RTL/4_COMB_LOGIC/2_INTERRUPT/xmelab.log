@@ -1,0 +1,28 @@
+xmelab(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
+TOOL:	xmelab(64)	22.03-s012: Started on Jul 01, 2026 at 02:45:40 KST
+xmelab
+    -MESS
+    -access rwc
+    tb_interrupt
+
+	Elaborating the design hierarchy:
+		Caching library 'work_lib' ....... Done
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		work_lib.interrupt:module <0x3d7505d5>
+			streams:   1, words:  4751
+		work_lib.tb_interrupt:module <0x7c7275f4>
+			streams:   5, words:  9049
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		             Instances  Unique
+		Modules:             2       2
+		Registers:           5       5
+		Scalar wires:        2       -
+		Vectored wires:      2       -
+		Always blocks:       1       1
+		Initial blocks:      2       2
+		Pseudo assignments:  2       2
+	Writing initial simulation snapshot: work_lib.tb_interrupt:module
+TOOL:	xmelab(64)	22.03-s012: Exiting on Jul 01, 2026 at 02:45:40 KST  (total: 00:00:00)

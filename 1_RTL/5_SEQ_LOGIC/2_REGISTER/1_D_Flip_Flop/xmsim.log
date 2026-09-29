@@ -1,0 +1,12 @@
+xmsim(64): 22.03-s012: (c) Copyright 1995-2023 Cadence Design Systems, Inc.
+TOOL:	xmsim(64)	22.03-s012: Started on Jul 02, 2026 at 01:59:35 KST
+xmsim
+    -MESS
+    tb_filp_flop
+
+Loading snapshot work_lib.tb_filp_flop:module .................... Done
+xcelium> run
+Simulation complete via $finish(1) at time 55 NS + 0
+./tb_filp_flop.v:35 $finish;
+xcelium> exit
+TOOL:	xmsim(64)	22.03-s012: Exiting on Jul 02, 2026 at 01:59:35 KST  (total: 00:00:00)

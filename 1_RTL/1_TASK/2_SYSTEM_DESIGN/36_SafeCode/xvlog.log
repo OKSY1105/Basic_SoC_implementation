@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/36_SafeCode/safe_code_checker.v" into library work
+INFO: [VRFC 10-311] analyzing module safe_code_checker
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/sean/Basic_SoC_implementation/1_RTL/1_TASK/2_SYSTEM_DESIGN/36_SafeCode/testbench.v" into library work
+INFO: [VRFC 10-311] analyzing module testbench
