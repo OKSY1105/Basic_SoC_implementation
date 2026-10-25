@@ -1,0 +1,14 @@
+.Xil/
+xsim.dir/
+BUILD/
+__pycache__/
+*.py[cod]
+*.log
+*.jou
+*.pb
+*.wdb
+*.vcd
+*.vvp
+*.str
+output.txt
+.xsim_gui_setup.tcl

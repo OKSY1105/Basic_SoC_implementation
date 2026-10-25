@@ -1,0 +1,6 @@
+read_verilog -I RTL RTL/cpu8_decoder.v RTL/cpu8_regfile.v RTL/cpu8_alu.v RTL/cpu8_top.v
+hierarchy -check -top cpu8_top
+synth -top cpu8_top -noabc
+check -assert
+select -assert-none t:$_DLATCH_*
+stat

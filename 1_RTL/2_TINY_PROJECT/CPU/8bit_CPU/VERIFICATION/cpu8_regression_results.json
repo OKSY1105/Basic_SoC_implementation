@@ -1,0 +1,506 @@
+{
+  "simulator": "iverilog",
+  "program_cases": 62,
+  "alu_cases": 786432,
+  "reset_inflight_passed": true,
+  "all_17_opcodes_covered": true,
+  "total_retired": 1509,
+  "cases": [
+    {
+      "name": "first_add_wait0",
+      "retired": 4,
+      "cycles": 7,
+      "stalls": 1,
+      "three_stages": 1,
+      "fault": 0
+    },
+    {
+      "name": "four_writable_wait0",
+      "retired": 8,
+      "cycles": 10,
+      "stalls": 0,
+      "three_stages": 6,
+      "fault": 0
+    },
+    {
+      "name": "carry_chain_wait0",
+      "retired": 7,
+      "cycles": 10,
+      "stalls": 1,
+      "three_stages": 4,
+      "fault": 0
+    },
+    {
+      "name": "borrow_chain_wait0",
+      "retired": 7,
+      "cycles": 10,
+      "stalls": 1,
+      "three_stages": 4,
+      "fault": 0
+    },
+    {
+      "name": "signed_flags_wait0",
+      "retired": 7,
+      "cycles": 12,
+      "stalls": 3,
+      "three_stages": 2,
+      "fault": 0
+    },
+    {
+      "name": "flags_branches_wait0",
+      "retired": 12,
+      "cycles": 23,
+      "stalls": 5,
+      "three_stages": 1,
+      "fault": 0
+    },
+    {
+      "name": "x_bytes_wait0",
+      "retired": 11,
+      "cycles": 18,
+      "stalls": 5,
+      "three_stages": 4,
+      "fault": 0
+    },
+    {
+      "name": "ram_edges_wait0",
+      "retired": 10,
+      "cycles": 16,
+      "stalls": 4,
+      "three_stages": 4,
+      "fault": 0
+    },
+    {
+      "name": "x_wrap_wait0",
+      "retired": 5,
+      "cycles": 10,
+      "stalls": 3,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "load_use_store_wait0",
+      "retired": 7,
+      "cycles": 13,
+      "stalls": 4,
+      "three_stages": 1,
+      "fault": 0
+    },
+    {
+      "name": "loop_wait0",
+      "retired": 24,
+      "cycles": 36,
+      "stalls": 5,
+      "three_stages": 9,
+      "fault": 0
+    },
+    {
+      "name": "branch_flush_wait0",
+      "retired": 5,
+      "cycles": 11,
+      "stalls": 2,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "mmio_once_wait0",
+      "retired": 8,
+      "cycles": 13,
+      "stalls": 3,
+      "three_stages": 3,
+      "fault": 0
+    },
+    {
+      "name": "illegal_opcode_wait0",
+      "retired": 1,
+      "cycles": 4,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_rr_wait0",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 1,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_halt_wait0",
+      "retired": 1,
+      "cycles": 4,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_load_wait0",
+      "retired": 1,
+      "cycles": 4,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_branch_wait0",
+      "retired": 1,
+      "cycles": 4,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "fetch_missing_wait0",
+      "retired": 1,
+      "cycles": 4,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 2
+    },
+    {
+      "name": "fetch_negative_wait0",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 2
+    },
+    {
+      "name": "fetch_wrap_wait0",
+      "retired": 2,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "data_unmapped_wait0",
+      "retired": 2,
+      "cycles": 7,
+      "stalls": 2,
+      "three_stages": 0,
+      "fault": 3
+    },
+    {
+      "name": "data_fault_older_wait0",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 1,
+      "three_stages": 0,
+      "fault": 3
+    },
+    {
+      "name": "fetch_error_wait0",
+      "retired": 1,
+      "cycles": 4,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 2
+    },
+    {
+      "name": "store_error_wait0",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 1,
+      "three_stages": 0,
+      "fault": 3
+    },
+    {
+      "name": "first_add_wait1",
+      "retired": 4,
+      "cycles": 9,
+      "stalls": 1,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "four_writable_wait1",
+      "retired": 8,
+      "cycles": 13,
+      "stalls": 0,
+      "three_stages": 4,
+      "fault": 0
+    },
+    {
+      "name": "carry_chain_wait1",
+      "retired": 7,
+      "cycles": 13,
+      "stalls": 1,
+      "three_stages": 2,
+      "fault": 0
+    },
+    {
+      "name": "borrow_chain_wait1",
+      "retired": 7,
+      "cycles": 13,
+      "stalls": 1,
+      "three_stages": 2,
+      "fault": 0
+    },
+    {
+      "name": "signed_flags_wait1",
+      "retired": 7,
+      "cycles": 14,
+      "stalls": 2,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "flags_branches_wait1",
+      "retired": 12,
+      "cycles": 25,
+      "stalls": 2,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "x_bytes_wait1",
+      "retired": 11,
+      "cycles": 25,
+      "stalls": 10,
+      "three_stages": 4,
+      "fault": 0
+    },
+    {
+      "name": "ram_edges_wait1",
+      "retired": 10,
+      "cycles": 25,
+      "stalls": 10,
+      "three_stages": 3,
+      "fault": 0
+    },
+    {
+      "name": "x_wrap_wait1",
+      "retired": 5,
+      "cycles": 10,
+      "stalls": 1,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "load_use_store_wait1",
+      "retired": 7,
+      "cycles": 20,
+      "stalls": 8,
+      "three_stages": 1,
+      "fault": 0
+    },
+    {
+      "name": "loop_wait1",
+      "retired": 24,
+      "cycles": 45,
+      "stalls": 5,
+      "three_stages": 3,
+      "fault": 0
+    },
+    {
+      "name": "branch_flush_wait1",
+      "retired": 5,
+      "cycles": 11,
+      "stalls": 1,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "mmio_once_wait1",
+      "retired": 8,
+      "cycles": 25,
+      "stalls": 12,
+      "three_stages": 3,
+      "fault": 0
+    },
+    {
+      "name": "illegal_opcode_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_rr_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_halt_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_load_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "illegal_branch_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1
+    },
+    {
+      "name": "fetch_missing_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 2
+    },
+    {
+      "name": "fetch_negative_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 2
+    },
+    {
+      "name": "fetch_wrap_wait1",
+      "retired": 2,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 0
+    },
+    {
+      "name": "data_unmapped_wait1",
+      "retired": 2,
+      "cycles": 9,
+      "stalls": 2,
+      "three_stages": 0,
+      "fault": 3
+    },
+    {
+      "name": "data_fault_older_wait1",
+      "retired": 1,
+      "cycles": 9,
+      "stalls": 4,
+      "three_stages": 0,
+      "fault": 3
+    },
+    {
+      "name": "fetch_error_wait1",
+      "retired": 1,
+      "cycles": 5,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 2
+    },
+    {
+      "name": "store_error_wait1",
+      "retired": 1,
+      "cycles": 9,
+      "stalls": 4,
+      "three_stages": 0,
+      "fault": 3
+    },
+    {
+      "name": "random_0",
+      "retired": 107,
+      "cycles": 196,
+      "stalls": 60,
+      "three_stages": 63,
+      "fault": 0
+    },
+    {
+      "name": "random_1",
+      "retired": 105,
+      "cycles": 189,
+      "stalls": 50,
+      "three_stages": 42,
+      "fault": 0
+    },
+    {
+      "name": "random_2",
+      "retired": 107,
+      "cycles": 198,
+      "stalls": 59,
+      "three_stages": 56,
+      "fault": 0
+    },
+    {
+      "name": "random_3",
+      "retired": 103,
+      "cycles": 182,
+      "stalls": 42,
+      "three_stages": 53,
+      "fault": 0
+    },
+    {
+      "name": "random_4",
+      "retired": 104,
+      "cycles": 198,
+      "stalls": 54,
+      "three_stages": 44,
+      "fault": 0
+    },
+    {
+      "name": "random_5",
+      "retired": 108,
+      "cycles": 181,
+      "stalls": 40,
+      "three_stages": 56,
+      "fault": 0
+    },
+    {
+      "name": "random_6",
+      "retired": 103,
+      "cycles": 186,
+      "stalls": 47,
+      "three_stages": 50,
+      "fault": 0
+    },
+    {
+      "name": "random_7",
+      "retired": 106,
+      "cycles": 198,
+      "stalls": 58,
+      "three_stages": 49,
+      "fault": 0
+    },
+    {
+      "name": "random_8",
+      "retired": 104,
+      "cycles": 197,
+      "stalls": 51,
+      "three_stages": 52,
+      "fault": 0
+    },
+    {
+      "name": "random_9",
+      "retired": 104,
+      "cycles": 183,
+      "stalls": 42,
+      "three_stages": 49,
+      "fault": 0
+    },
+    {
+      "name": "random_10",
+      "retired": 99,
+      "cycles": 187,
+      "stalls": 53,
+      "three_stages": 53,
+      "fault": 0
+    },
+    {
+      "name": "random_11",
+      "retired": 101,
+      "cycles": 198,
+      "stalls": 60,
+      "three_stages": 45,
+      "fault": 0
+    }
+  ]
+}

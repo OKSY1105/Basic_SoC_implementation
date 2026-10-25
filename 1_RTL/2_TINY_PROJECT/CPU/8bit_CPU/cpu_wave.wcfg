@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="/home/sean/Basic_SoC_implementation/1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/cpu_wave.wdb" id="1">
+         <top_modules>
+            <top_module name="tb_cpu_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="8,529,987 ps"></ZoomStartTime>
+      <ZoomEndTime time="8,530,003 ps"></ZoomEndTime>
+      <Cursor1Time time="8,530,000 ps"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="139"></NameColumnWidth>
+      <ValueColumnWidth column_width="198"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="27" />
+   <wvobject type="logic" fp_name="/tb_cpu_top/i_clk">
+      <obj_property name="ElementShortName">i_clk</obj_property>
+      <obj_property name="ObjectShortName">i_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_cpu_top/i_rst_n">
+      <obj_property name="ElementShortName">i_rst_n</obj_property>
+      <obj_property name="ObjectShortName">i_rst_n</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_cpu_top/dut/o_mem_req">
+      <obj_property name="ElementShortName">o_mem_req</obj_property>
+      <obj_property name="ObjectShortName">o_mem_req</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_cpu_top/dut/o_mem_we">
+      <obj_property name="ElementShortName">o_mem_we</obj_property>
+      <obj_property name="ObjectShortName">o_mem_we</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/o_mem_addr">
+      <obj_property name="ElementShortName">o_mem_addr[7:0]</obj_property>
+      <obj_property name="ObjectShortName">o_mem_addr[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/o_mem_wdata">
+      <obj_property name="ElementShortName">o_mem_wdata[7:0]</obj_property>
+      <obj_property name="ObjectShortName">o_mem_wdata[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/i_mem_rdata">
+      <obj_property name="ElementShortName">i_mem_rdata[7:0]</obj_property>
+      <obj_property name="ObjectShortName">i_mem_rdata[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_cpu_top/dut/i_mem_ready">
+      <obj_property name="ElementShortName">i_mem_ready</obj_property>
+      <obj_property name="ObjectShortName">i_mem_ready</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_cu/u_fsm/o_state">
+      <obj_property name="ElementShortName">o_state[2:0]</obj_property>
+      <obj_property name="ObjectShortName">o_state[2:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/w_instruction">
+      <obj_property name="ElementShortName">w_instruction[15:0]</obj_property>
+      <obj_property name="ObjectShortName">w_instruction[15:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_pc/o_pc">
+      <obj_property name="ElementShortName">o_pc[7:0]</obj_property>
+      <obj_property name="ObjectShortName">o_pc[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/w_alu_a">
+      <obj_property name="ElementShortName">w_alu_a[7:0]</obj_property>
+      <obj_property name="ObjectShortName">w_alu_a[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/w_alu_b">
+      <obj_property name="ElementShortName">w_alu_b[7:0]</obj_property>
+      <obj_property name="ObjectShortName">w_alu_b[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/w_alu_result">
+      <obj_property name="ElementShortName">w_alu_result[7:0]</obj_property>
+      <obj_property name="ObjectShortName">w_alu_result[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_cpu_top/dut/w_zero">
+      <obj_property name="ElementShortName">w_zero</obj_property>
+      <obj_property name="ObjectShortName">w_zero</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_cpu_top/dut/w_pc_we">
+      <obj_property name="ElementShortName">w_pc_we</obj_property>
+      <obj_property name="ObjectShortName">w_pc_we</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/w_pc_sel">
+      <obj_property name="ElementShortName">w_pc_sel[1:0]</obj_property>
+      <obj_property name="ObjectShortName">w_pc_sel[1:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_cpu_top/dut/w_reg_we">
+      <obj_property name="ElementShortName">w_reg_we</obj_property>
+      <obj_property name="ObjectShortName">w_reg_we</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/w_writeback">
+      <obj_property name="ElementShortName">w_writeback[7:0]</obj_property>
+      <obj_property name="ObjectShortName">w_writeback[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[0]">
+      <obj_property name="ElementShortName">[0][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[0][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[1]">
+      <obj_property name="ElementShortName">[1][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[1][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[2]">
+      <obj_property name="ElementShortName">[2][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[2][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[3]">
+      <obj_property name="ElementShortName">[3][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[3][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[4]">
+      <obj_property name="ElementShortName">[4][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[4][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[5]">
+      <obj_property name="ElementShortName">[5][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[5][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[6]">
+      <obj_property name="ElementShortName">[6][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[6][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_cpu_top/dut/u_du/u_irf/r_regs[7]">
+      <obj_property name="ElementShortName">[7][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[7][7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+</wave_config>
