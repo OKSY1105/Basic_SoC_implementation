@@ -1,8 +1,8 @@
 # CPU8: 4개 레지스터·3단계 파이프라인 8bit CPU
 
 현재 새 CPU의 최상위는 **`RTL/cpu8_top.v`의 `cpu8_top`**이다.
-기존 `CPU/`의 `cpu_top`과 `TB/tb_cpu_top.v`는 이전 MIPS형 CPU를 참고/회귀검증용으로 보존했다.
-기존 README.md는 그 이전 CPU 설명이다. 두 ISA와 포트는 호환되지 않는다.
+이 폴더는 새 CPU8 코어와 검증 환경을 담는다. 이전 MIPS형 CPU RTL·테스트벤치·실행 스크립트는 2026-10-25 사용자 요청으로 삭제했다.
+현재 설계의 RTL은 `RTL/`, 테스트벤치는 `TB/tb_cpu8_*.sv`에 있다.
 
 ## 구현 범위
 
@@ -121,12 +121,11 @@ Windows에서는 `--vivado-bin C:/Xilinx/Vivado/2024.2/bin`을 지정할 수 있
 도구 실행 환경의 실패와 RTL의 기능 통과 여부는 `TEST_STATUS_PIPELINED.md`에 구분해 기록한다.
 합성 예제의 기본 `xc7z020clg400-1`은 후보 칩 기준이며 최종 보드·패키지·핀·목표 클록 확정이 아니다.
 
-## 기존 블록 참고
+## 이전 구현과 변경 이력
 
-기존 `CPU/DU/alu.v`의 9bit 산술/carry/overflow 방식과 `irf.v`의 2R1W 구조,
-`CPU/CU/instruction_decoder.v`의 기본 제어 신호 구성, `CPU/DU/pc.v`·`ir.v`의 enable/hold 개념을 참고했다.
-새 ISA·GPR 수·분리 포트·파이프라인에 맞는 제어는 새 `cpu8_*` 모듈로 작성했다.
-기존 MIPS 코드의 8개 레지스터·R0 상수·공유 바이트 버스·다중 사이클 동작을 새 코어의 명세로 가져오지 않았다.
+초기 설계에서는 이전 CPU의 ALU carry/overflow, 2R1W, 제어 신호와 enable/hold 개념을 참고했다.
+사용자 요청에 따라 이전 RTL과 TB·실행 스크립트·파형 설정을 현재 트리에서 삭제했다.
+이전 구현은 [삭제 전 커밋 abc28c6](https://github.com/OKSY1105/Basic_SoC_implementation/tree/abc28c60b85e8caaeb1be6e1d226521a4f0957ff/1_RTL/2_TINY_PROJECT/CPU/8bit_CPU)에서 확인할 수 있다.
 
 첫 ROM 프로그램의 `080A / 0914 / 2401 / 0400`은 고정 입력 설명/단위 시험이다.
 전체 계산기에서는 ROM 프로그램이 UART 데이터를 읽어 변환하여 계산해야 한다.
