@@ -1,4 +1,4 @@
-# CPU8 RTL 검증 결과 — 2026-10-25
+# CPU8 RTL 검증 결과 — 2026-10-26
 
 새 코어의 top은 `cpu8_top`이다. 이전 CPU/ 및 기존 TB는 첫 검증 당시 보존했으며, 2026-10-25 후속 삭제 요청으로 현재 트리에서 제거했다.
 
@@ -42,3 +42,19 @@ UART IP 연결, STM32 LCD 드라이버는 다음 작업이다. CPU 단독 RTL의
 
 이전 CPU RTL 11개와 기존 TB·run.tcl·clean.tcl·cpu_wave.wcfg·TEST_STATUS.md를 삭제했다.
 새 RTL/TB/어셈블러/runner/합성 스크립트는 그대로 유지한다. 정리 후 남은 소스만 복사한 검증 환경에서 공개 runner를 다시 실행했다. 프로그램 62개·완료 명령 1,509개·ALU 786,432건·메모리 대기 중 reset을 모두 통과했고 기존 검증 JSON과 결과가 같았다. 이전 CPU 파일 없이 새 코어가 컴파일/실행됨을 확인했다.
+
+## 설정 없는 기본 TB 실행 — 2026-10-26
+
+`tb_cpu8_top`은 CASES 인자 없이 실행하면 내장 ROM의 LDI R0,10 / LDI R1,20 / ADD R0,R1 / HALT를 자동 실행한다.
+클록·리셋·ROM/RAM 초기화는 TB가 수행한다. 외부파일이나 UART 입력은 필요 없다.
+명령 완료 순서와 최종 GPR/PC/FLAGS/X·fault·메모리 부작용을 검사한 뒤 다음을 출력한다.
+
+```text
+CPU8_DEMO_PASS: 10 + 20 = 30; R0=30 R1=20 PC=4
+ALL_CASES_DONE 1
+```
+
+Icarus13.0에서 기본 무인자 실행PASS 및 기존62프로그램/1509완료·ALU786432·reset PASS를 확인했다.
+runner의 `default_demo_passed: true`는 기본 실행 경로를 별도로 검사한 결과이며 program_cases=62는 기존 외부 회귀 개수다.
+Vivado2024.2 xvlog로 수정한RTL/TB 전체 구문 분석도 통과했다. 이번에는 xelab/XSIM 실행을 재시도하지 않았으며 이전 환경 오류 한계는 그대로다.
+CPU RTL5개 파일은 변경하지 않았다. 외부회귀용 CASES는 명시했을 때만 사용하며 그 경우 지정 파일을 그대로 읽는다.

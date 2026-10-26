@@ -169,6 +169,14 @@ def main():
         else:
             plus=["-testplusarg","CASES="+manifest.as_posix()] if top=="tb_cpu8_top" else []
             outputs[top]=run([tool("xsim"),top+"_snapshot","-runall",*plus],build,top+"_run.log")
+    # Exercise the GUI/default path as well: no CASES argument and no ROM files.
+    if sim=="iverilog":
+        demo_command=["vvp",build/"tb_cpu8_top.vvp"]
+    else:
+        demo_command=[tool("xsim"),"tb_cpu8_top_snapshot","-runall"]
+    demo_output=run(demo_command,build,"tb_cpu8_default_demo_run.log")
+    if "CPU8_DEMO_PASS: 10 + 20 = 30" not in demo_output or "ALL_CASES_DONE 1" not in demo_output:
+        raise AssertionError("default no-argument demo did not finish")
     if "ALU_PASS 786432" not in outputs["tb_cpu8_alu"]:raise AssertionError("ALU test did not finish")
     if "RESET_PASS" not in outputs["tb_cpu8_reset"]:raise AssertionError("reset test did not finish")
     got={};current=None
@@ -199,7 +207,7 @@ def main():
         covered.update(t[1]>>10 for t in e["trace"])
         result.append(dict(name=cfg["name"],retired=len(e["trace"]),cycles=z[0],stalls=z[8],three_stages=z[9],fault=e["fault"]))
     assert covered==set(OPS.values()),("missing supported opcode",set(OPS.values())-covered)
-    summary=dict(simulator=sim,program_cases=len(result),alu_cases=786432,reset_inflight_passed=True,all_17_opcodes_covered=True,total_retired=sum(x["retired"] for x in result),cases=result)
+    summary=dict(simulator=sim,default_demo_passed=True,program_cases=len(result),alu_cases=786432,reset_inflight_passed=True,all_17_opcodes_covered=True,total_retired=sum(x["retired"] for x in result),cases=result)
     (build/"results.json").write_text(json.dumps(summary,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({k:v for k,v in summary.items() if k!="cases"},indent=2))
 if __name__=="__main__":main()

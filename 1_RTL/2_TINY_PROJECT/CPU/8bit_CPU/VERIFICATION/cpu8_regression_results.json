@@ -1,5 +1,6 @@
 {
   "simulator": "iverilog",
+  "default_demo_passed": true,
   "program_cases": 62,
   "alu_cases": 786432,
   "reset_inflight_passed": true,

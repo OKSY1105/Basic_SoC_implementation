@@ -25,7 +25,7 @@
 | `RTL/cpu8_regfile.v` | 4×8bit 2R1W, R0 쓰기 가능 |
 | `RTL/cpu8_alu.v` | ADD/ADC·SUB/SBC/CMP·AND, Z/N/C/V |
 | `RTL/cpu8_isa.vh` | opcode 상수 |
-| `TB/tb_cpu8_top.sv` | 여러 프로그램·메모리 지연·부작용·retirement trace |
+| `TB/tb_cpu8_top.sv` | 기본 내장 덧셈 데모 + 선택적 외부 회귀·메모리 지연·retirement trace |
 | `TB/tb_cpu8_alu.sv` | 독립 정수 범위 기준 786,432개 산술/플래그 조합 |
 | `TB/tb_cpu8_reset.sv` | 메모리 대기 중 리셋·이전 명령 폐기·재시작 |
 | `TOOLS/cpu8_asm.py` | 레이블/rel8·.org·.word를 지원하는 작은 어셈블러 |
@@ -101,6 +101,14 @@
 - `o_retire_*`는 시험/디버그용 완료 추적, `o_stage_valid={MEM/WB,ID/EX,IF요청}`, `o_stall`은 ID 진행 보류다.
 
 ## 실행
+
+**기본 실행은 Vivado에서 RTL/헤더와 TB를 추가하고 `tb_cpu8_top`을 simulation top으로 지정한 뒤 Behavioral Simulation을 실행하면 된다.**
+별도 옵션 없이 TB에 내장한 네 명령으로10+20을 계산하고 결과·완료 순서를 검사해 `CPU8_DEMO_PASS`를 출력한다.
+클록·리셋·시험 메모리는 TB가 만든다. 기본 시험에는 사용자 입력이나 외부파일이 필요 없다.
+
+`CASES` 인자를 명시한 경우에만 기존 외부 시험 목록 모드를 사용한다. 아래 Python runner는 전체62개 회귀·ALU/reset과 기본 무인자 데모를 함께 검증한다.
+`PROGRAMS/first_add.asm`은 같은 프로그램의 별도 어셈블러 예제다. 기본 TB의 내장 ROM은 해당파일을 읽지 않는다.
+
 
 Linux/WSL에서 Icarus Verilog와 Python 3이 준비된 경우:
 
