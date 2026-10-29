@@ -1,0 +1,15 @@
+# Vivado-generated files; retain RTL, constraints and project descriptions.
+.Xil/
+*.cache/
+*.hw/
+*.sim/
+*.runs/
+*.gen/
+*.ip_user_files/
+*.log
+*.jou
+*.str
+*.wdb
+*.vcd
+*.dcp
+*.pb
