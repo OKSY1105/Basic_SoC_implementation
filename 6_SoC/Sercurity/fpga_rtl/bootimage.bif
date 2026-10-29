@@ -1,0 +1,7 @@
+//arch = zynq; split = false; format = BIN
+the_ROM_image:
+{
+   [bootloader] build/fsbl.elf
+   build/security_top_zynq.bit
+   build/uart_bridge.elf
+}

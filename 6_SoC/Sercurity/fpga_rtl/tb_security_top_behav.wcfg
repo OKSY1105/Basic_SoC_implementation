@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_security_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_security_top" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0 ps"></ZoomStartTime>
+      <ZoomEndTime time="3,500,000,000 ps"></ZoomEndTime>
+      <Cursor1Time time="1,100,000,000 ps"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="340"></NameColumnWidth>
+      <ValueColumnWidth column_width="151"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="34" />
+   <wvobject type="divider" fp_name="divider26">
+      <obj_property name="label">1. System &amp; Dynamic Threshold (F-02, NFR-03)</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/rst_pb" type="logic">
+      <obj_property name="ElementShortName">rst_pb</obj_property>
+      <obj_property name="ObjectShortName">rst_pb</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/sw" type="array">
+      <obj_property name="ElementShortName">sw[3:0]</obj_property>
+      <obj_property name="ObjectShortName">sw[3:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/threshold_cm" type="array">
+      <obj_property name="ElementShortName">threshold_cm[15:0]</obj_property>
+      <obj_property name="ObjectShortName">threshold_cm[15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider31">
+      <obj_property name="label">2. 7-Segment Digital Clock (F-01)</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/u_clock_fnd/hour" type="array">
+      <obj_property name="ElementShortName">hour[4:0]</obj_property>
+      <obj_property name="ObjectShortName">hour[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/u_clock_fnd/minute" type="array">
+      <obj_property name="ElementShortName">minute[5:0]</obj_property>
+      <obj_property name="ObjectShortName">minute[5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/fnd_digit" type="array">
+      <obj_property name="ElementShortName">fnd_digit[3:0]</obj_property>
+      <obj_property name="ObjectShortName">fnd_digit[3:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/fnd_seg" type="array">
+      <obj_property name="ElementShortName">fnd_seg[7:0]</obj_property>
+      <obj_property name="ObjectShortName">fnd_seg[7:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider36">
+      <obj_property name="label">3. Ultrasonic &amp; 5-Sample Moving Avg (F-02, NFR-01, NFR-05)</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/sonar_trig" type="logic">
+      <obj_property name="ElementShortName">sonar_trig</obj_property>
+      <obj_property name="ObjectShortName">sonar_trig</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/sonar_echo" type="logic">
+      <obj_property name="ElementShortName">sonar_echo</obj_property>
+      <obj_property name="ObjectShortName">sonar_echo</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/raw_dist_cm" type="array">
+      <obj_property name="ElementShortName">raw_dist_cm[15:0]</obj_property>
+      <obj_property name="ObjectShortName">raw_dist_cm[15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/distance_cm" type="array">
+      <obj_property name="ElementShortName">distance_cm[15:0]</obj_property>
+      <obj_property name="ObjectShortName">distance_cm[15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/dist_valid" type="logic">
+      <obj_property name="ElementShortName">dist_valid</obj_property>
+      <obj_property name="ObjectShortName">dist_valid</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider42">
+      <obj_property name="label">4. Composite Alarm &amp; Latch (F-03)</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/alert_flag" type="logic">
+      <obj_property name="ElementShortName">alert_flag</obj_property>
+      <obj_property name="ObjectShortName">alert_flag</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/led" type="array">
+      <obj_property name="ElementShortName">led[3:0]</obj_property>
+      <obj_property name="ObjectShortName">led[3:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/buzzer" type="logic">
+      <obj_property name="ElementShortName">buzzer</obj_property>
+      <obj_property name="ObjectShortName">buzzer</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/motor_nsleep" type="logic">
+      <obj_property name="ElementShortName">motor_nsleep</obj_property>
+      <obj_property name="ObjectShortName">motor_nsleep</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/motor_in2" type="logic">
+      <obj_property name="ElementShortName">motor_in2</obj_property>
+      <obj_property name="ObjectShortName">motor_in2</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider48">
+      <obj_property name="label">5. Touch Keypad 20ms Debounce &amp; Password FSM (F-05, NFR-04)</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/touch_key" type="array">
+      <obj_property name="ElementShortName">touch_key[3:0]</obj_property>
+      <obj_property name="ObjectShortName">touch_key[3:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/key_pulse" type="array">
+      <obj_property name="ElementShortName">key_pulse[3:0]</obj_property>
+      <obj_property name="ObjectShortName">key_pulse[3:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/pw_step" type="array">
+      <obj_property name="ElementShortName">pw_step[1:0]</obj_property>
+      <obj_property name="ObjectShortName">pw_step[1:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/ev_pw_error" type="logic">
+      <obj_property name="ElementShortName">ev_pw_error</obj_property>
+      <obj_property name="ObjectShortName">ev_pw_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/ev_pw_ok_nrm" type="logic">
+      <obj_property name="ElementShortName">ev_pw_ok_nrm</obj_property>
+      <obj_property name="ObjectShortName">ev_pw_ok_nrm</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider54">
+      <obj_property name="label">6. PC UART RX/TX &amp; CRC8 Checksum (F-04, NFR-02)</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/uart_rx" type="logic">
+      <obj_property name="ElementShortName">uart_rx</obj_property>
+      <obj_property name="ObjectShortName">uart_rx</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/uart_tx" type="logic">
+      <obj_property name="ElementShortName">uart_tx</obj_property>
+      <obj_property name="ObjectShortName">uart_tx</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/crc_err_pulse" type="logic">
+      <obj_property name="ElementShortName">crc_err_pulse</obj_property>
+      <obj_property name="ObjectShortName">crc_err_pulse</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/cmd_stop_pulse" type="logic">
+      <obj_property name="ElementShortName">cmd_stop_pulse</obj_property>
+      <obj_property name="ObjectShortName">cmd_stop_pulse</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_security_top/dut/ev_pw_ok_pc" type="logic">
+      <obj_property name="ElementShortName">ev_pw_ok_pc</obj_property>
+      <obj_property name="ObjectShortName">ev_pw_ok_pc</obj_property>
+   </wvobject>
+</wave_config>

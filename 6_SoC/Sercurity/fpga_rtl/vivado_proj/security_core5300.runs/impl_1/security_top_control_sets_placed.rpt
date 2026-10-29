@@ -1,0 +1,132 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
+| Date         : Thu Oct 29 12:46:37 2026
+| Host         : BOOK-3GSAOKNJKI running 64-bit major release  (build 9200)
+| Command      : report_control_sets -verbose -file security_top_control_sets_placed.rpt
+| Design       : security_top
+| Device       : xc7z010
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Control Set Information
+
+Table of Contents
+-----------------
+1. Summary
+2. Histogram
+3. Flip-Flop Distribution
+4. Detailed Control Set Information
+
+1. Summary
+----------
+
++----------------------------------------------------------+-------+
+|                          Status                          | Count |
++----------------------------------------------------------+-------+
+| Total control sets                                       |    54 |
+|    Minimum number of control sets                        |    54 |
+|    Addition due to synthesis replication                 |     0 |
+|    Addition due to physical synthesis replication        |     0 |
+| Unused register locations in slices containing registers |   133 |
++----------------------------------------------------------+-------+
+* Control sets can be merged at opt_design using control_set_merge or merge_equivalent_drivers
+** Run report_qor_suggestions for automated merging and remapping suggestions
+
+
+2. Histogram
+------------
+
++--------------------+-------+
+|       Fanout       | Count |
++--------------------+-------+
+| Total control sets |    54 |
+| >= 0 to < 4        |     2 |
+| >= 4 to < 6        |     4 |
+| >= 6 to < 8        |     8 |
+| >= 8 to < 10       |    13 |
+| >= 10 to < 12      |     3 |
+| >= 12 to < 14      |     3 |
+| >= 14 to < 16      |     2 |
+| >= 16              |    19 |
++--------------------+-------+
+* Control sets can be remapped at either synth_design or opt_design
+
+
+3. Flip-Flop Distribution
+-------------------------
+
++--------------+-----------------------+------------------------+-----------------+--------------+
+| Clock Enable | Synchronous Set/Reset | Asynchronous Set/Reset | Total Registers | Total Slices |
++--------------+-----------------------+------------------------+-----------------+--------------+
+| No           | No                    | No                     |              11 |            7 |
+| No           | No                    | Yes                    |               0 |            0 |
+| No           | Yes                   | No                     |             335 |          113 |
+| Yes          | No                    | No                     |               4 |            1 |
+| Yes          | No                    | Yes                    |               0 |            0 |
+| Yes          | Yes                   | No                     |             429 |          140 |
++--------------+-----------------------+------------------------+-----------------+--------------+
+
+
+4. Detailed Control Set Information
+-----------------------------------
+
++----------------+----------------------------------------+-------------------------------------------------+------------------+----------------+--------------+
+|  Clock Signal  |              Enable Signal             |                 Set/Reset Signal                | Slice Load Count | Bel Load Count | Bels / Slice |
++----------------+----------------------------------------+-------------------------------------------------+------------------+----------------+--------------+
+|  clk_IBUF_BUFG | u_ultrasonic/sonar_trig_i_1_n_0        | u_uart_frame/sys_rst                            |                1 |              1 |         1.00 |
+|  clk_IBUF_BUFG | u_lcd_ctrl/lcd_e_i_1_n_0               | u_uart_frame/sys_rst                            |                1 |              1 |         1.00 |
+|  clk_IBUF_BUFG | gen_pb_debounce[1].u_deb_pb/E[0]       |                                                 |                1 |              4 |         4.00 |
+|  clk_IBUF_BUFG |                                        | gen_key_debounce[0].u_deb_key/rise_pulse_reg_0  |                1 |              5 |         5.00 |
+|  clk_IBUF_BUFG | u_uart_frame/pend_thresh0              | u_uart_frame/sys_rst                            |                2 |              5 |         2.50 |
+|  clk_IBUF_BUFG | u_lcd_ctrl/wait_limit[17]_i_1_n_0      | u_uart_frame/sys_rst                            |                4 |              5 |         1.25 |
+|  clk_IBUF_BUFG |                                        | u_clk_div/cnt_1us[5]_i_1_n_0                    |                2 |              6 |         3.00 |
+|  clk_IBUF_BUFG |                                        | u_security_fsm/led[0]_i_1_n_0                   |                4 |              6 |         1.50 |
+|  clk_IBUF_BUFG | u_security_fsm/rearm_cnt[7]_i_2_n_0    | u_uart_frame/SR[0]                              |                2 |              6 |         3.00 |
+|  clk_IBUF_BUFG | u_uart_frame/f_buf[13][6]_i_1_n_0      | u_uart_frame/sys_rst                            |                2 |              6 |         3.00 |
+|  clk_IBUF_BUFG | u_clk_div/tick_50ms_reg_0[0]           | gen_pb_debounce[1].u_deb_pb/SR[0]               |                2 |              6 |         3.00 |
+|  clk_IBUF_BUFG | u_lcd_ctrl/data_step[5]_i_1_n_0        | u_uart_frame/sys_rst                            |                2 |              6 |         3.00 |
+|  clk_IBUF_BUFG | u_uart_frame/f_crc[6]_i_1_n_0          | u_uart_frame/sys_rst                            |                4 |              7 |         1.75 |
+|  clk_IBUF_BUFG | u_uart_frame/f_buf[8][6]_i_1_n_0       | u_uart_frame/sys_rst                            |                2 |              7 |         3.50 |
+|  clk_IBUF_BUFG | u_uart_frame/tx_shift                  | u_uart_frame/sys_rst                            |                3 |              8 |         2.67 |
+|  clk_IBUF_BUFG |                                        | u_ultrasonic/SR[0]                              |                4 |              8 |         2.00 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_pay_idx[7]_i_1_n_0     | u_uart_frame/sys_rst                            |                3 |              8 |         2.67 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_type[7]_i_1_n_0        | u_uart_frame/sys_rst                            |                3 |              8 |         2.67 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_p3[7]_i_1_n_0          | u_uart_frame/sys_rst                            |                2 |              8 |         4.00 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_crc_acc[7]_i_1_n_0     | u_uart_frame/sys_rst                            |                4 |              8 |         2.00 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_p1[7]_i_1_n_0          | u_uart_frame/sys_rst                            |                2 |              8 |         4.00 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_p2[7]_i_1_n_0          | u_uart_frame/sys_rst                            |                2 |              8 |         4.00 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_p0[7]_i_1_n_0          | u_uart_frame/sys_rst                            |                1 |              8 |         8.00 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_len[7]_i_1_n_0         | u_uart_frame/sys_rst                            |                2 |              8 |         4.00 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_byte                   | u_uart_frame/sys_rst                            |                1 |              8 |         8.00 |
+|  clk_IBUF_BUFG | u_uart_frame/f_idx[7]_i_1_n_0          | u_uart_frame/sys_rst                            |                3 |              8 |         2.67 |
+|  clk_IBUF_BUFG | u_lcd_ctrl/lcd_rs_i_1_n_0              | u_uart_frame/sys_rst                            |                4 |              9 |         2.25 |
+|  clk_IBUF_BUFG | u_clk_div/tick_1us                     | u_security_fsm/pwm_us_cnt[9]_i_1_n_0            |                3 |             10 |         3.33 |
+|  clk_IBUF_BUFG | u_uart_frame/f_next_state[2]_i_1_n_0   | u_uart_frame/sys_rst                            |                3 |             11 |         3.67 |
+|  clk_IBUF_BUFG |                                        |                                                 |                7 |             11 |         1.57 |
+|  clk_IBUF_BUFG | u_security_fsm/E[0]                    | u_uart_frame/sys_rst                            |                4 |             12 |         3.00 |
+|  clk_IBUF_BUFG | u_ultrasonic/distance_cm[11]_i_1_n_0   | u_uart_frame/sys_rst                            |                3 |             12 |         4.00 |
+|  clk_IBUF_BUFG | u_uart_frame/cmd_stop_pulse_reg_0[0]   | u_uart_frame/sys_rst                            |                3 |             12 |         4.00 |
+|  clk_IBUF_BUFG | u_ultrasonic/sum_5_reg[13]_i_1_n_0     | u_uart_frame/sys_rst                            |                3 |             14 |         4.67 |
+|  clk_IBUF_BUFG |                                        | gen_pb_debounce[1].u_deb_pb/E[0]                |                6 |             15 |         2.50 |
+|  clk_IBUF_BUFG | u_ultrasonic/us_cnt[15]_i_1_n_0        | u_uart_frame/sys_rst                            |                6 |             16 |         2.67 |
+|  clk_IBUF_BUFG | u_uart_frame/f_buf[9][1]_i_1_n_0       | u_uart_frame/sys_rst                            |               10 |             16 |         1.60 |
+|  clk_IBUF_BUFG | u_uart_frame/rx_clk_cnt                | u_uart_frame/sys_rst                            |                7 |             16 |         2.29 |
+|  clk_IBUF_BUFG |                                        | u_clk_div/cnt_2ms[0]_i_1_n_0                    |                5 |             17 |         3.40 |
+|  clk_IBUF_BUFG | u_uart_frame/f_buf[5][4]_i_1_n_0       | u_uart_frame/sys_rst                            |                9 |             19 |         2.11 |
+|  clk_IBUF_BUFG | u_uart_frame/f_len[4]_i_1_n_0          | u_uart_frame/sys_rst                            |                8 |             20 |         2.50 |
+|  clk_IBUF_BUFG |                                        | gen_pb_debounce[1].u_deb_pb/cnt[0]_i_1__0_n_0   |                5 |             20 |         4.00 |
+|  clk_IBUF_BUFG |                                        | gen_pb_debounce[0].u_deb_pb/cnt[0]_i_1_n_0      |                5 |             20 |         4.00 |
+|  clk_IBUF_BUFG |                                        | gen_key_debounce[1].u_deb_key/cnt[0]_i_1__2_n_0 |                5 |             20 |         4.00 |
+|  clk_IBUF_BUFG |                                        | gen_key_debounce[0].u_deb_key/cnt[0]_i_1__1_n_0 |                5 |             20 |         4.00 |
+|  clk_IBUF_BUFG |                                        | gen_key_debounce[3].u_deb_key/cnt[0]_i_1__4_n_0 |                5 |             20 |         4.00 |
+|  clk_IBUF_BUFG |                                        | gen_key_debounce[2].u_deb_key/cnt[0]_i_1__3_n_0 |                5 |             20 |         4.00 |
+|  clk_IBUF_BUFG | u_uart_frame/f_buf[2][6]_i_1_n_0       | u_uart_frame/sys_rst                            |                8 |             21 |         2.62 |
+|  clk_IBUF_BUFG |                                        | u_clk_div/cnt_50ms[0]_i_1_n_0                   |                6 |             22 |         3.67 |
+|  clk_IBUF_BUFG | u_lcd_ctrl/timer_cnt[23]_i_1_n_0       | u_uart_frame/sys_rst                            |                6 |             24 |         4.00 |
+|  clk_IBUF_BUFG | u_lcd_ctrl/ref_cnt[23]_i_1_n_0         | u_uart_frame/sys_rst                            |                6 |             24 |         4.00 |
+|  clk_IBUF_BUFG |                                        | u_clk_div/cnt_1s[0]_i_1_n_0                     |                7 |             26 |         3.71 |
+|  clk_IBUF_BUFG | u_ultrasonic/sample_buf[0][10]_i_1_n_0 | u_uart_frame/sys_rst                            |                9 |             55 |         6.11 |
+|  clk_IBUF_BUFG |                                        | u_uart_frame/sys_rst                            |               48 |            110 |         2.29 |
++----------------+----------------------------------------+-------------------------------------------------+------------------+----------------+--------------+
+
+

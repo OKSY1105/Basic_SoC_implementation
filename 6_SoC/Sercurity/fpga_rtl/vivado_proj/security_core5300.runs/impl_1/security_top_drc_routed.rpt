@@ -1,0 +1,70 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
+| Date         : Thu Oct 29 12:47:16 2026
+| Host         : BOOK-3GSAOKNJKI running 64-bit major release  (build 9200)
+| Command      : report_drc -file security_top_drc_routed.rpt -pb security_top_drc_routed.pb -rpx security_top_drc_routed.rpx
+| Design       : security_top
+| Device       : xc7z010clg400-1
+| Speed File   : -1
+| Design State : Fully Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Report DRC
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: netlist
+          Floorplan: design_1
+      Design limits: <entire design considered>
+           Ruledeck: default
+             Max checks: <unlimited>
+             Checks found: 6
++----------+----------+----------------------------+--------+
+| Rule     | Severity | Description                | Checks |
++----------+----------+----------------------------+--------+
+| PDRC-132 | Warning  | SLICE_PairEqSame_A6A5_WARN | 2      |
+| PDRC-136 | Warning  | SLICE_PairEqSame_C6C5_WARN | 1      |
+| PDRC-138 | Warning  | SLICE_PairEqSame_D6D5_WARN | 1      |
+| PDRC-140 | Warning  | SLICE_PairEqSame_A6A5_WARN | 1      |
+| ZPS7-1   | Warning  | PS7 block required         | 1      |
++----------+----------+----------------------------+--------+
+
+2. REPORT DETAILS
+-----------------
+PDRC-132#1 Warning
+SLICE_PairEqSame_A6A5_WARN  
+Luts A6LUT and A5LUT in use in site SLICE_X39Y37 with different equations without A6 pin connected to Global Logic High.
+Related violations: <none>
+
+PDRC-132#2 Warning
+SLICE_PairEqSame_A6A5_WARN  
+Luts A6LUT and A5LUT in use in site SLICE_X39Y38 with different equations without A6 pin connected to Global Logic High.
+Related violations: <none>
+
+PDRC-136#1 Warning
+SLICE_PairEqSame_C6C5_WARN  
+Luts C6LUT and C5LUT in use in site SLICE_X26Y30 with different equations without A6 pin connected to Global Logic High.
+Related violations: <none>
+
+PDRC-138#1 Warning
+SLICE_PairEqSame_D6D5_WARN  
+Luts D6LUT and D5LUT in use in site SLICE_X26Y30 with different equations without A6 pin connected to Global Logic High.
+Related violations: <none>
+
+PDRC-140#1 Warning
+SLICE_PairEqSame_A6A5_WARN  
+Luts A6LUT and A5LUT in use in site SLICE_X42Y37 with different equations without A6 pin connected to Global Logic High.
+Related violations: <none>
+
+ZPS7-1#1 Warning
+PS7 block required  
+The PS7 cell must be used in this Zynq design in order to enable correct default configuration.
+Related violations: <none>
+
+

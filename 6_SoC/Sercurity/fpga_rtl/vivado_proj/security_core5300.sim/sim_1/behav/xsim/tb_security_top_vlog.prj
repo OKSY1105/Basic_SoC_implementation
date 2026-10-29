@@ -1,0 +1,17 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  \
+"../../../../../clk_div.v" \
+"../../../../../clock_fnd_ctrl.v" \
+"../../../../../debounce_edge.v" \
+"../../../../../lcd_ctrl.v" \
+"../../../../../security_fsm.v" \
+"../../../../../security_top.v" \
+"../../../../../uart_frame_ctrl.v" \
+"../../../../../ultrasonic_ctrl.v" \
+"../../../../../tb_security_top.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
