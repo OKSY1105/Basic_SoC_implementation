@@ -1,32 +1,32 @@
 {
   "cpu": {
     "rtl": [
-      "rtl/cpu/8bit_CPU/RTL/cpu8_alu.v",
-      "rtl/cpu/8bit_CPU/RTL/cpu8_decoder.v",
-      "rtl/cpu/8bit_CPU/RTL/cpu8_regfile.v",
-      "rtl/cpu/8bit_CPU/RTL/cpu8_top.v"
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_alu.v",
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_decoder.v",
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_regfile.v",
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_top.v"
     ],
     "headers": [
-      "rtl/cpu/8bit_CPU/RTL/cpu8_isa.vh"
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_isa.vh"
     ],
     "tb": [
-      "rtl/cpu/8bit_CPU/TB/tb_cpu8_top.sv"
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TB/tb_cpu8_top.sv"
     ],
     "include": [
-      "rtl/cpu/8bit_CPU/RTL"
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL"
     ],
     "top": "tb_cpu8_top",
     "expected": "CPU8_DEMO_PASS: 10 + 20 = 30"
   },
   "ram": {
     "rtl": [
-      "rtl/ram/dram_controller.v"
+      "../../1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/dram_controller.v"
     ],
     "models": [
-      "sim/models/DRAM/dram.v"
+      "../../1_RTL/2_TINY_PROJECT/DRAM/dram.v"
     ],
     "tb": [
-      "tb/ram/tb_dram_controller.v"
+      "../../1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/tb_dram_controller.v"
     ],
     "include": [],
     "tops": [
@@ -37,17 +37,17 @@
   },
   "uart": {
     "rtl": [
-      "rtl/uart/baud_rate_gen.v",
-      "rtl/uart/fifo.v",
-      "rtl/uart/uart_rx.v",
-      "rtl/uart/uart_tx.v",
-      "rtl/uart/uart_top.v"
+      "../../1_RTL/2_TINY_PROJECT/UART/baud_rate_gen.v",
+      "../../1_RTL/2_TINY_PROJECT/UART/fifo.v",
+      "../../1_RTL/2_TINY_PROJECT/UART/uart_rx.v",
+      "../../1_RTL/2_TINY_PROJECT/UART/uart_tx.v",
+      "../../1_RTL/2_TINY_PROJECT/UART/uart_top.v"
     ],
     "tb": [
-      "tb/uart/tb_uart.v"
+      "../../1_RTL/2_TINY_PROJECT/UART/tb_uart.v"
     ],
     "board": [
-      "fpga/boards/zybo/zybo_uart_top.v"
+      "../../1_RTL/2_TINY_PROJECT/UART/zybo_uart_top.v"
     ],
     "include": [],
     "tops": [
@@ -63,5 +63,7 @@
     "calculator_firmware",
     "pc_tools",
     "stm32"
-  ]
+  ],
+  "library_root": "../../1_RTL/2_TINY_PROJECT",
+  "source_policy": "Reusable modules stay in 1_RTL; this SoC references them directly without copies or source symlinks."
 }

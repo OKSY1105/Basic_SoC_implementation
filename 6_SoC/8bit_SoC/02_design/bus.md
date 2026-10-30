@@ -1,6 +1,6 @@
 # BUS 설계 과제 — 미구현
 
-개발 위치는 [rtl/bus](../rtl/bus), 시험 위치는 [tb/bus](../tb/bus)다. 이번에 BUS RTL이나 전체 SoC 연결이 생성된 것은 아니다.
+재사용 BUS 원본 개발 위치는 [1_RTL BUS](../../../1_RTL/2_TINY_PROJECT/BUS)이며, SoC별 주소 디코더/어댑터는 [rtl/bus](../rtl/bus), 통합 시험은 [tb/bus](../tb/bus)에 둔다. 이번에 BUS RTL이나 전체 SoC 연결이 생성된 것은 아니다.
 
 첫 연결 후보는 CPU의 기존 req/ready 데이터 포트를 유지하는 단일 master 구조다. APB/AHB/AXI 채택 여부는 별도 결정이며 폴더 정리만으로 확정하지 않는다.
 

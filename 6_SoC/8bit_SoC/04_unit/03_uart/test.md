@@ -1,6 +1,6 @@
 # UART 단위 검증
 
-기존 [tb_uart.v](../../tb/uart/tb_uart.v)의 top은 tb_uart_top이며 55/A5/00/FF 전송 확인과 tb_done/tb_error를 사용한다. 기존 TB는 $stop으로 멈추므로 자동 기능 PASS를 얻으려면 종료/실패 판정을 별도로 보강해야 한다.
+기존 [tb_uart.v](../../../../1_RTL/2_TINY_PROJECT/UART/tb_uart.v)의 top은 tb_uart_top이며 55/A5/00/FF 전송 확인과 tb_done/tb_error를 사용한다. 기존 TB는 $stop으로 멈추므로 자동 기능 PASS를 얻으려면 종료/실패 판정을 별도로 보강해야 한다.
 
 실행: `python3 scripts/run_unit.py uart --vivado-bin /home/sean/Vivado/2024.2/bin`
 
@@ -18,3 +18,12 @@
 - `zybo_uart_top`: compile/elaboration PASS.
 
 로그와 시험 소스 SHA-256은 외부 soc_reorg_20261030/test_logs 및 tested_source_fingerprints.json에 보관했다. FPGA 합성/타이밍/실물 시험은 이번에 실행하지 않았다.
+
+## 2026-10-30 — 1_RTL 공용 원본 직접 참조 검증
+
+기록 시각: 2026-10-30T16:43:44+09:00. 실제 실행 시각: 2026-10-30T16:40:03+09:00. 기준 HEAD 75659a8b0da4cd76446f2b7cf2c8e0ade82bf454 + 공용 라이브러리 복원/참조 수정. SoC run_unit.py와 sources.json이 1_RTL 원본을 직접 읽었다.
+
+- `tb_uart_top`: compile/elaboration PASS.
+- `zybo_uart_top`: compile/elaboration PASS.
+
+도구: Vivado 2024.2 xvlog/xelab/XSim. UART는 compile/elaboration 범위다. 외부 soc_library_restore_20261030/test_logs와 verification.json에 로그·원본 SHA-256을 보관한다. 실제 보드·전체 SoC 시험은 미실행이다.

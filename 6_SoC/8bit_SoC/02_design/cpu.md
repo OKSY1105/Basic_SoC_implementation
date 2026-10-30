@@ -1,6 +1,6 @@
 # CPU 현행 구현 인계
 
-코드 패키지는 [rtl/cpu/8bit_CPU](../rtl/cpu/8bit_CPU), 최상위는 [cpu8_top.v](../rtl/cpu/8bit_CPU/RTL/cpu8_top.v)다. [기존 구현 설명](../rtl/cpu/8bit_CPU/README_PIPELINED.md)과 [기존 검증 기록](../rtl/cpu/8bit_CPU/TEST_STATUS_PIPELINED.md)을 유지한다.
+코드 패키지는 [1_RTL/2_TINY_PROJECT/CPU/8bit_CPU](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU), 최상위는 [cpu8_top.v](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_top.v)다. [기존 구현 설명](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/README_PIPELINED.md)과 [기존 검증 기록](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TEST_STATUS_PIPELINED.md)을 유지한다.
 
 - 단일 코어, R0~R3 각 8bit, X 16bit, FLAGS.
 - 16bit 명령: opcode[15:10] 6bit, Rd[9:8] 2bit, operand[7:0] 8bit.

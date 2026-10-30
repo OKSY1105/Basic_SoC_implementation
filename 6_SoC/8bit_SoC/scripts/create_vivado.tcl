@@ -4,11 +4,12 @@ if {$argc != 2} { error "Usage: -tclargs cpu|ram|uart FPGA_PART" }
 set block [lindex $argv 0]
 set part [lindex $argv 1]
 set root [file dirname [file dirname [file normalize [info script]]]]
+set library [file normalize [file join $root .. .. 1_RTL 2_TINY_PROJECT]]
 set build [file join $root build vivado_$block]
 if {[file exists [file join $build unit_$block.xpr]]} { error "Project exists: $build; open it or choose another build directory" }
 switch -- $block {
     cpu {
-        set base [file join $root rtl cpu 8bit_CPU]
+        set base [file join $library CPU 8bit_CPU]
         set src [list [file join $base RTL cpu8_alu.v] [file join $base RTL cpu8_decoder.v] [file join $base RTL cpu8_regfile.v] [file join $base RTL cpu8_top.v] [file join $base RTL cpu8_isa.vh]]
         set tb [list [file join $base TB tb_cpu8_top.sv]]
         set top cpu8_top
@@ -16,15 +17,15 @@ switch -- $block {
     }
     ram {
         # Behavioral DRAM belongs to simulation sources, never synthesis sources.
-        set src [list [file join $root rtl ram dram_controller.v]]
-        set tb [list [file join $root sim models DRAM dram.v] [file join $root tb ram tb_dram_controller.v]]
+        set src [list [file join $library DRAM_CONTEOLLER dram_controller.v]]
+        set tb [list [file join $library DRAM dram.v] [file join $library DRAM_CONTEOLLER tb_dram_controller.v]]
         set top dram_controller
         set simtop tb_dram_controller
     }
     uart {
         set src {}
-        foreach name {baud_rate_gen fifo uart_rx uart_tx uart_top} { lappend src [file join $root rtl uart $name.v] }
-        set tb [list [file join $root tb uart tb_uart.v]]
+        foreach name {baud_rate_gen fifo uart_rx uart_tx uart_top} { lappend src [file join $library UART $name.v] }
+        set tb [list [file join $library UART tb_uart.v]]
         set top uart_top
         set simtop tb_uart_top
     }

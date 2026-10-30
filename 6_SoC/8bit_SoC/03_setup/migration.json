@@ -1,7 +1,54 @@
 {
   "recorded_at": "2026-10-30T10:21:30+09:00",
-  "base_commit": "26113681a818e79aaac595fe1d28bc75b67c89a0",
-  "aliases": [
+  "base_commit": "75659a8b0da4cd76446f2b7cf2c8e0ade82bf454",
+  "projects": [
+    "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/8bit_cpu_sim/8bit_cpu_sim.xpr",
+    "../../1_RTL/2_TINY_PROJECT/FUNCTION_TEST/UART_LED/UART_LED.xpr"
+  ],
+  "new_markdown": [
+    "01_planning/overview.md",
+    "02_design/README.md",
+    "02_design/bus.md",
+    "02_design/cpu.md",
+    "02_design/interfaces.md",
+    "02_design/ram.md",
+    "02_design/source_layout.md",
+    "02_design/uart.md",
+    "03_setup/README.md",
+    "03_setup/migration.md",
+    "03_setup/migration_20261030_initial.md",
+    "04_unit/01_cpu/test.md",
+    "04_unit/02_ram/test.md",
+    "04_unit/03_uart/test.md",
+    "04_unit/04_bus/test.md",
+    "04_unit/README.md",
+    "05_integration/README.md",
+    "06_scenario_test/README.md",
+    "07_final/README.md",
+    "PROCESS.md",
+    "README.md",
+    "firmware/README.md",
+    "fpga/README.md",
+    "fpga/boards/zybo/README.md",
+    "fpga/constraints/README.md",
+    "fpga/projects/cpu/README.md",
+    "fpga/projects/uart_led/README.md",
+    "history.md",
+    "pc_tools/README.md",
+    "rtl/bus/README.md",
+    "rtl/cpu/README.md",
+    "rtl/ram/README.md",
+    "rtl/rom/README.md",
+    "rtl/soc/README.md",
+    "rtl/uart/README.md",
+    "sim/models/README.md",
+    "stm32/README.md",
+    "tb/bus/README.md",
+    "tb/ram/README.md",
+    "tb/soc/README.md",
+    "tb/uart/README.md"
+  ],
+  "previous_aliases": [
     {
       "old": "1_RTL/2_TINY_PROJECT/CPU/8bit_CPU",
       "new": "6_SoC/8bit_SoC/rtl/cpu/8bit_CPU"
@@ -59,39 +106,15 @@
       "new": "6_SoC/8bit_SoC/rtl/uart/uart_top.v"
     }
   ],
-  "projects": [
-    "fpga/projects/uart_led/UART_LED.xpr",
-    "fpga/projects/cpu/8bit_cpu_sim/8bit_cpu_sim.xpr"
+  "aliases": [],
+  "library_modules": [
+    "1_RTL/2_TINY_PROJECT/CPU/8bit_CPU",
+    "1_RTL/2_TINY_PROJECT/UART",
+    "1_RTL/2_TINY_PROJECT/DRAM",
+    "1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER",
+    "1_RTL/2_TINY_PROJECT/BUS"
   ],
-  "new_markdown": [
-    "history.md",
-    "PROCESS.md",
-    "README.md",
-    "03_setup/README.md",
-    "03_setup/migration.md",
-    "02_design/uart.md",
-    "02_design/cpu.md",
-    "02_design/ram.md",
-    "02_design/README.md",
-    "02_design/bus.md",
-    "02_design/interfaces.md",
-    "07_final/README.md",
-    "tb/soc/README.md",
-    "tb/bus/README.md",
-    "04_unit/README.md",
-    "04_unit/04_bus/test.md",
-    "04_unit/03_uart/test.md",
-    "04_unit/02_ram/test.md",
-    "04_unit/01_cpu/test.md",
-    "01_planning/overview.md",
-    "05_integration/README.md",
-    "firmware/README.md",
-    "rtl/soc/README.md",
-    "rtl/bus/README.md",
-    "rtl/rom/README.md",
-    "fpga/README.md",
-    "06_scenario_test/README.md",
-    "stm32/README.md",
-    "pc_tools/README.md"
-  ]
+  "updated_at": "2026-10-30T16:38:24+09:00",
+  "source_policy": "1_RTL owns reusable modules; 6_SoC owns integration and refers to original files.",
+  "previous_base_commit": "26113681a818e79aaac595fe1d28bc75b67c89a0"
 }

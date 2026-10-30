@@ -1,6 +1,6 @@
 # UART 현행 구현과 통합 과제
 
-[uart_top.v](../rtl/uart/uart_top.v)와 baud generator·RX·TX·FIFO를 인계했다. [기존 TB](../tb/uart/tb_uart.v)는 tb_uart_top이며 [Zybo 래퍼](../fpga/boards/zybo/zybo_uart_top.v)는 보드 예제다.
+[uart_top.v](../../../1_RTL/2_TINY_PROJECT/UART/uart_top.v)와 baud generator·RX·TX·FIFO를 인계했다. [기존 TB](../../../1_RTL/2_TINY_PROJECT/UART/tb_uart.v)는 tb_uart_top이며 [Zybo 래퍼](../../../1_RTL/2_TINY_PROJECT/UART/zybo_uart_top.v)는 보드 예제다.
 
 - TX 입력: i_thr_we, i_thr_wdata.
 - RX 읽기: i_rhr_re, o_rhr_rdata.

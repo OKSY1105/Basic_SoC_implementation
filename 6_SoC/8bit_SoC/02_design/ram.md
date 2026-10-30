@@ -1,6 +1,6 @@
 # RAM·DRAM 제어기 인계
 
-실제 상위 접근은 8bit 한 바이트다. [제어기](../rtl/ram/dram_controller.v)는 [행동 모델](../sim/models/DRAM/dram.v)을 대상으로 하며 실제 외부 DDR PHY를 구현한 것은 아니다.
+실제 상위 접근은 8bit 한 바이트다. [제어기](../../../1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/dram_controller.v)는 [행동 모델](../../../1_RTL/2_TINY_PROJECT/DRAM/dram.v)을 대상으로 하며 실제 외부 DDR PHY를 구현한 것은 아니다.
 
 | 항목 | 현행 코드에서 확인한 동작 |
 |---|---|

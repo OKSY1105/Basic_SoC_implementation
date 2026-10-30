@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check explicit source lists, compatibility aliases and Vivado input paths."""
+"""Check canonical library sources, SoC documents and Vivado input paths."""
 import json, re, xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -15,6 +15,9 @@ def main():
                 checked+=1
                 if not (ROOT/name).exists():errors.append('Missing input: '+name)
     migration=json.loads((ROOT/'03_setup/migration.json').read_text())
+    for name in migration['library_modules']:
+        library=REPO/name;checked+=1
+        if not library.is_dir() or library.is_symlink():errors.append('Library must be a real directory: '+name)
     for pair in migration['aliases']:
         old=REPO/pair['old'];new=REPO/pair['new'];checked+=1
         if not old.is_symlink() or old.resolve()!=new.resolve():errors.append('Broken alias: '+pair['old'])

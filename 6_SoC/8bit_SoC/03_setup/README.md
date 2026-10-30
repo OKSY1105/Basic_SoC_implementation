@@ -23,7 +23,7 @@ CPU는 기본 데모, RAM은 기본·대체 타이밍 self-check를 실행한다
 
 ## Vivado GUI 프로젝트 생성
 
-원본 RTL을 직접 참조하며 기존 imported 사본을 재사용하지 않는다. part는 최종 보드에 맞춰 명시한다. 아래의 part는 Zynq-7020 예시이며 이번에 보드가 확정된 것은 아니다.
+1_RTL/2_TINY_PROJECT의 원본 RTL을 직접 참조하며 SoC 내부 사본을 만들지 않는다. part는 최종 보드에 맞춰 명시한다. 아래의 part는 Zynq-7020 예시이며 이번에 보드가 확정된 것은 아니다.
 
 ```sh
 /home/sean/Vivado/2024.2/bin/vivado -mode batch -source scripts/create_vivado.tcl -tclargs cpu xc7z020clg400-1
@@ -31,4 +31,4 @@ CPU는 기본 데모, RAM은 기본·대체 타이밍 self-check를 실행한다
 
 `cpu`, `ram`, `uart` 중 하나를 선택한다. 생성된 프로젝트는 `build/vivado_<블록>/` 아래에 있으며 자동 Run Simulation/합성/보드 programming은 하지 않는다. GUI에서 simulation top을 확인하고 Run Behavioral Simulation을 실행한다.
 
-최종 보드/FPGA part·입력 클록·핀·전압·baud는 실물 통합 전에 확인한다. 기존 Zybo XDC는 보드 예제로 보관한다. [이동 표와 기존 경로 호환](migration.md)을 참고한다.
+최종 보드/FPGA part·입력 클록·핀·전압·baud는 실물 통합 전에 확인한다. 기존 Zybo XDC는 보드 예제로 보관한다. [공용 원본 복원 기록](migration.md)을 참고한다.

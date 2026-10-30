@@ -1,32 +1,11 @@
-# 경로 개편과 호환 링크
+# 공용 모듈 원본 복원과 SoC 참조
 
-작업 시각: 2026-10-30T10:21:30+09:00
+기록 시각: 2026-10-30T16:38:24+09:00.
 
-사용자 선택: 기존 Sercurity와 분리한 6_SoC/8bit_SoC. 이동 전에 기존 소스와 프로젝트 전체를 외부 before_move.tar.gz에 보관하고 SHA-256을 기록했다.
+사용자 의도는 모듈 원본을 1_RTL/2_TINY_PROJECT에 두고 6_SoC/8bit_SoC에서 읽어 오는 구조다. 이전의 반대 방향 이동/호환 링크는 이 기록으로 대체한다. [이전 이동표](migration_20261030_initial.md)는 당시 자료로 보존했다.
 
-| 기존 저장소 상대 경로 | 현행 저장소 상대 경로 |
-|---|---|
-| `1_RTL/2_TINY_PROJECT/CPU/8bit_CPU` | `6_SoC/8bit_SoC/rtl/cpu/8bit_CPU` |
-| `1_RTL/2_TINY_PROJECT/DRAM` | `6_SoC/8bit_SoC/sim/models/DRAM` |
-| `1_RTL/2_TINY_PROJECT/FUNCTION_TEST/UART_LED` | `6_SoC/8bit_SoC/fpga/projects/uart_led` |
-| `6_SoC/8bit_SoC/rtl/cpu/8bit_CPU/8bit_cpu_sim` | `6_SoC/8bit_SoC/fpga/projects/cpu/8bit_cpu_sim` |
-| `6_SoC/8bit_SoC/fpga/projects/uart_led/UART_LED.srcs/constrs_1/new/zybo_uart_top.xdc` | `6_SoC/8bit_SoC/fpga/constraints/zybo_uart_top.xdc` |
-| `1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/dram_controller.v` | `6_SoC/8bit_SoC/rtl/ram/dram_controller.v` |
-| `1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/tb_dram_controller.v` | `6_SoC/8bit_SoC/tb/ram/tb_dram_controller.v` |
-| `1_RTL/2_TINY_PROJECT/UART/tb_uart.v` | `6_SoC/8bit_SoC/tb/uart/tb_uart.v` |
-| `1_RTL/2_TINY_PROJECT/UART/zybo_uart_top.v` | `6_SoC/8bit_SoC/fpga/boards/zybo/zybo_uart_top.v` |
-| `1_RTL/2_TINY_PROJECT/UART/baud_rate_gen.v` | `6_SoC/8bit_SoC/rtl/uart/baud_rate_gen.v` |
-| `1_RTL/2_TINY_PROJECT/UART/fifo.v` | `6_SoC/8bit_SoC/rtl/uart/fifo.v` |
-| `1_RTL/2_TINY_PROJECT/UART/uart_rx.v` | `6_SoC/8bit_SoC/rtl/uart/uart_rx.v` |
-| `1_RTL/2_TINY_PROJECT/UART/uart_tx.v` | `6_SoC/8bit_SoC/rtl/uart/uart_tx.v` |
-| `1_RTL/2_TINY_PROJECT/UART/uart_top.v` | `6_SoC/8bit_SoC/rtl/uart/uart_top.v` |
+CPU 패키지·기존 CPU 프로젝트, UART 원본과 단독 TB/보드 래퍼·기존 UART LED 프로젝트/XDC, DRAM 모델·제어기·TB를 기존 라이브러리 경로로 복원했다. 기존 경로는 실제 디렉터리/파일이며 소스 symlink가 아니다. SoC에 중복 모듈이나 역방향 symlink를 만들지 않는다.
 
-이전 위치는 파일 사본 대신 상대 심볼릭 링크로 현행 원본을 가리킨다. WSL/Linux Git의 symlink 지원이 필요하다. Windows에서 사용할 때는 WSL 경로로 연다. 기존 Tiny Project의 Vivado 로그/캐시와 UART legacy Tcl은 원래 위치에 보존했다.
+sources.json·Vivado Tcl·현재 문서 링크를 원본 경로로 바꿨다. [소유 경계](../02_design/source_layout.md)를 따른다. 생성된 단위 프로젝트는 build 안에 이전 버전을 보관하고 원본을 읽도록 재생성한다. 실제 RTL/TB 바이트는 보존한다.
 
-기존 CPU imported 프로젝트는 당시 소스 사본을 포함한다. 직접 참조 방식의 새 프로젝트는 scripts/create_vivado.tcl로 생성한다. UART LED XPR의 입력 경로는 이동한 현행 소스/보드 래퍼/XDC로 다시 연결했다.
-
-기능 RTL/TB 바이트는 그대로 유지했다. 경로 수정 대상은 UART LED 프로젝트 XML과 새 문서/도구다. 이동한 모든 파일의 해시와 보호 대상 Sercurity 지문을 확인한다.
-
-공유 기록: C:/codex_project의 AGENTS/Resume/history는 기존 Vault 검사 오류로 안전 저장이 차단되어 변경하지 않았다. 기존 CPU 코드 경로는 호환 링크를 통해 유효하다. 새 실제 경로와 공유 기록 반영 사항은 외부 pending_vault_record.md에도 남긴다.
-
-원본 백업·이동 지문·검증 로그는 C:/Users/okhou/.codex/visualizations/2026/10/23/01a16780-b1e1-7d30-9694-739a8f485015/soc_reorg_20261030에 있다.
+수정 전 tar.gz, 지문, 단계별 저널 및 검증 로그는 외부 soc_library_restore_20261030 폴더에 저장한다. 과거 H001~H003은 그대로 두고 새 H기록으로 정정한다. 기존 Windows Vault 문서는 별도 안전 저장 오류와 혼동하지 않으며 이번에는 직접 수정하지 않는다.
