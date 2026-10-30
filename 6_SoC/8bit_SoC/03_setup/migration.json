@@ -1,0 +1,97 @@
+{
+  "recorded_at": "2026-10-30T10:21:30+09:00",
+  "base_commit": "26113681a818e79aaac595fe1d28bc75b67c89a0",
+  "aliases": [
+    {
+      "old": "1_RTL/2_TINY_PROJECT/CPU/8bit_CPU",
+      "new": "6_SoC/8bit_SoC/rtl/cpu/8bit_CPU"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/DRAM",
+      "new": "6_SoC/8bit_SoC/sim/models/DRAM"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/FUNCTION_TEST/UART_LED",
+      "new": "6_SoC/8bit_SoC/fpga/projects/uart_led"
+    },
+    {
+      "old": "6_SoC/8bit_SoC/rtl/cpu/8bit_CPU/8bit_cpu_sim",
+      "new": "6_SoC/8bit_SoC/fpga/projects/cpu/8bit_cpu_sim"
+    },
+    {
+      "old": "6_SoC/8bit_SoC/fpga/projects/uart_led/UART_LED.srcs/constrs_1/new/zybo_uart_top.xdc",
+      "new": "6_SoC/8bit_SoC/fpga/constraints/zybo_uart_top.xdc"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/dram_controller.v",
+      "new": "6_SoC/8bit_SoC/rtl/ram/dram_controller.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/tb_dram_controller.v",
+      "new": "6_SoC/8bit_SoC/tb/ram/tb_dram_controller.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/UART/tb_uart.v",
+      "new": "6_SoC/8bit_SoC/tb/uart/tb_uart.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/UART/zybo_uart_top.v",
+      "new": "6_SoC/8bit_SoC/fpga/boards/zybo/zybo_uart_top.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/UART/baud_rate_gen.v",
+      "new": "6_SoC/8bit_SoC/rtl/uart/baud_rate_gen.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/UART/fifo.v",
+      "new": "6_SoC/8bit_SoC/rtl/uart/fifo.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/UART/uart_rx.v",
+      "new": "6_SoC/8bit_SoC/rtl/uart/uart_rx.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/UART/uart_tx.v",
+      "new": "6_SoC/8bit_SoC/rtl/uart/uart_tx.v"
+    },
+    {
+      "old": "1_RTL/2_TINY_PROJECT/UART/uart_top.v",
+      "new": "6_SoC/8bit_SoC/rtl/uart/uart_top.v"
+    }
+  ],
+  "projects": [
+    "fpga/projects/uart_led/UART_LED.xpr",
+    "fpga/projects/cpu/8bit_cpu_sim/8bit_cpu_sim.xpr"
+  ],
+  "new_markdown": [
+    "history.md",
+    "PROCESS.md",
+    "README.md",
+    "03_setup/README.md",
+    "03_setup/migration.md",
+    "02_design/uart.md",
+    "02_design/cpu.md",
+    "02_design/ram.md",
+    "02_design/README.md",
+    "02_design/bus.md",
+    "02_design/interfaces.md",
+    "07_final/README.md",
+    "tb/soc/README.md",
+    "tb/bus/README.md",
+    "04_unit/README.md",
+    "04_unit/04_bus/test.md",
+    "04_unit/03_uart/test.md",
+    "04_unit/02_ram/test.md",
+    "04_unit/01_cpu/test.md",
+    "01_planning/overview.md",
+    "05_integration/README.md",
+    "firmware/README.md",
+    "rtl/soc/README.md",
+    "rtl/bus/README.md",
+    "rtl/rom/README.md",
+    "fpga/README.md",
+    "06_scenario_test/README.md",
+    "stm32/README.md",
+    "pc_tools/README.md"
+  ]
+}

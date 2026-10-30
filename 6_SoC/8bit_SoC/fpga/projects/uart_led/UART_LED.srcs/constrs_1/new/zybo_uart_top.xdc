@@ -1,0 +1,1 @@
+../../../../../constraints/zybo_uart_top.xdc

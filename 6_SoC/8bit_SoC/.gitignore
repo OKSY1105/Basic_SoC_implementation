@@ -1,0 +1,19 @@
+# Generated build products; source inputs and test evidence stay explicit.
+/build/
+__pycache__/
+*.pyc
+.Xil/
+*.cache/
+*.hw/
+*.sim/
+*.runs/
+*.gen/
+*.ip_user_files/
+*.log
+*.jou
+*.str
+*.wdb
+*.vcd
+*.dcp
+*.pb
+*.bit
