@@ -33,7 +33,6 @@
     "fpga/constraints/README.md",
     "fpga/projects/cpu/README.md",
     "fpga/projects/uart_led/README.md",
-    "history.md",
     "pc_tools/README.md",
     "rtl/bus/README.md",
     "rtl/cpu/README.md",

@@ -4,7 +4,7 @@ PC의 UART 숫자·연산 요청을 8bit CPU가 계산하고 STM32 LCD에 결과
 
 ## 진입 문서
 
-- [현재 상태와 다음 작업](history.md#current)
+- [진행 단계와 다음 작업](PROCESS.md#지금-이어갈-순서)
 - [개요](01_planning/overview.md) · [단계별 완료 기준](PROCESS.md)
 - [공용 원본과 SoC의 경계](02_design/source_layout.md) · [설계 문서](02_design/README.md)
 - [실행 방법](03_setup/README.md) · [원본 복원 기록](03_setup/migration.md)
