@@ -9,6 +9,7 @@ PC의 UART 숫자·연산 요청을 8bit CPU가 계산하고 STM32 LCD에 결과
 - [공용 원본과 SoC의 경계](02_design/source_layout.md) · [설계 문서](02_design/README.md)
 - [실행 방법](03_setup/README.md) · [원본 복원 기록](03_setup/migration.md)
 - [단위 시험 결과](04_unit/README.md)
+- [검증 프로세스와 기록](verification/README.md) — Claude Code 작성 · Codex 독립 검증
 
 ## 공용 모듈 원본
 
