@@ -9,7 +9,7 @@
 - 단일 코어, 모두 읽고 쓸 수 있는 R0~R3 4개(각각 8bit). R0도 일반 레지스터다.
 - IF / ID·EX / MEM·WB 3단계, 순차 완료, forwarding 없이 GPR/FLAGS/X 의존성을 stall로 처리.
 - 16bit 고정 명령, opcode [15:10] / r [9:8] / operand [7:0].
-- 16bit 프로그램 PC는 **명령 word** 주소, 16bit X와 데이터 포트는 **byte** 주소.
+- 16bit 프로그램 PC는 **명령 word** 주소, 16bit X와 데이터 포트는 **byte** 주소. 명령 포트의 AHB 주소는 byte 단위 `{PC,1'b0}`(17bit)이다.
 - 아래 17개 명령을 구현. MUL/DIV는 프로그램 반복으로 구성하며 전용 opcode는 없다.
 - CPU 코어에는 ROM·RAM·UART를 내장하지 않는다. 프로그램 ROM과 데이터 RAM/MMIO는 분리된 외부 포트에 연결한다.
 - 첫 시스템 데이터 RAM은 2KiB(2,048×8bit)로 선정했다. 상위 모듈에서 범위를 디코드한다. CPU의 16bit 주소가 64KiB RAM 내장을 의미하지 않는다.
@@ -72,22 +72,25 @@
 
 ## 외부 메모리 포트
 
-| 방향 | 신호 | 단위 |
-|---|---|---|
-| 출력 | `o_i_req, o_i_addr[15:0]` | 16bit 명령 word 주소 |
-| 입력 | `i_i_ready, i_i_data[15:0], i_i_error` | 명령 완료·명령 데이터·오류 |
-| 출력 | `o_d_req, o_d_write, o_d_addr[15:0], o_d_wdata[7:0]` | byte 주소·쓰기 값 |
-| 입력 | `i_d_ready, i_d_rdata[7:0], i_d_error` | 데이터 완료·읽기 값·오류 |
+두 포트 모두 **AMBA AHB-Lite master**다(2026-11-03 변경, 이전 `req && ready` 방식 대체).
+단일 전송만 사용한다(`HTRANS` IDLE/NONSEQ, `HBURST` SINGLE). 경로·시간표·규칙의 원문은
+[CPU AHB 포트 변경안](../../../../6_SoC/8bit_SoC/02_design/cpu_ahb_port.md)이다.
 
-**이번 구현은 기존 CPU의 req/ready 형태를 참고한 완료 handshake다.** 각 포트의 `req && ready` 상승 에지에서
-요청 수락과 완료가 함께 발생한다. 이전 설계 문서의 별도 request/response 채널 제안과 신호를 그대로 혼용하지 않는다.
-외부 동기식 RAM/ROM 래퍼는 읽기 데이터가 준비된 에지에 ready를 올리면 된다.
+| 포트 | 출력 | 입력 | 고정값 |
+|---|---|---|---|
+| 명령 | `o_i_haddr[16:0]`(=`{PC,1'b0}`), `o_i_htrans[1:0]` | `i_i_hrdata[15:0]`, `i_i_hready`, `i_i_hresp` | `HSIZE`=001, `HPROT`=0010, `HWRITE`=0 |
+| 데이터 | `o_d_haddr[15:0]`(=X), `o_d_htrans[1:0]`, `o_d_hwrite`, `o_d_hwdata[7:0]` | `i_d_hrdata[7:0]`, `i_d_hready`, `i_d_hresp` | `HSIZE`=000, `HPROT`=0011 |
 
-- ready=0 동안 데이터 요청의 주소·방향·쓰기 값은 유지한다. ready가 참인 에지에서 한 번만 부작용을 발생시킨다.
-- 오류가 참인 완료에서는 메모리 래퍼가 RAM/UART 쓰기·FIFO pop/push를 억제해야 한다.
-- 인출 요청은 리셋·최선행 오류/HALT에서 취소할 수 있다. 명령 읽기는 부작용 없는 접근이어야 한다.
-- reset은 아직 수락되지 않은 데이터 요청도 취소한다. 이미 반영한 외부 쓰기는 되돌리지 않는다.
-- instruction/data 포트의 구현 지연에 따라 처리율은 달라진다. 모든 명령이 고정 3클록이라는 규약은 아니다.
+`HBURST`=000, `HMASTLOCK`=0도 두 포트에 출력한다.
+
+- 명령 포트: 주소 단계는 IF 직전 클록, IF가 데이터 단계다. IF/ID와 예비 칸 1개가 있고, 데이터를 받을 칸이 보장될 때만 주소 단계를 낸다.
+- 데이터 포트: LD/ST는 ID/EX에서 주소 단계를 내고 MEM/WB가 데이터 단계다. 주소 단계가 수락되는 에지에 명령이 MEM/WB로 발행된다.
+- `HREADY`=0이면 NONSEQ 주소 단계와 쓰기 데이터를 유지한다. 대기 없는 slave에서 순차 명령 1개/클록, LD/ST 1개/클록이다.
+- `HRESP`=ERROR는 2클록이다. 데이터 포트는 첫 클록을 기록해 둘째 클록에 다음 주소 단계를 IDLE로 취소하고, 오류 완료에서 fault 3으로 정지한다. 명령 포트의 오류는 그 명령이 실제로 실행될 때 fault 2가 된다.
+- 분기·HALT·fault 뒤의 인출은 응답을 받아서 버린다. 잘못된 경로의 명령은 ID/EX에 들어가지 않으므로 데이터 포트 접근을 만들지 않는다.
+- 오류로 끝난 전송의 RAM/UART 쓰기·FIFO pop/push 억제는 slave의 책임이다.
+- reset 중 두 포트는 IDLE이다. 이미 반영한 외부 쓰기는 되돌리지 않는다.
+- 포트 지연에 따라 처리율은 달라진다. 모든 명령이 고정 3클록이라는 규약은 아니다.
 
 ## 완료·정지·리셋
 

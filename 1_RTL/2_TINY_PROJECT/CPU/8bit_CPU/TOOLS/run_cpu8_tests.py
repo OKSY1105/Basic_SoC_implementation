@@ -90,6 +90,9 @@ def cases():
       ("data_fault_older","LDXL 32\nLD R0,[X]\nJMP skip\nLDI R1,99\nskip: HALT",{32:20}),
       ("fetch_error","LDI R0,31\nLDI R1,99\nHALT",{}),
       ("store_error","LDI R0,31\nST [X],R0\nHALT",{}),
+      # The second LD's address phase waits behind the first LD's ERROR and
+      # must be cancelled: no access to 0x0800 may complete.
+      ("data_error_cancel","LDXH 8\nLDXL 0\nLD R0,[X]\nLD R1,[X]\nHALT",{}),
     ]
     # The wrap case exits through an explicit injected fetch error after revisiting 0.
     # Instead use HALT at address ffff to exercise a wrapping next-PC of zero.
@@ -120,7 +123,11 @@ def cases():
 def run(command,build,log,cwd=None):
     command=list(map(str,command))
     if str(command[0]).lower().endswith(".bat"):
-        command=[os.environ.get("COMSPEC","cmd.exe"),"/d","/c",*command]
+        # cmd.exe splits unquoted batch arguments at '=', ',', ';' and spaces
+        # (e.g. CASES=C:/...), so quote those arguments explicitly.
+        quote=lambda a:'"'+a+'"' if re.search(r"[=,; ]",a) else a
+        line=" ".join(['"'+command[0]+'"']+[quote(a) for a in command[1:]])
+        command='"'+os.environ.get("COMSPEC","cmd.exe")+'" /d /s /c "'+line+'"'
     p=subprocess.run(command,cwd=(cwd or build),input=b"",stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=300)
     output=p.stdout.decode("utf-8",errors="replace")
     (build/log).write_text(output,encoding="utf-8")
@@ -137,6 +144,8 @@ def main():
     build=(args.build_dir or ROOT/"BUILD").resolve();build.mkdir(parents=True,exist_ok=True);fixtures=build/"cases";fixtures.mkdir(exist_ok=True)
     rtl=list(sorted((ROOT/"RTL").glob("*.v")))
     tops=["tb_cpu8_top","tb_cpu8_alu","tb_cpu8_reset"]
+    # AHB protocol checker: concurrent SVA is enabled for XSim (CPU8_SVA).
+    checker=ROOT/"TB"/"cpu8_ahb_checker.sv"
     sim=args.simulator
     if sim=="auto":sim="iverilog" if shutil.which("iverilog") else "xsim"
     outputs={}
@@ -150,10 +159,10 @@ def main():
         return q
     if sim=="iverilog":
         for top in tops:
-            command=["iverilog","-g2012","-I",str(ROOT/"RTL"),"-s",top,"-o",str(build/(top+".vvp")),*map(str,rtl),str(ROOT/"TB"/(top+".sv"))]
+            command=["iverilog","-g2012","-I",str(ROOT/"RTL"),"-s",top,"-o",str(build/(top+".vvp")),*map(str,rtl),str(checker),str(ROOT/"TB"/(top+".sv"))]
             run(command,build,top+"_compile.log")
     else:
-        run([tool("xvlog"),"--sv","-i",ROOT/"RTL",*rtl,*[ROOT/"TB"/(t+".sv") for t in tops]],build,"xvlog_cpu8.log")
+        run([tool("xvlog"),"--sv","-d","CPU8_SVA","-i",ROOT/"RTL",*rtl,checker,*[ROOT/"TB"/(t+".sv") for t in tops]],build,"xvlog_cpu8.log")
         for top in tops:run([tool("xelab"),top,"-s",top+"_snapshot"],build,top+"_elaborate.log")
     suite=list(cases());lines=[]
     for cfg in suite:
@@ -179,11 +188,12 @@ def main():
         raise AssertionError("default no-argument demo did not finish")
     if "ALU_PASS 786432" not in outputs["tb_cpu8_alu"]:raise AssertionError("ALU test did not finish")
     if "RESET_PASS" not in outputs["tb_cpu8_reset"]:raise AssertionError("reset test did not finish")
-    got={};current=None
+    got={};current=None;cover={}
     for raw in outputs["tb_cpu8_top"].splitlines():
         line=raw.strip();p=line.split()
         if not p:continue
-        if p[0]=="CASE":current={"trace":[],"reads":[],"writes":[]};got[p[1]]=current
+        if p[0]=="COVER":cover={k:int(v) for k,v in (s.split("=") for s in p[1:])}
+        elif p[0]=="CASE":current={"trace":[],"reads":[],"writes":[]};got[p[1]]=current
         elif current is not None and p[0] in {"READ","WRITE"}:current["reads" if p[0]=="READ" else "writes"].append(tuple(int(x,16) for x in p[1:]))
         elif current is not None and p[0]=="RET":
             t=tuple(int(x,16) for x in p[1:7])+tuple(int(x) for x in p[7:9])+(int(p[9],16),)
@@ -207,7 +217,9 @@ def main():
         covered.update(t[1]>>10 for t in e["trace"])
         result.append(dict(name=cfg["name"],retired=len(e["trace"]),cycles=z[0],stalls=z[8],three_stages=z[9],fault=e["fault"]))
     assert covered==set(OPS.values()),("missing supported opcode",set(OPS.values())-covered)
-    summary=dict(simulator=sim,default_demo_passed=True,program_cases=len(result),alu_cases=786432,reset_inflight_passed=True,all_17_opcodes_covered=True,total_retired=sum(x["retired"] for x in result),cases=result)
+    # Each AHB corner case must have occurred at least once in the suite.
+    if not cover or min(cover.values())<1:raise AssertionError("AHB corner case not exercised: "+str(cover))
+    summary=dict(simulator=sim,default_demo_passed=True,program_cases=len(result),alu_cases=786432,reset_inflight_passed=True,all_17_opcodes_covered=True,total_retired=sum(x["retired"] for x in result),ahb_corner_cases=cover,cases=result)
     (build/"results.json").write_text(json.dumps(summary,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({k:v for k,v in summary.items() if k!="cases"},indent=2))
 if __name__=="__main__":main()

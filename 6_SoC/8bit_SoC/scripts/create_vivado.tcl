@@ -11,7 +11,7 @@ switch -- $block {
     cpu {
         set base [file join $library CPU 8bit_CPU]
         set src [list [file join $base RTL cpu8_alu.v] [file join $base RTL cpu8_decoder.v] [file join $base RTL cpu8_regfile.v] [file join $base RTL cpu8_top.v] [file join $base RTL cpu8_isa.vh]]
-        set tb [list [file join $base TB tb_cpu8_top.sv]]
+        set tb [list [file join $base TB cpu8_ahb_checker.sv] [file join $base TB tb_cpu8_top.sv]]
         set top cpu8_top
         set simtop tb_cpu8_top
     }

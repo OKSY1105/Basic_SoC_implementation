@@ -2,22 +2,35 @@
 `default_nettype none
 `include "cpu8_isa.vh"
 // Single-issue IF / ID-EX / MEM-WB pipeline; no forwarding.
-// Instruction addresses count 16-bit WORDS; data addresses count BYTES.
-// Both ports complete at req && ready on a rising edge. Read data/error
-// must be valid then. A memory wrapper must suppress writes on error.
-// Instruction requests may be cancelled on reset/older fault/HALT.
-// Data requests stay stable until completion, except on reset.
+// Both memory ports are AMBA AHB-Lite masters: single transfers only
+// (HTRANS IDLE/NONSEQ, HBURST SINGLE), HREADY wait, two-cycle ERROR.
+// Spec: 6_SoC/8bit_SoC/02_design/cpu_ahb_port.md.
+// Instruction port: 16-bit reads at byte address {PC,1'b0}; PC counts words,
+//   so HADDR is 17 bits and never aliases. The address phase is the cycle
+//   before IF; IF is the data phase. IF/ID plus one skid slot; an address
+//   phase is issued only when a slot is guaranteed for its data. Fetches made
+//   dead by a branch/HALT/fault are received and discarded.
+// Data port: 8-bit byte address X. ID/EX drives the LD/ST address phase and
+//   it is accepted on the edge the instruction issues into MEM/WB, which is
+//   the data phase. The first ERROR cycle is recorded and the next address
+//   phase is cancelled (IDLE) in the second. Slaves suppress writes on ERROR.
 module cpu8_top (
     input wire i_clk, i_rst_n,
-    output wire o_i_req,
-    output wire [15:0] o_i_addr,
-    input wire [15:0] i_i_data,
-    input wire i_i_ready, i_i_error,
-    output wire o_d_req, o_d_write,
-    output wire [15:0] o_d_addr,
-    output wire [7:0] o_d_wdata,
-    input wire [7:0] i_d_rdata,
-    input wire i_d_ready, i_d_error,
+    output wire [16:0] o_i_haddr,
+    output wire [1:0] o_i_htrans,
+    output wire [2:0] o_i_hsize, o_i_hburst,
+    output wire [3:0] o_i_hprot,
+    output wire o_i_hwrite, o_i_hmastlock,
+    input wire [15:0] i_i_hrdata,
+    input wire i_i_hready, i_i_hresp,
+    output wire [15:0] o_d_haddr,
+    output wire [1:0] o_d_htrans,
+    output wire [2:0] o_d_hsize, o_d_hburst,
+    output wire [3:0] o_d_hprot,
+    output wire o_d_hwrite, o_d_hmastlock,
+    output wire [7:0] o_d_hwdata,
+    input wire [7:0] i_d_hrdata,
+    input wire i_d_hready, i_d_hresp,
     output reg o_halted, o_fault,
     output reg [2:0] o_fault_code,
     output reg [15:0] o_pc,
@@ -32,21 +45,34 @@ module cpu8_top (
     output reg [1:0] o_retire_rd,
     output reg [7:0] o_retire_data
 );
+    localparam [1:0] HTRANS_IDLE=2'b00, HTRANS_NONSEQ=2'b10;
     reg [15:0] r_fetch_pc, r_x;
     reg [3:0] r_flags;
     reg r_stop_fetch;
 
+    // Instruction address phase held while HREADY=0. The slot rule below only
+    // issues an address phase that can wait when IF/ID and skid are empty, so
+    // no branch can issue during a hold (asserted in cpu8_ahb_checker).
+    reg r_i_hold;
+    // Instruction data phase (IF): the fetch in flight and whether it is dead.
+    reg r_if_valid, r_if_kill;
+    reg [15:0] r_if_pc;
     // IF/ID boundary: the instruction remains here throughout RAW/backpressure.
     reg r_id_valid, r_id_error;
     reg [15:0] r_id_pc, r_id_instruction;
-    // ID/MEM boundary: the oldest issued instruction owns the data port.
+    // Skid slot: a fetch whose data arrives while IF/ID cannot take it.
+    reg r_sk_valid, r_sk_error;
+    reg [15:0] r_sk_pc, r_sk_instruction;
+    // ID/MEM boundary: the oldest issued instruction owns the data phase.
     reg r_m_valid, r_m_memory, r_m_store, r_m_halt, r_m_fault;
     reg r_m_reg_write, r_m_flags_write, r_m_x_write;
     reg [2:0] r_m_fault_code;
-    reg [15:0] r_m_pc, r_m_instruction, r_m_next_pc, r_m_address, r_m_x_data;
+    reg [15:0] r_m_pc, r_m_instruction, r_m_next_pc, r_m_x_data;
     reg [1:0] r_m_rd;
     reg [7:0] r_m_result, r_m_store_data;
     reg [3:0] r_m_flags;
+    // First cycle of a data-port ERROR seen; cancels the next address phase.
+    reg r_d_err;
 
     wire [5:0] w_opcode;
     wire [1:0] w_rd, w_rs;
@@ -54,11 +80,11 @@ module cpu8_top (
     wire w_reg_write,w_flags_write,w_x_write,w_memory,w_store,w_branch,w_halt;
     wire [7:0] w_a,w_b,w_alu_result;
     wire [3:0] w_alu_flags;
-    wire w_m_done=r_m_valid && (!r_m_memory || i_d_ready);
-    wire w_m_error=r_m_fault || (r_m_memory && i_d_error);
+    wire w_m_done=r_m_valid && (!r_m_memory || i_d_hready);
+    wire w_m_error=r_m_fault || (r_m_memory && i_d_hresp);
     wire w_m_terminal=w_m_done && (w_m_error || r_m_halt);
     wire w_wb_write=w_m_done && !w_m_error && r_m_reg_write && !o_halted;
-    wire [7:0] w_wb_data=r_m_memory ? i_d_rdata : r_m_result;
+    wire [7:0] w_wb_data=r_m_memory ? i_d_hrdata : r_m_result;
 
     cpu8_decoder u_decoder (
         .i_instruction(r_id_instruction),.o_opcode(w_opcode),.o_rd(w_rd),.o_rs(w_rs),
@@ -95,30 +121,67 @@ module cpu8_top (
         {{8{r_id_instruction[7]}},r_id_instruction[7:0]};
     wire w_redirect=w_id_issue && !w_id_fault && w_take_branch;
     wire w_stop_issue=w_id_issue && (w_id_fault || w_halt);
-    assign o_i_req=i_rst_n && !o_halted && !r_stop_fetch && !w_m_terminal &&
-        (!r_id_valid || w_id_issue) && !w_redirect && !w_stop_issue;
-    assign o_i_addr=r_fetch_pc;
-    wire w_fetch=o_i_req && i_i_ready;
 
-    assign o_d_req=i_rst_n && !o_halted && r_m_valid && r_m_memory && !r_m_fault;
-    assign o_d_write=r_m_store;
-    assign o_d_addr=r_m_address;
-    assign o_d_wdata=r_m_store_data;
+    // Instruction port. Every fetch younger than a redirect, HALT/fault issue
+    // or terminal MEM/WB completion is dead; its data is never used.
+    wire w_kill_fetch=w_redirect || w_stop_issue || w_m_terminal;
+    wire w_if_live=r_if_valid && !r_if_kill;
+    wire w_if_land=w_if_live && i_i_hready && !w_kill_fetch &&
+        !r_stop_fetch && !o_halted;
+    wire w_id_free=!r_id_valid || w_id_issue;
+    // A new address phase needs a slot for its data even if ID does not issue
+    // next cycle: (IF/ID + skid) - issued now + live fetch in flight + 1 <= 2.
+    wire [2:0] w_fetch_need=r_id_valid+r_sk_valid+w_if_live+3'd1-w_id_issue;
+    wire w_fetch_room=w_redirect || (w_fetch_need<=3'd2);
+    wire w_i_new=!o_halted && !r_stop_fetch && !w_stop_issue &&
+        !w_m_terminal && !r_d_err && w_fetch_room;
+    wire w_i_request=i_rst_n && (r_i_hold || w_i_new);
+    wire [15:0] w_i_pc=(!r_i_hold && w_redirect) ? w_branch_pc : r_fetch_pc;
+    wire w_i_accept=w_i_request && i_i_hready;
+    // A held address phase is dead if MEM/WB ended the program while it waited.
+    wire w_i_dead=r_i_hold && (w_kill_fetch || r_stop_fetch);
+    assign o_i_htrans=w_i_request ? HTRANS_NONSEQ : HTRANS_IDLE;
+    assign o_i_haddr={w_i_pc,1'b0};
+    assign o_i_hsize=3'b001;
+    assign o_i_hburst=3'b000;
+    assign o_i_hprot=4'b0010;
+    assign o_i_hwrite=1'b0;
+    assign o_i_hmastlock=1'b0;
+
+    // Data port. The LD/ST in ID/EX drives its address phase from registers
+    // only, so it holds through the older data phase and is accepted exactly
+    // when the instruction issues.
+    wire w_m_blocks=r_m_valid && (r_m_halt || r_m_fault);
+    wire w_d_request=i_rst_n && !o_halted && r_id_valid && w_memory &&
+        !w_id_fault && !w_hazard && !w_m_blocks && !r_d_err;
+    assign o_d_htrans=w_d_request ? HTRANS_NONSEQ : HTRANS_IDLE;
+    assign o_d_haddr=r_x;
+    assign o_d_hwrite=w_store;
+    assign o_d_hwdata=r_m_store_data;
+    assign o_d_hsize=3'b000;
+    assign o_d_hburst=3'b000;
+    assign o_d_hprot=4'b0011;
+    assign o_d_hmastlock=1'b0;
     assign o_x=r_x;
     assign o_flags=r_flags;
     assign o_stall=r_id_valid && !w_id_issue && !o_halted && !w_m_terminal;
-    assign o_stage_valid={r_m_valid,r_id_valid,o_i_req};
+    assign o_stage_valid={r_m_valid,r_id_valid,w_if_live};
 
     always @(posedge i_clk) begin
         if (!i_rst_n) begin
             r_fetch_pc<=16'b0; r_x<=16'b0; r_flags<=4'b0; r_stop_fetch<=1'b0;
+            r_i_hold<=1'b0;
+            r_if_valid<=1'b0; r_if_kill<=1'b0; r_if_pc<=16'b0;
             r_id_valid<=1'b0; r_id_error<=1'b0;
             r_id_pc<=16'b0; r_id_instruction<=16'b0;
+            r_sk_valid<=1'b0; r_sk_error<=1'b0;
+            r_sk_pc<=16'b0; r_sk_instruction<=16'b0;
+            r_d_err<=1'b0;
             r_m_valid<=1'b0; r_m_memory<=1'b0; r_m_store<=1'b0;
             r_m_halt<=1'b0; r_m_fault<=1'b0; r_m_fault_code<=3'b0;
             r_m_reg_write<=1'b0; r_m_flags_write<=1'b0; r_m_x_write<=1'b0;
             r_m_pc<=16'b0; r_m_instruction<=16'b0; r_m_next_pc<=16'b0;
-            r_m_address<=16'b0; r_m_x_data<=16'b0; r_m_rd<=2'b0;
+            r_m_x_data<=16'b0; r_m_rd<=2'b0;
             r_m_result<=8'b0; r_m_store_data<=8'b0; r_m_flags<=4'b0;
             o_halted<=1'b0; o_fault<=1'b0; o_fault_code<=3'b0; o_pc<=16'b0;
             o_retire_valid<=1'b0; o_retire_pc<=16'b0; o_retire_instruction<=16'b0;
@@ -144,11 +207,25 @@ module cpu8_top (
                     if (r_m_halt) o_halted<=1'b1;
                 end
             end
+            if (r_m_valid && r_m_memory && !i_d_hready && i_d_hresp) r_d_err<=1'b1;
+
+            // Instruction address/data phase bookkeeping.
+            if (w_i_accept) begin
+                r_if_valid<=1'b1; r_if_pc<=w_i_pc; r_if_kill<=w_i_dead;
+                r_i_hold<=1'b0; r_fetch_pc<=w_i_pc+16'd1;
+            end else begin
+                if (i_i_hready) r_if_valid<=1'b0;
+                else if (w_kill_fetch) r_if_kill<=1'b1;
+                // A waiting address phase (e.g. a branch target) is kept.
+                r_i_hold<=w_i_request;
+                if (w_i_request) r_fetch_pc<=w_i_pc;
+            end
+
             if (w_m_terminal) begin
-                r_id_valid<=1'b0; r_stop_fetch<=1'b1;
+                r_id_valid<=1'b0; r_sk_valid<=1'b0; r_stop_fetch<=1'b1;
             end else if (!o_halted) begin
                 if (w_id_issue) begin
-                    r_id_valid<=1'b0; r_m_valid<=1'b1;
+                    r_m_valid<=1'b1;
                     r_m_pc<=r_id_pc; r_m_instruction<=r_id_instruction;
                     r_m_fault<=w_id_fault;
                     r_m_fault_code<=r_id_error ? 3'd2 : 3'd1;
@@ -159,7 +236,7 @@ module cpu8_top (
                     r_m_memory<=w_memory && !w_id_fault;
                     r_m_store<=w_store && !w_id_fault;
                     r_m_rd<=w_rd;
-                    r_m_address<=r_x; r_m_store_data<=w_a;
+                    r_m_store_data<=w_a;
                     r_m_flags<=w_alu_flags;
                     r_m_next_pc<=w_take_branch ? w_branch_pc : w_sequential_pc;
                     case (w_opcode)
@@ -173,12 +250,30 @@ module cpu8_top (
                         default: r_m_x_data<=r_x+16'd1;
                     endcase
                     if (w_stop_issue) r_stop_fetch<=1'b1;
-                    if (w_redirect) r_fetch_pc<=w_branch_pc;
                 end
-                if (w_fetch) begin
-                    r_id_valid<=1'b1; r_id_pc<=r_fetch_pc;
-                    r_id_instruction<=i_i_data; r_id_error<=i_i_error;
-                    r_fetch_pc<=r_fetch_pc+16'd1;
+                // Refill IF/ID in program order: skid first, then the fetch
+                // landing now. A redirect or stop empties both slots.
+                if (w_redirect || w_stop_issue) begin
+                    r_id_valid<=1'b0; r_sk_valid<=1'b0;
+                end else if (w_id_free) begin
+                    if (r_sk_valid) begin
+                        r_id_valid<=1'b1; r_id_pc<=r_sk_pc;
+                        r_id_instruction<=r_sk_instruction; r_id_error<=r_sk_error;
+                        r_sk_valid<=w_if_land;
+                        if (w_if_land) begin
+                            r_sk_pc<=r_if_pc;
+                            r_sk_instruction<=i_i_hrdata; r_sk_error<=i_i_hresp;
+                        end
+                    end else begin
+                        r_id_valid<=w_if_land;
+                        if (w_if_land) begin
+                            r_id_pc<=r_if_pc;
+                            r_id_instruction<=i_i_hrdata; r_id_error<=i_i_hresp;
+                        end
+                    end
+                end else if (w_if_land) begin
+                    r_sk_valid<=1'b1; r_sk_pc<=r_if_pc;
+                    r_sk_instruction<=i_i_hrdata; r_sk_error<=i_i_hresp;
                 end
             end
         end
