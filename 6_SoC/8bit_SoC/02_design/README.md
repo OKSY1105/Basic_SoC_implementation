@@ -3,6 +3,7 @@
 | 문서 | 다루는 결정 |
 |---|---|
 | [CPU](cpu.md) | 기존 ISA·파이프라인·외부 포트와 원본 연결 |
+| [CPU AHB 포트 변경안](cpu_ahb_port.md) | 명령·데이터 포트의 AHB-Lite 변경: 경로·시간표·대기·분기 취소 |
 | [RAM](ram.md) | DRAM 행동 모델·바이트 제어기·실물 경계 |
 | [UART](uart.md) | 기존 FIFO/상태와 MMIO 변환에서 남은 일 |
 | [BUS](bus.md) | 주소·선택·대기·오류·응답 중복 방지 |

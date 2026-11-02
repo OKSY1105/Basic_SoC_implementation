@@ -8,9 +8,9 @@
 |---|---|---|
 | 메모리 구조 | 수정 하버드: CPU 코어의 명령/데이터 포트는 분리 유지, 시스템은 ROM·RAM·UART를 단일 주소 맵에 배치 | 사용자 확정 |
 | 버스 | 직접 정의한 req/ready 대신 표준 AMBA 프로토콜 | 사용자 확정 |
-| 프로토콜 조합 | AHB-Lite(ROM·RAM) + AHB-to-APB 브리지 + APB(UART) | 추천안, 진행 기준 |
-| 단계 | 1차: 명령 포트→ROM 직결, 데이터 포트→AHB-Lite master 어댑터(단일 master). 2차: 명령 포트도 AHB master로 연결하고 중재기 추가 | 추천안, 진행 기준 |
-| CPU 코어 | RTL·ISA·req/ready 포트 무변경, AHB 변환은 SoC `rtl/bus`의 어댑터가 담당 | 추천안, 진행 기준 |
+| 프로토콜 조합 | AHB-Lite(ROM·RAM) + AHB-to-APB 브리지 + APB3(UART) | 사용자 확정(2026-11-02) |
+| 단계 | 1차: 명령 포트(AHB-Lite)→ROM 포트 A 점대점, 데이터 포트(AHB-Lite)→디코더(단일 master). 2차: 명령 포트를 버스에 연결하고 중재기 추가 | 추천안, 진행 기준 |
+| CPU 코어 | ISA·3단계·stall 유지, 명령·데이터 포트를 AHB-Lite master로 변경(변환기 없음). 경로·시간표·대기·분기 취소 규칙은 [CPU AHB 포트 변경안](cpu_ahb_port.md) | 사용자 확정(2026-11-02), RTL 미반영 |
 
 아래 표의 각 항목은 이 결정을 기준으로 AHB-Lite/APB 신호(HTRANS·HREADY·HRESP, PSEL·PENABLE·PREADY·PSLVERR)로 구체화한다.
 
@@ -22,6 +22,6 @@
 | 응답 | 선택한 slave의 ready/rdata/error만 반영 |
 | 부작용 | 한 완료당 UART pop/push·메모리 쓰기 각각 1회 |
 | reset | 진행 중 취소/이미 반영된 쓰기/drain 규칙 합의 |
-| 명령 연결 | 현행 분리 ROM 인출 유지 또는 공유 메모리 변경은 별도 결정 |
+| 명령 연결 | 1차는 명령 포트→ROM 포트 A 점대점 ([변경안](cpu_ahb_port.md) 3절) |
 
 단위 시험은 최초/최종 주소·미할당·back-to-back·긴 wait·reset 중 접근·중복 완료·비선택 slave의 가짜 ready를 포함한다. 통합 전 포트 시간표와 기대 결과를 문서화한다.
