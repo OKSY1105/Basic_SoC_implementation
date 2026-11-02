@@ -1,101 +1,121 @@
-module cache(
-
-i_clk,
-i_rstn,
-i_cpu_req, // cpu request
-i_cache_write, // cpu is going to write data to cache
-i_cpu_memaddr, // cpu give memory address to cache
-i_cpu_wdata, // cpu is going to write wdata
-o_cpu_ack, // cache tell cpu i finish work that you request
-o_cpu_rdata, // cpu read data
-
-o_mem_req, // miss cache reqest data to memory
-o_mem_write, // cache data is going to written to memory
-o_mem_address, //cache give  memory address 
-o_mem_wdata, // cahce is going to write wdata to memory
-i_mem_ack, // memory tell cache i finish work that you request
-i_mem_rdata // data is written to cache
-
+`timescale 1ns/1ps
+// Direct-mapped, write-back, write-allocate data cache for the 8bit SoC RAM
+// path: RAM AHB slave wrapper -> cache -> DRAM controller (2 KiB local RAM).
+//
+// CPU side (byte): one request at a time. Hold req, address, write and wdata
+//   until ack; req && ack at a rising edge completes the access exactly once.
+//   A hit acknowledges in the same cycle the request is presented.
+// Memory side (line): one 64-bit line request at a time with the same req/ack
+//   rule. A line is one DRAM column burst (BL8 x 8bit); o_mem_address is the
+//   line number = byte address [10:3] = {row[3:0], column[3:0]}. Byte k of a
+//   line is bits [8k+7:8k], matching the DRAM controller's byte offset.
+// Miss: write the victim line back if it is dirty, then refill the requested
+//   line; the held request then hits and is acknowledged.
+// Reset clears valid/dirty only. Dirty data not yet written back is lost.
+// Counters: completed CPU accesses, misses (refills) and write-backs.
+module cache #(
+    parameter integer INDEX_W = 3                 // 2**INDEX_W lines of 8 bytes
+) (
+    input  wire        i_clk,
+    input  wire        i_rstn,
+    // CPU side
+    input  wire        i_cpu_req,                 // request, held until ack
+    input  wire        i_cpu_write,               // 1: write i_cpu_wdata
+    input  wire [10:0] i_cpu_memaddr,             // RAM local byte address
+    input  wire [7:0]  i_cpu_wdata,
+    output wire        o_cpu_ack,                 // access completes this cycle
+    output wire [7:0]  o_cpu_rdata,               // valid while o_cpu_ack
+    // Memory side
+    output reg         o_mem_req,                 // line request, held until ack
+    output reg         o_mem_write,               // 1: write back o_mem_wdata
+    output reg  [7:0]  o_mem_address,             // line number {row, column}
+    output reg  [63:0] o_mem_wdata,
+    input  wire        i_mem_ack,                 // line access completes
+    input  wire [63:0] i_mem_rdata,               // refill data, valid with ack
+    // Measurement
+    output reg  [15:0] o_access_count,
+    output reg  [15:0] o_miss_count,
+    output reg  [15:0] o_writeback_count
 );
-input i_cpu_req;
-input i_cpu_write;
-input [7:0] i_cpu_memaddr;
-input [31:0] i_cpu_wdata;
-output o_cpu_ack;
-output [31:0] o_cpu_rdata;
+    localparam integer LINES = 1 << INDEX_W;
+    localparam integer TAG_W = 8 - INDEX_W;
+    localparam [1:0] ST_IDLE = 2'd0, ST_WRITEBACK = 2'd1, ST_REFILL = 2'd2;
 
-output o_mem_req; // cache has no data that cpu wants so request data
-output o_mem_write; // cache data is different from memory data so cache data will be written to memory
-output [7:0] o_mem_address; // cache give address to memory
-output [31:0] o_mem_wdata; // data is different from memory data so update data 
-input i_mem_ack;   // memory give cache a signle it it done
-input [31:0] i_mem_rdata; // cache write data from memory
+    // Line storage (no reset, so tools may map it to distributed RAM).
+    reg [63:0] r_data [0:LINES-1];
+    reg [TAG_W-1:0] r_tag [0:LINES-1];
+    // Line state and miss handling.
+    reg [LINES-1:0] r_valid, r_dirty;
+    reg [1:0] r_state;
+    reg [INDEX_W-1:0] r_miss_index;
+    reg [TAG_W-1:0] r_miss_tag;
 
-reg [31:0] cache [7:0]; // I need to make it  SRAM module later.
-reg [7:0] valid_mem;
+    wire [2:0] w_offset = i_cpu_memaddr[2:0];
+    wire [INDEX_W-1:0] w_index = i_cpu_memaddr[INDEX_W+2:3];
+    wire [TAG_W-1:0] w_tag = i_cpu_memaddr[10:INDEX_W+3];
+    wire [63:0] w_line = r_data[w_index];
+    wire w_hit = r_valid[w_index] && (r_tag[w_index] == w_tag);
+    wire w_idle_req = i_cpu_req && (r_state == ST_IDLE);
+    wire w_victim_dirty = r_valid[w_index] && r_dirty[w_index];
+    // Write hit: replace one byte of the line.
+    wire [63:0] w_byte_mask = 64'hff << {w_offset, 3'b000};
+    wire [63:0] w_merged = (w_line & ~w_byte_mask) |
+                           ({56'd0, i_cpu_wdata} << {w_offset, 3'b000});
 
-wire [2:0] w_tag =i_cpu_memaddr[7:5];     // i_cpu_memaddr - index - offset 
-wire [2:0] w_index =i_cpu_memaddr[4:2];  // size of cache
-wire [1:0] w_offset = i_cpu_memaddr[1:0]; //size of byte
+    assign o_cpu_ack = w_idle_req && w_hit;
+    assign o_cpu_rdata = w_line[{w_offset, 3'b000} +: 8];
 
-reg [2:0] cache_tag_mem[7:0];     // i_cpu_memaddr - index - offset
-reg [2:0] cache_index_mem;  // size of cache
-reg [1:0] cache_offset_mem; //size of byte
-reg valid_rd;
+    always @(posedge i_clk) begin
+        if (o_cpu_ack && i_cpu_write) r_data[w_index] <= w_merged;
+        if (r_state == ST_REFILL && i_mem_ack) begin
+            r_data[r_miss_index] <= i_mem_rdata;
+            r_tag[r_miss_index] <= r_miss_tag;
+        end
+    end
 
-wire empty;
-wire hit;
-wire miss;
-wire diff;
-wire hit_read;
-
-assign empty = i_cpu_req & ~valid_mem[w_index];
-assign hit = i_cpu_req & valid_mem[w_index] &(cache_tag_mem[w_index] == w_tag);
-assign diff = i_cpu_req & valid_mem[w_index] &(cache_tag_mem[w_index] != w_tag);
-assign miss = empty | diff;
-
-assign hit_read = hit  & ~(i_cpu_write); 
-assign hit_write = hit  & i_cpu_write;
-
-reg [7:0] r_dirty;
-always @(posedge i_clk or negedge i_rstn) begin  
-	if(!i_rstn) begin 
-		valid_mem <=8'b0;      // when empty?
-		o_cpu_rdata <= 32'd0;
-                o_cpu_ack <= 1'b0;
-		r_dirty <=1'b0;
-
-		o_mem_wdata <=32'd0;  // when miss?
-		o_mem_req<=1'b0;
-		o_mem_write <=1'b0;
-		o_mem_address <=8'd0;
-
-	end
-
-	else begin
-		o_cpu_ack <=0;
-
-		if(i_mem_ack) begin    // cache is empty so get data from memry
-			cache_tag_mem[w_index] <= w_tag;
-			cache[w_index] <= i_mem_rdata;
-			valid_mem[w_index] <= 1'b1;
-		end
-
-		else if(hit_read)begin // hit read
-                        o_cpu_rdata <= cache[w_index];
-                        o_cpu_ack <=1'b1;
+    always @(posedge i_clk or negedge i_rstn) begin
+        if (!i_rstn) begin
+            r_valid <= {LINES{1'b0}}; r_dirty <= {LINES{1'b0}};
+            r_state <= ST_IDLE;
+            r_miss_index <= {INDEX_W{1'b0}}; r_miss_tag <= {TAG_W{1'b0}};
+            o_mem_req <= 1'b0; o_mem_write <= 1'b0;
+            o_mem_address <= 8'd0; o_mem_wdata <= 64'd0;
+            o_access_count <= 16'd0; o_miss_count <= 16'd0;
+            o_writeback_count <= 16'd0;
+        end else begin
+            case (r_state)
+                ST_IDLE: begin
+                    if (o_cpu_ack) begin
+                        o_access_count <= o_access_count + 16'd1;
+                        if (i_cpu_write) r_dirty[w_index] <= 1'b1;
+                    end else if (w_idle_req) begin
+                        // Miss: keep the request's line; evict the victim.
+                        o_miss_count <= o_miss_count + 16'd1;
+                        r_miss_index <= w_index; r_miss_tag <= w_tag;
+                        o_mem_req <= 1'b1;
+                        if (w_victim_dirty) begin
+                            r_state <= ST_WRITEBACK; o_mem_write <= 1'b1;
+                            o_mem_address <= {r_tag[w_index], w_index};
+                            o_mem_wdata <= w_line;
+                        end else begin
+                            r_state <= ST_REFILL; o_mem_write <= 1'b0;
+                            o_mem_address <= {w_tag, w_index};
+                        end
+                    end
                 end
-                
-		else if(hit_write) begin // hit write
-                        cache[w_index] <= i_cpu_wdata;
-                        r_dirty[w_index] <= 1'b1;
-                        o_cpu_ack <=1'b1;
+                ST_WRITEBACK: if (i_mem_ack) begin
+                    o_writeback_count <= o_writeback_count + 16'd1;
+                    r_dirty[r_miss_index] <= 1'b0;
+                    r_state <= ST_REFILL; o_mem_write <= 1'b0;
+                    o_mem_address <= {r_miss_tag, r_miss_index};
                 end
-
-	end
-
-end
-
-
-
+                ST_REFILL: if (i_mem_ack) begin
+                    r_valid[r_miss_index] <= 1'b1;
+                    r_dirty[r_miss_index] <= 1'b0;
+                    r_state <= ST_IDLE; o_mem_req <= 1'b0;
+                end
+                default: r_state <= ST_IDLE;
+            endcase
+        end
+    end
 endmodule
