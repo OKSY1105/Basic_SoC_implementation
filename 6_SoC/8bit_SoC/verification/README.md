@@ -14,7 +14,7 @@
 
 ## 1. 진행 흐름
 
-1. Claude: RTL·TB 작성 → 자체 시뮬레이션(ModelSim Intel FPGA Edition 2020.1) → `feat/<블록>` 브랜치 push
+1. Claude: RTL·TB 작성 → 자체 시뮬레이션(Windows Vivado 2024.2 XSim) → `feat/<블록>` 브랜치 push
 2. Claude: 검증 요청서 작성 (작업 중에는 로컬 교환 폴더 `handoff/requests/`)
 3. 사용자: Codex에 검증 지시
 4. Codex: 요청서의 커밋을 checkout해 실행·검토(Vivado XSim 등) → Notion 상세 기록 → 결과 파일 작성 (`handoff/results/`)
