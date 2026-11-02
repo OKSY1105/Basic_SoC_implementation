@@ -2,8 +2,8 @@
 
 | 경계 | 현재 폭/단위 | 상태 |
 |---|---|---|
-| CPU instruction | 주소 16bit word, 명령 16bit | 기존 구현 |
-| CPU data | 주소 16bit byte, 데이터 8bit, req/ready/error | 기존 구현 |
+| CPU instruction | AHB-Lite, `HADDR` 17bit byte(2×PC), `HRDATA` 16bit | `feat/cpu-ahb-port` 구현, Codex 검증 대기 — [변경안](cpu_ahb_port.md) |
+| CPU data | AHB-Lite, `HADDR` 16bit byte(X), 데이터 8bit, `HREADY`/`HRESP` | `feat/cpu-ahb-port` 구현, Codex 검증 대기 — [변경안](cpu_ahb_port.md) |
 | RAM 제어기 host | 주소 11bit byte, 데이터 8bit, 요청 동시 1개 | 기존 구현, BUS 어댑터 필요 |
 | UART host | THR write/RHR read pulse, 데이터와 FIFO/LSR 상태 | 기존 구현, MMIO 어댑터 필요 |
 | CPU→BUS→slave | 선택·보관·오류·완료 시간표 | 미구현/세부 설계 필요 |
@@ -22,4 +22,4 @@
 
 ## 요청 완료 규칙에서 확인할 것
 
-CPU와 DRAM의 각 포트에서 clk 상승 에지 req&&ready를 완료로 삼는다. 처리 중 주소/데이터를 유지한다. slave 재수락 간격, reset 중 drain, UART FIFO side effect는 연결 회로와 TB가 함께 검증해야 한다. ready가 올라간 기간을 여러 번의 쓰기나 RX pop으로 해석하지 않는다.
+CPU와 DRAM의 각 포트에서 clk 상승 에지 req&&ready를 완료로 삼는다. CPU 포트는 AHB-Lite로 바꾸며, 바꾼 뒤에는 [변경안](cpu_ahb_port.md)의 주소·데이터 단계 시간표를 따른다. 처리 중 주소/데이터를 유지한다. slave 재수락 간격, reset 중 drain, UART FIFO side effect는 연결 회로와 TB가 함께 검증해야 한다. ready가 올라간 기간을 여러 번의 쓰기나 RX pop으로 해석하지 않는다.
