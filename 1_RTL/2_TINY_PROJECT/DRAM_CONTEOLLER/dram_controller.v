@@ -1,14 +1,25 @@
 `timescale 1ns / 1ps
 
-// Byte-access controller for ../DRAM/dram.v (the project's behavioral model).
-// This is NOT a physical DDR PHY or a JEDEC-complete memory controller.
+// Byte/line-access controller for ../DRAM/dram.v (the project's behavioral
+// model). This is NOT a physical DDR PHY or a JEDEC-complete memory controller.
+//
+// Two modules:
+//   dram_controller_core: the controller with DQ/DQS split into output,
+//     output enable and input (no tri-state), for a memory inside the FPGA.
+//   dram_controller: the same controller with inout DQ/DQS (tri-state
+//     buffers only), for the behavioral model ../DRAM/dram.v.
 //
 // Host contract:
-//   * One outstanding byte request. Hold req/address/write/wdata until ready.
+//   * One outstanding request. Hold req/line/address/write/wdata until ready.
 //   * req && ready at posedge i_clk completes the operation exactly once.
 //   * ready lasts one i_clk cycle; a new request is accepted in a later IDLE.
 //   * Local address = {row[3:0], column[3:0], byte_offset[2:0]} (2 KiB).
-//   * Offset 0 selects bits [7:0]; byte writes use read-modify-write (RMW).
+//   * i_line=0 (byte): offset 0 selects bits [7:0]; byte writes use
+//     read-modify-write (RMW: one RD burst, then one WR burst).
+//   * i_line=1 (line): one 64-bit line = one BL8 burst at address [10:3]
+//     (offset ignored); byte k is bits [8k+7:8k]. A line read is one RD and
+//     returns o_line_rdata with ready; a line write is one WR of i_line_wdata
+//     (no RMW read). This is the port of the data cache.
 //   * error is always 0: this model has no error response or timeout input.
 //
 // Clock/timing contract:
@@ -29,7 +40,9 @@
 //   Reset does not clear the DRAM array, and does not undo an issued write.
 //
 // No PRE/REF, refresh, bank scheduling, training, or real-board constraints.
-module dram_controller #(
+// Read data is captured at fixed phases of the generated CK, so the core has
+// no DQS input.
+module dram_controller_core #(
     parameter integer T_RCD_CYCLES = 9,
     parameter integer CL_CYCLES = 9,
     parameter integer CWL_CYCLES = 10
@@ -38,10 +51,13 @@ module dram_controller #(
     input  wire        i_rst_n,
     input  wire        i_req,
     input  wire        i_write,
+    input  wire        i_line,
     input  wire [10:0] i_addr,
     input  wire [7:0]  i_wdata,
+    input  wire [63:0] i_line_wdata,
     output wire        o_ready,
     output wire [7:0]  o_rdata,
+    output wire [63:0] o_line_rdata,
     output wire        o_error,
     output wire        o_busy,
     output reg         o_initialized,
@@ -54,9 +70,12 @@ module dram_controller #(
     output reg  [1:0]  o_dram_bg,
     output reg  [1:0]  o_dram_ba,
     output reg  [17:0] o_dram_a,
-    inout  wire [7:0]  io_dram_dq,
-    inout  wire        io_dram_dqs_t,
-    inout  wire        io_dram_dqs_c
+    output wire [7:0]  o_dram_dq,
+    output wire        o_dram_dq_oe,
+    input  wire [7:0]  i_dram_dq,
+    output wire        o_dram_dqs_t,
+    output wire        o_dram_dqs_c,
+    output wire        o_dram_dqs_oe
 );
     localparam [3:0] ST_POWERUP = 0, ST_MRS0_WAIT = 1,
                      ST_MRS2_WAIT = 2, ST_INIT_WAIT = 3,
@@ -93,11 +112,15 @@ module dram_controller #(
 
     assign o_dram_ck_c = ~o_dram_ck_t;
     assign o_dram_cke = 1'b1;
-    assign io_dram_dq = r_dq_oe ? r_dq : 8'bz;
-    assign io_dram_dqs_t = r_dqs_oe ? r_dqs_t : 1'bz;
-    assign io_dram_dqs_c = r_dqs_oe ? r_dqs_c : 1'bz;
+    assign o_dram_dq = r_dq;
+    assign o_dram_dq_oe = r_dq_oe;
+    assign o_dram_dqs_t = r_dqs_t;
+    assign o_dram_dqs_c = r_dqs_c;
+    assign o_dram_dqs_oe = r_dqs_oe;
     assign o_ready = i_rst_n && !r_cancel && (r_state == ST_DONE);
     assign o_rdata = r_response;
+    // The whole burst: read data of a line read, valid with o_ready.
+    assign o_line_rdata = r_burst;
     assign o_error = 1'b0;
     assign o_busy = !o_initialized || (r_state != ST_IDLE);
 
@@ -143,9 +166,9 @@ module dram_controller #(
             if (r_state == ST_READ &&
                 r_cycle >= CL_CYCLES && r_cycle < CL_CYCLES + 4) begin
                 if (r_phase == 1)
-                    r_burst[(r_cycle-CL_CYCLES)*16 +: 8] <= io_dram_dq;
+                    r_burst[(r_cycle-CL_CYCLES)*16 +: 8] <= i_dram_dq;
                 if (r_phase == 3)
-                    r_burst[(r_cycle-CL_CYCLES)*16+8 +: 8] <= io_dram_dq;
+                    r_burst[(r_cycle-CL_CYCLES)*16+8 +: 8] <= i_dram_dq;
             end
 
             if (r_state == ST_WRITE) begin
@@ -233,7 +256,15 @@ module dram_controller #(
                     r_addr <= i_addr;
                     r_wdata <= i_wdata;
                     r_response <= 0;
-                    r_state <= ST_READ_ACT;
+                    // A line write has its whole burst already: no RMW read.
+                    // A line read is a plain read; so after a RD burst
+                    // r_write still means "byte write, merge next".
+                    if (i_line && i_write) begin
+                        r_burst <= i_line_wdata;
+                        r_state <= ST_WRITE_ACT;
+                    end else begin
+                        r_state <= ST_READ_ACT;
+                    end
                 end
                 ST_READ_ACT, ST_WRITE_ACT: if (r_phase == 3) begin
                     o_dram_csn <= 0;
@@ -280,4 +311,60 @@ module dram_controller #(
             endcase
         end
     end
+endmodule
+
+// dram_controller_core with inout DQ/DQS for the behavioral model dram.v.
+// The tri-state drivers follow the core's output enables exactly.
+module dram_controller #(
+    parameter integer T_RCD_CYCLES = 9,
+    parameter integer CL_CYCLES = 9,
+    parameter integer CWL_CYCLES = 10
+) (
+    input  wire        i_clk,
+    input  wire        i_rst_n,
+    input  wire        i_req,
+    input  wire        i_write,
+    input  wire        i_line,
+    input  wire [10:0] i_addr,
+    input  wire [7:0]  i_wdata,
+    input  wire [63:0] i_line_wdata,
+    output wire        o_ready,
+    output wire [7:0]  o_rdata,
+    output wire [63:0] o_line_rdata,
+    output wire        o_error,
+    output wire        o_busy,
+    output wire        o_initialized,
+
+    output wire        o_dram_ck_t,
+    output wire        o_dram_ck_c,
+    output wire        o_dram_cke,
+    output wire        o_dram_csn,
+    output wire        o_dram_actn,
+    output wire [1:0]  o_dram_bg,
+    output wire [1:0]  o_dram_ba,
+    output wire [17:0] o_dram_a,
+    inout  wire [7:0]  io_dram_dq,
+    inout  wire        io_dram_dqs_t,
+    inout  wire        io_dram_dqs_c
+);
+    wire [7:0] w_dq;
+    wire w_dq_oe, w_dqs_t, w_dqs_c, w_dqs_oe;
+
+    dram_controller_core #(
+        .T_RCD_CYCLES(T_RCD_CYCLES), .CL_CYCLES(CL_CYCLES), .CWL_CYCLES(CWL_CYCLES)
+    ) u_core (
+        .i_clk(i_clk), .i_rst_n(i_rst_n), .i_req(i_req), .i_write(i_write),
+        .i_line(i_line), .i_addr(i_addr), .i_wdata(i_wdata), .i_line_wdata(i_line_wdata),
+        .o_ready(o_ready), .o_rdata(o_rdata), .o_line_rdata(o_line_rdata),
+        .o_error(o_error), .o_busy(o_busy), .o_initialized(o_initialized),
+        .o_dram_ck_t(o_dram_ck_t), .o_dram_ck_c(o_dram_ck_c), .o_dram_cke(o_dram_cke),
+        .o_dram_csn(o_dram_csn), .o_dram_actn(o_dram_actn), .o_dram_bg(o_dram_bg),
+        .o_dram_ba(o_dram_ba), .o_dram_a(o_dram_a),
+        .o_dram_dq(w_dq), .o_dram_dq_oe(w_dq_oe), .i_dram_dq(io_dram_dq),
+        .o_dram_dqs_t(w_dqs_t), .o_dram_dqs_c(w_dqs_c), .o_dram_dqs_oe(w_dqs_oe)
+    );
+
+    assign io_dram_dq = w_dq_oe ? w_dq : 8'bz;
+    assign io_dram_dqs_t = w_dqs_oe ? w_dqs_t : 1'bz;
+    assign io_dram_dqs_c = w_dqs_oe ? w_dqs_c : 1'bz;
 endmodule

@@ -5,7 +5,7 @@
 | CPU instruction | AHB-Lite, `HADDR` 17bit byte(2×PC), `HRDATA` 16bit → ROM 포트 A 점대점 | 구현(M1·M5, `feat/8bit-soc`). 모듈 검증 때 Codex 검증 — [변경안](cpu_ahb_port.md)·[ROM](../rtl/rom/README.md) |
 | CPU data | AHB-Lite, `HADDR` 16bit byte(X), 데이터 8bit, `HREADY`/`HRESP` → AHB 디코더 | 구현(M1·M6, `feat/8bit-soc`). 모듈 검증 때 Codex 검증 — [변경안](cpu_ahb_port.md)·[bus.md](bus.md) |
 | RAM (캐시) | AHB-Lite slave(바이트), 아래쪽 64bit 줄 req/ack | 구현(M2) — [Cache](../../../1_RTL/2_TINY_PROJECT/Cache/README.md) |
-| RAM 제어기 host | 주소 11bit byte, 데이터 8bit, 요청 동시 1개 | 기존 구현. 캐시용 64bit 줄 포트 추가 예정(M3) — [ram.md](ram.md) |
+| RAM 제어기 host | 주소 11bit byte, 데이터 8bit 또는 64bit 줄(`i_line`), 요청 동시 1개 | 구현. 캐시용 64bit 줄 포트·DQ/DQS 분리 코어 추가(M3) — [ram.md](ram.md)·[DRAM 제어기](../../../1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/README.md) |
 | UART host | THR write/RHR read pulse, 데이터와 FIFO/LSR 상태 | 기존 구현(오류 flag 지우기 입력 추가). APB 래퍼(M9)가 0xFF00~0xFF04 레지스터와 IRQ로 연결 — 구현, [uart.md](uart.md) |
 | CPU→BUS→slave | 선택·보관·오류·완료 시간표 | AHB 디코더·응답 선택기·기본 slave(M6), AHB→APB3 브리지(M8) 구현 — [bus.md](bus.md) |
 | UART IRQ → CPU | 1bit level, `i_clk` 동기(UART 래퍼 `o_irq` 레지스터 출력 → CPU `i_irq`) | 구현(M9·M11). 벡터 PC 0x0002 — [cpu.md](cpu.md)·[uart.md](uart.md) |

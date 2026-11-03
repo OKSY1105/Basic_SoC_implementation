@@ -31,7 +31,7 @@ RAM용 AHB 래퍼는 따로 두지 않고 캐시가 AHB-Lite slave 단자를 직
 | 메모리(줄) | `o_mem_req`, `o_mem_write`, `o_mem_address[7:0]`, `o_mem_wdata[63:0]` ← `i_mem_ack`, `i_mem_rdata[63:0]` | 요청은 ack까지 유지하고 `req && ack`인 상승 에지에서 한 번 완료. 주소는 줄 번호 = 바이트 주소 [10:3] = {row, column}. 줄의 바이트 k = [8k+7:8k] |
 | 측정 | `o_access_count`, `o_miss_count`, `o_writeback_count` (16bit) | hit 수 = 접근 − miss. 시뮬레이션·보드 ILA에서 hit 비율 측정 |
 
-메모리 쪽 64bit 줄 포트는 현재 DRAM 제어기에 아직 없다. 제어기에 줄 단위 포트를 추가하는 작업은 [SoC RAM 문서](../../../6_SoC/8bit_SoC/02_design/ram.md)의 FPGA RAM 방향에 있다.
+메모리 쪽 줄 포트는 DRAM 제어기의 줄 포트(`i_line`=1, 주소 = `{o_mem_address, 3'b000}`, `o_ready` = ack)에 그대로 연결한다(2026-11-03 M3). 캐시·제어기·동작 모델을 함께 돌린 짝 시험은 [tb_cache_dram.sv](../../../6_SoC/8bit_SoC/tb/ram/tb_cache_dram.sv)에 있다. 제어기에 줄 단위 포트를 추가하는 작업은 [SoC RAM 문서](../../../6_SoC/8bit_SoC/02_design/ram.md)의 FPGA RAM 방향에 있다.
 
 ## 시험
 
@@ -72,7 +72,7 @@ xsim tb_cache -runall
 
 - `CACHE_PASS accesses=24934 hits=9471 misses=15463 writebacks=6960 hit_rate=37% avg_miss_cycles=10 max_miss_cycles=21 b2b_8hits_cycles=9 bad_size_errors=223 other_slave_ops=425` (지정 시나리오 + 위 세 구간 합계, AHB 판, SVA 검사기 포함)
 - 모든 hit가 데이터 단계 첫 클록에 완료했다. 연속 hit 8개 = 9클록(첫 주소 단계 1 + 1개/클록). reset 시나리오도 통과했다.
-- 위 지연은 시험용 줄 메모리(1~8클록) 기준이다. 실제 DRAM 제어기와 연결한 지연은 제어기 줄 포트를 만든 뒤 측정한다.
+- 위 지연은 시험용 줄 메모리(1~8클록) 기준이다. 실제 DRAM 제어기·동작 모델과 연결한 짝 시험의 결과는 `CACHE_DRAM_PASS accesses=3412 hit_rate=59% misses=1382 writebacks=574 miss_wait_avg=143 miss_wait_max=207`이다(2026-11-03, CL=9·CWL=10·tRCD=9). miss는 줄 읽기 1회(약 94클록), dirty miss는 줄 쓰기 1회를 더해 약 200클록이 걸린다.
 
 변이 시험(저장소에 반영하지 않은 임시 사본, 모두 PASS 없음):
 
