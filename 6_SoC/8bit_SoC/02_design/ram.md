@@ -23,13 +23,14 @@ PRE/REF·refresh·뱅크 스케줄링·training·PHY/보드 검증은 미구현�
 직접 만든 메모리 제어기를 보드(ZYNQ-7020)에서 동작시키기 위해 **A + 캐시** 방향으로 간다. ZYNQ 보드의 DDR3는 PS 전용이라 이 제어기가 구동할 수 없으므로, DRAM 소자는 FPGA 안의 BRAM 기반 동작 모델로 대신한다.
 
 ```text
-RAM AHB 래퍼 → 캐시(Cache/cache.v) → DRAM 제어기 → DRAM 동작 모델
-               8줄×8B, write-back   (줄 단위 포트 추가 필요)  (시뮬레이션: dram.v / 보드: BRAM 기반 합성 가능 모델, 신규)
+AHB 디코더 → 캐시(Cache/cache.v) → DRAM 제어기 → DRAM 동작 모델
+             AHB-Lite slave,      (줄 단위 포트 추가 필요)  (시뮬레이션: dram.v / 보드: BRAM 기반 합성 가능 모델, 신규)
+             8줄×8B, write-back
 ```
 
 | 항목 | 상태 |
 |---|---|
-| 캐시 | [Cache/README.md](../../../1_RTL/2_TINY_PROJECT/Cache/README.md) — 직접 사상 8줄×8바이트, write-back·write-allocate, 단독 시험 통과 |
+| 캐시 | [Cache/README.md](../../../1_RTL/2_TINY_PROJECT/Cache/README.md) — 직접 사상 8줄×8바이트, write-back·write-allocate, AHB-Lite slave 단자(RAM AHB 래퍼를 합침), 단독 시험 통과 |
 | 제어기 줄 단위 포트 | 캐시의 64bit 줄 요청을 받아 RD/WR burst 1회로 처리(바이트 RMW 불필요). 미구현 |
 | DQ/DQS 분리 | FPGA 내부에는 양방향 버퍼가 없으므로 출력·입력·출력 enable로 나눈다. 미구현 |
 | 합성 가능 DRAM 모델 | BRAM 저장 + 시스템 클록 기준 명령·지연 카운터. 기존 제어기 TB를 기존 모델과 새 모델 양쪽으로 통과시켜 동작 일치를 확인한다. 미구현 |

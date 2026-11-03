@@ -19,7 +19,8 @@ PC의 UART 숫자·연산 요청을 8bit CPU가 계산하고 STM32 LCD에 결과
 | UART | [1_RTL/2_TINY_PROJECT/UART](../../1_RTL/2_TINY_PROJECT/UART) |
 | DRAM 제어기/TB | [1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER](../../1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER) |
 | DRAM 행동 모델 | [1_RTL/2_TINY_PROJECT/DRAM](../../1_RTL/2_TINY_PROJECT/DRAM) |
-| BUS | [1_RTL/2_TINY_PROJECT/BUS](../../1_RTL/2_TINY_PROJECT/BUS) — 미구현 |
+| BUS | [1_RTL/2_TINY_PROJECT/BUS](../../1_RTL/2_TINY_PROJECT/BUS) — AHB-Lite 시험 도구. AHB→APB3 브리지·리셋 동기화기 예정 |
+| 데이터 캐시 | [1_RTL/2_TINY_PROJECT/Cache](../../1_RTL/2_TINY_PROJECT/Cache) — AHB-Lite slave 단자 포함 |
 
 이 SoC에는 위 모듈의 사본이나 경로 심볼릭 링크를 두지 않는다. [sources.json](sources.json)과 [Vivado 생성 Tcl](scripts/create_vivado.tcl)이 원본 RTL/TB를 직접 참조한다.
 

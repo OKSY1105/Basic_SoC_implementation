@@ -15,11 +15,11 @@
   1. 이미지 확인: 포트 A로 모든 워드 4,096개, 포트 B로 모든 바이트 8,192개를 읽는다(이미지 밖은 0).
   2. 무작위 내용, 두 포트 동시 접근: 각 12,000건(포트 B는 ERROR 뒤 계속 / 취소 각 절반)
      - 잘못된 전송을 섞는다: 쓰기, 잘못된 `HSIZE`, 홀수 주소, 범위 밖 명령 주소
-     - 두 포트가 같은 클록에 같은 워드를 읽도록 접근이 몰리는 영역을 둔다.
+     - 접근이 몰리는 영역을 두고, 끝에 두 포트가 워드 4개만 연속으로 읽는 구간(각 2,000건)을 넣어 같은 클록에 같은 워드를 읽게 한다.
   3. 전송 중 reset 15회, 포트 A ERROR 첫 클록 reset. 그 뒤 모든 워드를 다시 읽어 reset 후에도 내용이 유지되는지 확인한다.
 - 통과 조건
   - `FAIL` 줄이 없다.
-  - 커버리지 항목이 모두 1 이상이다: 각 오류 종류, 짝수·홀수 바이트, 첫·끝 워드와 바이트, 같은 워드 동시 읽기, 다른 slave 대기 중 ROM 주소 단계 유지, reset.
+  - 커버리지 항목이 모두 1 이상이다: 각 오류 종류, 짝수·홀수 바이트, 첫·끝 워드와 바이트, 다른 slave 대기 중 ROM 주소 단계 유지, reset. 같은 워드 동시 읽기는 100회 이상이다.
   - `ROM_PASS`를 출력한다.
 
 실행 (Windows, 빈 작업 폴더에서. WSL은 `xvlog`·`xelab`·`xsim`):
@@ -35,10 +35,12 @@ xsim.bat tb_rom -runall
 결과 (2026-11-03, Windows Vivado 2024.2 XSim):
 
 ```text
-COVER portA ok=19521 write=133 size=261 odd=247 range=355 | portB lo=7646 hi=8610 write=319 size=233 other=3593
-COVER same_word=6 rom_hold=5155 resets=16 first/last A=11 B=11 image_words=48
-ROM_PASS portA_ok=19521 portB_ok=16256 same_word=6 rom_hold=5155 resets=16
+COVER portA ok=21570 write=136 size=264 odd=247 range=362 | portB lo=8521 hi=9751 write=321 size=231 other=3617
+COVER same_word=530 rom_hold=5150 resets=16 first/last A=11 B=11 image_words=48
+ROM_PASS portA_ok=21570 portB_ok=18272 same_word=530 rom_hold=5150 resets=16
 ```
+
+(같은 워드 동시 읽기 구간을 넣기 전 첫 판은 `same_word=6`이었다.)
 
 변이 시험(저장소에 반영하지 않은 임시 사본, 모두 PASS 없음):
 

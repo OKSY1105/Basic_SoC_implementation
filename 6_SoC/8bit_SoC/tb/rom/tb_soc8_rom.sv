@@ -13,8 +13,9 @@
 //   1. Image: every word on port A and every byte on port B against
 //      rom_test.mem (zero outside the image).
 //   2. Random contents, both ports at once, including bad transfers (write,
-//      wrong HSIZE, odd or out-of-range instruction address) and a hot area
-//      so that both ports read the same word in the same cycle.
+//      wrong HSIZE, odd or out-of-range instruction address) and a hot area,
+//      then both ports back to back on four words so that they read the same
+//      word in the same cycle (at least 100 times).
 //   3. Resets during traffic and during a port A ERROR, then every word
 //      again (contents survive reset).
 // The run directory must contain rom_test.mem (copy it from this folder).
@@ -287,6 +288,12 @@ module tb_soc8_rom;
         push_a_random(6000); push_b_random(6000); wait_idle();
         bfm_b.cancel_on_error = 1'b1;
         push_a_random(6000); push_b_random(6000); wait_idle();
+        // Both ports back to back on four words: same-word reads in one cycle.
+        for (int i = 0; i < 2000; i++) begin
+            id = bfm_a.push(17'(2 * $urandom_range(3, 0)), 1'b0, 16'h0000, 0, 3'b001);
+            id = bfm_b.push(16'($urandom_range(7, 0)), 1'b0, 8'h00, 0, 3'b000);
+        end
+        wait_idle();
         check_a(); check_b();
 
         // 3. Resets during traffic, reset during a port A ERROR.
@@ -310,7 +317,7 @@ module tb_soc8_rom;
         cov_ok = n_a_ok > 1000 && n_a_write && n_a_size && n_a_odd && n_a_range &&
                  n_b_lo > 1000 && n_b_hi > 1000 && n_b_write && n_b_size && n_b_other &&
                  cov_a_first && cov_a_last && cov_b_first && cov_b_last &&
-                 n_same_word && n_rom_hold && n_resets >= 16;
+                 n_same_word >= 100 && n_rom_hold && n_resets >= 16;
         $display("COVER portA ok=%0d write=%0d size=%0d odd=%0d range=%0d | portB lo=%0d hi=%0d write=%0d size=%0d other=%0d",
                  n_a_ok, n_a_write, n_a_size, n_a_odd, n_a_range,
                  n_b_lo, n_b_hi, n_b_write, n_b_size, n_b_other);

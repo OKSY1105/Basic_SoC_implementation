@@ -1,6 +1,6 @@
 # CPU AHB-Lite master 포트 변경안
 
-> **상태 — 2026-11-03:** 사용자 결정 "AHB 방식으로 변경"(2026-11-02). 이 문서를 기준으로 RTL·TB를 `feat/cpu-ahb-port` 브랜치에 구현했고, Windows XSim 회귀·SVA를 통과했다(결과: `1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TEST_STATUS_PIPELINED.md`). Codex 검증 후 main에 병합한다. 구현 중 바뀐 규칙은 4절 `HADDR`, 6.3절 4번, 6.4절 3번에 반영했다. 수정 위치는 [소유 경계](source_layout.md) 규칙("공용 코어를 수정하면 그 원본 한 곳에만 적용")에 따라 공용 원본 `1_RTL/2_TINY_PROJECT/CPU/8bit_CPU`이며, 현행 포트 버전은 git 이력으로 남는다.
+> **상태 — 2026-11-03:** 사용자 결정 "AHB 방식으로 변경"(2026-11-02). 이 문서를 기준으로 RTL·TB를 `feat/cpu-ahb-port` 브랜치에 구현했고, Windows XSim 회귀·SVA를 통과했다(결과: `1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TEST_STATUS_PIPELINED.md`). 이 구현은 통합 브랜치 `feat/8bit-soc`에 합쳤고, 모든 모듈 설계를 마친 뒤 모듈별 Codex 검증을 거쳐 main에 병합한다(2026-11-03 작업 순서). 구현 중 바뀐 규칙은 4절 `HADDR`, 6.3절 4번, 6.4절 3번에 반영했다. 수정 위치는 [소유 경계](source_layout.md) 규칙("공용 코어를 수정하면 그 원본 한 곳에만 적용")에 따라 공용 원본 `1_RTL/2_TINY_PROJECT/CPU/8bit_CPU`이며, 현행 포트 버전은 git 이력으로 남는다.
 
 현행 `cpu8_top`은 명령·데이터 포트 모두 `req && ready`가 참인 상승 에지에서 요청 수락과 완료가 함께 일어난다. 이 방식에 변환기를 붙이면 AHB의 주소 단계와 데이터 단계가 직렬로 이어져, 동기식 ROM에서 명령당 2클록, 무대기 slave에서도 LD/ST마다 1클록 정지가 생긴다. 이를 피하기 위해 CPU의 두 포트를 AHB-Lite master로 직접 만들고, AHB 단계를 파이프라인 단계에 맞춘다. 변환기는 없어지지만 CPU가 지켜야 할 AHB 주소·데이터·대기 시간표는 이 문서가 정한다(기존 D7 "master 어댑터 시간표"를 대체).
 

@@ -12,6 +12,8 @@
 //   data-phase cycle; the cache counters must match the shadow.
 // - Contents: valid lines + memory equal the reference; clean lines equal
 //   memory. Unsupported HSIZE gets a two-cycle ERROR without side effects.
+// - Response rules: the shared ahb_lite_slave_checker (compile
+//   1_RTL/2_TINY_PROJECT/BUS/ahb_lite_slave_checker.sv, -d AHB_LITE_SVA).
 // Ends with CACHE_PASS, or FAIL lines and $fatal.
 module tb_cache;
     localparam integer INDEX_W = 3;
@@ -51,6 +53,11 @@ module tb_cache;
         .o_mem_wdata(mwdata), .i_mem_ack(mack), .i_mem_rdata(mrdata),
         .o_access_count(n_access), .o_miss_count(n_miss), .o_writeback_count(n_wb)
     );
+
+    // Slave response rules (BUS/ahb_lite_slave_checker.sv, SVA with AHB_LITE_SVA).
+    ahb_lite_slave_checker #(.MAX_WAIT(64)) chk (
+        .clk(clk), .rstn(rstn), .hsel(hsel), .htrans(htrans),
+        .hready(hready), .hreadyout(hreadyout), .hresp(hresp));
 
     reg [7:0] ref_mem [0:2047];
     reg [63:0] lines [0:255];
@@ -405,6 +412,7 @@ module tb_cache;
         check_counters("after reset");
         check_contents("after reset");
 
+        errors = errors + chk.fails;
         if (errors != 0) begin
             $display("FAIL cache test errors=%0d", errors);
             $fatal(1);
