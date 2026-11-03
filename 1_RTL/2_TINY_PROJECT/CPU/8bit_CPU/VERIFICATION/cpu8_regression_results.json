@@ -1,17 +1,27 @@
 {
   "simulator": "xsim",
   "default_demo_passed": true,
-  "program_cases": 64,
+  "program_cases": 88,
   "alu_cases": 786432,
   "reset_inflight_passed": true,
-  "all_17_opcodes_covered": true,
-  "total_retired": 1513,
-  "ahb_corner_cases": {
-    "i_addr_held": 267,
-    "branch_target_waited": 17,
-    "d_addr_held": 63,
+  "all_20_opcodes_covered": true,
+  "total_retired": 5993,
+  "interrupts_taken": 130,
+  "max_irq_latency_cycles": 6,
+  "corner_cases": {
+    "i_addr_held": 855,
+    "branch_target_waited": 114,
+    "d_addr_held": 125,
     "d_error_cancel": 2,
-    "skid_used": 660
+    "skid_used": 2372,
+    "int_taken": 130,
+    "int_after_mem_wait": 19,
+    "int_dropped_ldst": 26,
+    "int_dropped_branch": 22,
+    "int_deferred_by_held_d": 2,
+    "int_reentry_after_reti": 44,
+    "irq_masked": 1032,
+    "irq_in_handler": 1328
   },
   "cases": [
     {
@@ -20,7 +30,8 @@
       "cycles": 8,
       "stalls": 1,
       "three_stages": 3,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "four_writable_wait0",
@@ -28,7 +39,8 @@
       "cycles": 11,
       "stalls": 0,
       "three_stages": 7,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "carry_chain_wait0",
@@ -36,7 +48,8 @@
       "cycles": 11,
       "stalls": 1,
       "three_stages": 6,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "borrow_chain_wait0",
@@ -44,7 +57,8 @@
       "cycles": 11,
       "stalls": 1,
       "three_stages": 6,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "signed_flags_wait0",
@@ -52,7 +66,8 @@
       "cycles": 13,
       "stalls": 3,
       "three_stages": 6,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "flags_branches_wait0",
@@ -60,7 +75,8 @@
       "cycles": 24,
       "stalls": 5,
       "three_stages": 7,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "x_bytes_wait0",
@@ -68,7 +84,8 @@
       "cycles": 19,
       "stalls": 5,
       "three_stages": 10,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "ram_edges_wait0",
@@ -76,7 +93,8 @@
       "cycles": 17,
       "stalls": 4,
       "three_stages": 9,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "x_wrap_wait0",
@@ -84,7 +102,8 @@
       "cycles": 11,
       "stalls": 3,
       "three_stages": 4,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "load_use_store_wait0",
@@ -92,7 +111,8 @@
       "cycles": 14,
       "stalls": 4,
       "three_stages": 6,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "loop_wait0",
@@ -100,7 +120,8 @@
       "cycles": 37,
       "stalls": 5,
       "three_stages": 18,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "branch_flush_wait0",
@@ -108,7 +129,8 @@
       "cycles": 12,
       "stalls": 2,
       "three_stages": 2,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "mmio_once_wait0",
@@ -116,7 +138,8 @@
       "cycles": 14,
       "stalls": 3,
       "three_stages": 7,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "illegal_opcode_wait0",
@@ -124,7 +147,8 @@
       "cycles": 5,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_rr_wait0",
@@ -132,7 +156,8 @@
       "cycles": 6,
       "stalls": 1,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_halt_wait0",
@@ -140,7 +165,8 @@
       "cycles": 5,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_load_wait0",
@@ -148,7 +174,8 @@
       "cycles": 5,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_branch_wait0",
@@ -156,7 +183,8 @@
       "cycles": 5,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "fetch_missing_wait0",
@@ -164,7 +192,8 @@
       "cycles": 6,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 2
+      "fault": 2,
+      "interrupts": 0
     },
     {
       "name": "fetch_negative_wait0",
@@ -172,7 +201,8 @@
       "cycles": 8,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 2
+      "fault": 2,
+      "interrupts": 0
     },
     {
       "name": "fetch_wrap_wait0",
@@ -180,7 +210,8 @@
       "cycles": 7,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "data_unmapped_wait0",
@@ -188,7 +219,8 @@
       "cycles": 9,
       "stalls": 3,
       "three_stages": 4,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
     },
     {
       "name": "data_fault_older_wait0",
@@ -196,7 +228,8 @@
       "cycles": 7,
       "stalls": 2,
       "three_stages": 2,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
     },
     {
       "name": "fetch_error_wait0",
@@ -204,7 +237,8 @@
       "cycles": 6,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 2
+      "fault": 2,
+      "interrupts": 0
     },
     {
       "name": "store_error_wait0",
@@ -212,7 +246,8 @@
       "cycles": 7,
       "stalls": 2,
       "three_stages": 3,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
     },
     {
       "name": "data_error_cancel_wait0",
@@ -220,7 +255,8 @@
       "cycles": 9,
       "stalls": 3,
       "three_stages": 3,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
     },
     {
       "name": "first_add_wait1",
@@ -228,7 +264,8 @@
       "cycles": 9,
       "stalls": 1,
       "three_stages": 3,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "four_writable_wait1",
@@ -236,7 +273,8 @@
       "cycles": 14,
       "stalls": 0,
       "three_stages": 5,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "carry_chain_wait1",
@@ -244,7 +282,8 @@
       "cycles": 13,
       "stalls": 1,
       "three_stages": 5,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "borrow_chain_wait1",
@@ -252,7 +291,8 @@
       "cycles": 13,
       "stalls": 1,
       "three_stages": 5,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "signed_flags_wait1",
@@ -260,7 +300,8 @@
       "cycles": 14,
       "stalls": 3,
       "three_stages": 6,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "flags_branches_wait1",
@@ -268,7 +309,8 @@
       "cycles": 26,
       "stalls": 4,
       "three_stages": 6,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "x_bytes_wait1",
@@ -276,7 +318,8 @@
       "cycles": 30,
       "stalls": 15,
       "three_stages": 13,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "ram_edges_wait1",
@@ -284,7 +327,8 @@
       "cycles": 30,
       "stalls": 16,
       "three_stages": 11,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "x_wrap_wait1",
@@ -292,7 +336,8 @@
       "cycles": 15,
       "stalls": 6,
       "three_stages": 5,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "load_use_store_wait1",
@@ -300,7 +345,8 @@
       "cycles": 20,
       "stalls": 9,
       "three_stages": 7,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "loop_wait1",
@@ -308,7 +354,8 @@
       "cycles": 42,
       "stalls": 3,
       "three_stages": 14,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "branch_flush_wait1",
@@ -316,7 +363,8 @@
       "cycles": 14,
       "stalls": 2,
       "three_stages": 2,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "mmio_once_wait1",
@@ -324,7 +372,8 @@
       "cycles": 25,
       "stalls": 13,
       "three_stages": 9,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "illegal_opcode_wait1",
@@ -332,7 +381,8 @@
       "cycles": 6,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_rr_wait1",
@@ -340,7 +390,8 @@
       "cycles": 7,
       "stalls": 1,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_halt_wait1",
@@ -348,7 +399,8 @@
       "cycles": 6,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_load_wait1",
@@ -356,7 +408,8 @@
       "cycles": 6,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "illegal_branch_wait1",
@@ -364,7 +417,8 @@
       "cycles": 6,
       "stalls": 0,
       "three_stages": 1,
-      "fault": 1
+      "fault": 1,
+      "interrupts": 0
     },
     {
       "name": "fetch_missing_wait1",
@@ -372,7 +426,8 @@
       "cycles": 7,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 2
+      "fault": 2,
+      "interrupts": 0
     },
     {
       "name": "fetch_negative_wait1",
@@ -380,7 +435,8 @@
       "cycles": 10,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 2
+      "fault": 2,
+      "interrupts": 0
     },
     {
       "name": "fetch_wrap_wait1",
@@ -388,7 +444,8 @@
       "cycles": 9,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "data_unmapped_wait1",
@@ -396,7 +453,8 @@
       "cycles": 10,
       "stalls": 3,
       "three_stages": 4,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
     },
     {
       "name": "data_fault_older_wait1",
@@ -404,7 +462,8 @@
       "cycles": 10,
       "stalls": 4,
       "three_stages": 2,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
     },
     {
       "name": "fetch_error_wait1",
@@ -412,7 +471,8 @@
       "cycles": 7,
       "stalls": 0,
       "three_stages": 0,
-      "fault": 2
+      "fault": 2,
+      "interrupts": 0
     },
     {
       "name": "store_error_wait1",
@@ -420,7 +480,8 @@
       "cycles": 10,
       "stalls": 4,
       "three_stages": 3,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
     },
     {
       "name": "data_error_cancel_wait1",
@@ -428,7 +489,224 @@
       "cycles": 10,
       "stalls": 3,
       "three_stages": 3,
-      "fault": 3
+      "fault": 3,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_basic_wait0",
+      "retired": 309,
+      "cycles": 488,
+      "stalls": 117,
+      "three_stages": 261,
+      "fault": 0,
+      "interrupts": 6
+    },
+    {
+      "name": "irq_disabled_wait0",
+      "retired": 248,
+      "cycles": 373,
+      "stalls": 81,
+      "three_stages": 206,
+      "fault": 0,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_reentry_wait0",
+      "retired": 289,
+      "cycles": 450,
+      "stalls": 105,
+      "three_stages": 243,
+      "fault": 0,
+      "interrupts": 4
+    },
+    {
+      "name": "irq_di_window_wait0",
+      "retired": 364,
+      "cycles": 555,
+      "stalls": 118,
+      "three_stages": 299,
+      "fault": 0,
+      "interrupts": 3
+    },
+    {
+      "name": "irq_mmio_wait0",
+      "retired": 205,
+      "cycles": 346,
+      "stalls": 83,
+      "three_stages": 165,
+      "fault": 0,
+      "interrupts": 8
+    },
+    {
+      "name": "irq_after_halt_wait0",
+      "retired": 4,
+      "cycles": 8,
+      "stalls": 0,
+      "three_stages": 2,
+      "fault": 0,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_reti_outside_wait0",
+      "retired": 2,
+      "cycles": 7,
+      "stalls": 0,
+      "three_stages": 1,
+      "fault": 1,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_ei_reserved_wait0",
+      "retired": 2,
+      "cycles": 7,
+      "stalls": 0,
+      "three_stages": 1,
+      "fault": 1,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_basic_wait1",
+      "retired": 309,
+      "cycles": 555,
+      "stalls": 130,
+      "three_stages": 237,
+      "fault": 0,
+      "interrupts": 6
+    },
+    {
+      "name": "irq_disabled_wait1",
+      "retired": 248,
+      "cycles": 420,
+      "stalls": 85,
+      "three_stages": 186,
+      "fault": 0,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_reentry_wait1",
+      "retired": 289,
+      "cycles": 505,
+      "stalls": 109,
+      "three_stages": 218,
+      "fault": 0,
+      "interrupts": 4
+    },
+    {
+      "name": "irq_di_window_wait1",
+      "retired": 354,
+      "cycles": 610,
+      "stalls": 117,
+      "three_stages": 254,
+      "fault": 0,
+      "interrupts": 2
+    },
+    {
+      "name": "irq_mmio_wait1",
+      "retired": 205,
+      "cycles": 466,
+      "stalls": 160,
+      "three_stages": 174,
+      "fault": 0,
+      "interrupts": 8
+    },
+    {
+      "name": "irq_after_halt_wait1",
+      "retired": 4,
+      "cycles": 10,
+      "stalls": 0,
+      "three_stages": 1,
+      "fault": 0,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_reti_outside_wait1",
+      "retired": 2,
+      "cycles": 9,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_ei_reserved_wait1",
+      "retired": 2,
+      "cycles": 9,
+      "stalls": 0,
+      "three_stages": 0,
+      "fault": 1,
+      "interrupts": 0
+    },
+    {
+      "name": "irq_random_0",
+      "retired": 199,
+      "cycles": 387,
+      "stalls": 109,
+      "three_stages": 164,
+      "fault": 0,
+      "interrupts": 11
+    },
+    {
+      "name": "irq_random_1",
+      "retired": 180,
+      "cycles": 356,
+      "stalls": 108,
+      "three_stages": 153,
+      "fault": 0,
+      "interrupts": 9
+    },
+    {
+      "name": "irq_random_2",
+      "retired": 219,
+      "cycles": 412,
+      "stalls": 103,
+      "three_stages": 175,
+      "fault": 0,
+      "interrupts": 12
+    },
+    {
+      "name": "irq_random_3",
+      "retired": 189,
+      "cycles": 367,
+      "stalls": 99,
+      "three_stages": 147,
+      "fault": 0,
+      "interrupts": 9
+    },
+    {
+      "name": "irq_random_4",
+      "retired": 216,
+      "cycles": 439,
+      "stalls": 139,
+      "three_stages": 175,
+      "fault": 0,
+      "interrupts": 12
+    },
+    {
+      "name": "irq_random_5",
+      "retired": 213,
+      "cycles": 440,
+      "stalls": 142,
+      "three_stages": 179,
+      "fault": 0,
+      "interrupts": 12
+    },
+    {
+      "name": "irq_random_6",
+      "retired": 216,
+      "cycles": 436,
+      "stalls": 138,
+      "three_stages": 188,
+      "fault": 0,
+      "interrupts": 12
+    },
+    {
+      "name": "irq_random_7",
+      "retired": 212,
+      "cycles": 446,
+      "stalls": 153,
+      "three_stages": 185,
+      "fault": 0,
+      "interrupts": 12
     },
     {
       "name": "random_0",
@@ -436,7 +714,8 @@
       "cycles": 187,
       "stalls": 59,
       "three_stages": 93,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_1",
@@ -444,7 +723,8 @@
       "cycles": 180,
       "stalls": 53,
       "three_stages": 89,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_2",
@@ -452,7 +732,8 @@
       "cycles": 192,
       "stalls": 60,
       "three_stages": 94,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_3",
@@ -460,7 +741,8 @@
       "cycles": 181,
       "stalls": 46,
       "three_stages": 86,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_4",
@@ -468,7 +750,8 @@
       "cycles": 178,
       "stalls": 54,
       "three_stages": 92,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_5",
@@ -476,7 +759,8 @@
       "cycles": 176,
       "stalls": 51,
       "three_stages": 99,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_6",
@@ -484,7 +768,8 @@
       "cycles": 190,
       "stalls": 56,
       "three_stages": 80,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_7",
@@ -492,7 +777,8 @@
       "cycles": 198,
       "stalls": 63,
       "three_stages": 89,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_8",
@@ -500,7 +786,8 @@
       "cycles": 188,
       "stalls": 55,
       "three_stages": 86,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_9",
@@ -508,7 +795,8 @@
       "cycles": 187,
       "stalls": 54,
       "three_stages": 87,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_10",
@@ -516,7 +804,8 @@
       "cycles": 182,
       "stalls": 52,
       "three_stages": 84,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     },
     {
       "name": "random_11",
@@ -524,7 +813,8 @@
       "cycles": 193,
       "stalls": 68,
       "three_stages": 87,
-      "fault": 0
+      "fault": 0,
+      "interrupts": 0
     }
   ]
 }

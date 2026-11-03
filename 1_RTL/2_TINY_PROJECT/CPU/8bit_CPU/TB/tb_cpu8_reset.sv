@@ -29,6 +29,7 @@ module tb_cpu8_reset;
         .i_i_hrdata(ins),.i_i_hready(1'b1),.i_i_hresp(1'b0),
         .o_d_haddr(da),.o_d_htrans(dtrans),.o_d_hwrite(dw),.o_d_hwdata(wd),
         .i_d_hrdata(8'hee),.i_d_hready(dready),.i_d_hresp(1'b0),
+        .i_irq(1'b0),
         .o_halted(halted),.o_fault(fault),.o_pc(pc),.o_x(x),
         .o_flags(flags),.o_registers(regs));
     initial begin

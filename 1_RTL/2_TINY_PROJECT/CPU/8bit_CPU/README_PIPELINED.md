@@ -10,7 +10,8 @@
 - IF / ID·EX / MEM·WB 3단계, 순차 완료, forwarding 없이 GPR/FLAGS/X 의존성을 stall로 처리.
 - 16bit 고정 명령, opcode [15:10] / r [9:8] / operand [7:0].
 - 16bit 프로그램 PC는 **명령 word** 주소, 16bit X와 데이터 포트는 **byte** 주소. 명령 포트의 AHB 주소는 byte 단위 `{PC,1'b0}`(17bit)이다.
-- 아래 17개 명령을 구현. MUL/DIV는 프로그램 반복으로 구성하며 전용 opcode는 없다.
+- 아래 20개 명령을 구현(17개 + 2026-11-03 추가한 인터럽트 제어 EI/DI/RETI). MUL/DIV는 프로그램 반복으로 구성하며 전용 opcode는 없다.
+- IRQ 입력 1개의 정확한 인터럽트(precise interrupt)를 지원한다. 처리 루틴은 별도 레지스터 묶음을 쓴다(아래 "인터럽트" 절).
 - CPU 코어에는 ROM·RAM·UART를 내장하지 않는다. 프로그램 ROM과 데이터 RAM/MMIO는 분리된 외부 포트에 연결한다.
 - 첫 시스템 데이터 RAM은 2KiB(2,048×8bit)로 선정했다. 상위 모듈에서 범위를 디코드한다. CPU의 16bit 주소가 64KiB RAM 내장을 의미하지 않는다.
 - PC는 숫자·연산 요청만 UART로 전송하고, FPGA ROM의 CPU 프로그램이 이를 처리하는 시스템 구성을 따른다.
@@ -20,14 +21,16 @@
 
 | 파일 | 역할 |
 |---|---|
-| `RTL/cpu8_top.v` | 단계 경계·인출 PC·완료 PC·interlock·메모리/HALT/fault 제어 |
-| `RTL/cpu8_decoder.v` | 17개 명령·예약 비트·읽기/쓰기 대상 해독 |
-| `RTL/cpu8_regfile.v` | 4×8bit 2R1W, R0 쓰기 가능 |
+| `RTL/cpu8_top.v` | 단계 경계·인출 PC·완료 PC·interlock·메모리/HALT/fault·인터럽트 제어 |
+| `RTL/cpu8_decoder.v` | 20개 명령·예약 비트·읽기/쓰기 대상 해독 |
+| `RTL/cpu8_regfile.v` | 4×8bit 2R1W × 2묶음(프로그램/인터럽트 처리), R0 쓰기 가능 |
 | `RTL/cpu8_alu.v` | ADD/ADC·SUB/SBC/CMP·AND, Z/N/C/V |
 | `RTL/cpu8_isa.vh` | opcode 상수 |
 | `TB/tb_cpu8_top.sv` | 기본 내장 덧셈 데모 + 선택적 외부 회귀·메모리 지연·retirement trace |
 | `TB/tb_cpu8_alu.sv` | 독립 정수 범위 기준 786,432개 산술/플래그 조합 |
 | `TB/tb_cpu8_reset.sv` | 메모리 대기 중 리셋·이전 명령 폐기·재시작 |
+| `TB/cpu8_ahb_checker.sv` | 두 AHB-Lite master 포트의 규칙 SVA(`CPU8_SVA`) |
+| `TB/cpu8_irq_checker.sv` | 인터럽트 진입·복귀·레지스터 묶음 규칙 SVA(`CPU8_SVA`) |
 | `TOOLS/cpu8_asm.py` | 레이블/rel8·.org·.word를 지원하는 작은 어셈블러 |
 | `TOOLS/run_cpu8_tests.py` | 독립 ISA 모델과 실제 RTL 명령 완료 상태/메모리 접근 비교 |
 | `TOOLS/check_cpu8.ys` | 일반 논리 합성·드라이버 검사·래치 없음 확인 |
@@ -62,9 +65,12 @@
 | 15 | JZ rel8 | Z=1이면 분기 |
 | 17 | JC rel8 | C=1이면 분기 |
 | 1A | SBC Rd,Rs | Rd=Rd-Rs-(1-이전 C) |
+| 18 | EI | 인터럽트 허용(IE=1). 발행 시점에 반영되어 다음 명령부터 적용 |
+| 19 | DI | 인터럽트 금지(IE=0). 발행 시점에 반영 |
+| 1B | RETI | 처리 루틴에서 복귀: PC=EPC, 레지스터 묶음 0, IE=1. 처리 루틴 밖에서는 불법 명령 |
 
 - RR 형식은 r=Rd, operand[1:0]=Rs이고 operand[7:2]=0.
-- LD/ST는 operand=0. LDXL/LDXH와 분기는 r=0. HALT/INX는 하위 10bit=0.
+- LD/ST는 operand=0. LDXL/LDXH와 분기는 r=0. HALT/INX/EI/DI/RETI는 하위 10bit=0.
 - NOP을 포함해 위 목록 외 opcode와 예약 비트 위반은 ILLEGAL_INSTRUCTION fault다.
 - `o_flags[3:0]={Z,N,C,V}`. 뺄셈 C=1은 **빌림 없음**이다.
 - ADD/ADC·SUB/SBC·CMP는 Z/N/C/V를 갱신한다. 결과는 8bit, carry/borrow로 여러 바이트 계산을 연결한다.
@@ -92,6 +98,22 @@
 - reset 중 두 포트는 IDLE이다. 이미 반영한 외부 쓰기는 되돌리지 않는다.
 - 포트 지연에 따라 처리율은 달라진다. 모든 명령이 고정 3클록이라는 규약은 아니다.
 
+## 인터럽트 — 2026-11-03
+
+| 항목 | 규칙 |
+|---|---|
+| 신호 | 입력 `i_irq`(level, `i_clk` 동기). 출력 `o_irq_active`(처리 루틴 실행 중), `o_retire_bank`(완료 명령의 레지스터 묶음, 시험용) |
+| 허용 | IE는 reset 0. `EI`/`DI`로 바꾼다 |
+| 진입 조건 | IE=1, 처리 루틴 밖, `i_irq`=1, ID/EX에 명령이 있고 MEM/WB가 비었거나 이번 클록에 완료 |
+| 진입 동작 | ID/EX 명령은 실행하지 않고 그 PC를 EPC에 저장. 인출을 벡터 PC 0x0002로 돌림(분기처럼 뒤 인출 폐기). MEM/WB의 앞 명령은 완료한다(정확한 인터럽트). IE=0, 레지스터 묶음 1로 전환 |
+| 레지스터 묶음 | 묶음 0 = 프로그램, 묶음 1 = 처리 루틴. 각각 R0~R3·X·FLAGS를 따로 가진다. 처리 루틴은 저장·복원 코드 없이 레지스터를 쓰고, 두 쪽은 RAM으로 데이터를 주고받는다. 묶음 1의 값은 다음 진입까지 유지된다 |
+| 복귀 | `RETI`: PC=EPC, 묶음 0, IE=1. 버려졌던 명령부터 다시 실행 |
+| 데이터 포트 | 인터럽트 대기 중에는 새 데이터 주소 단계를 내지 않는다. 이미 `HREADY`=0으로 붙잡힌 주소 단계가 있으면 그 LD/ST가 발행된 뒤 진입한다. 따라서 버려지는 LD/ST는 버스 접근(RAM 쓰기·UART pop 등)을 만들지 않는다 |
+| 중첩·HALT | 중첩 없음(처리 중 요청은 `RETI` 뒤에 받음). HALT 뒤에는 깨어나지 않는다 |
+| 지연 | 시험 조건(메모리 대기 포함)에서 요청부터 진입까지 최대 6클록 |
+
+인터럽트를 쓰지 않는 프로그램의 동작과 클록 수는 추가 전과 같다(기존 64개 회귀 프로그램에서 완료 명령 수·클록·stall 동일).
+
 ## 완료·정지·리셋
 
 - active-low **동기식** `i_rst_n`. 보드 상위에서 리셋 해제를 해당 클록에 동기화한다.
@@ -109,7 +131,7 @@
 별도 옵션 없이 TB에 내장한 네 명령으로10+20을 계산하고 결과·완료 순서를 검사해 `CPU8_DEMO_PASS`를 출력한다.
 클록·리셋·시험 메모리는 TB가 만든다. 기본 시험에는 사용자 입력이나 외부파일이 필요 없다.
 
-`CASES` 인자를 명시한 경우에만 기존 외부 시험 목록 모드를 사용한다. 아래 Python runner는 전체62개 회귀·ALU/reset과 기본 무인자 데모를 함께 검증한다.
+`CASES` 인자를 명시한 경우에만 기존 외부 시험 목록 모드를 사용한다. 아래 Python runner는 전체 88개 프로그램 회귀(인터럽트 24개 포함)·ALU/reset과 기본 무인자 데모를 함께 검증한다.
 `PROGRAMS/first_add.asm`은 같은 프로그램의 별도 어셈블러 예제다. 기본 TB의 내장 ROM은 해당파일을 읽지 않는다.
 
 

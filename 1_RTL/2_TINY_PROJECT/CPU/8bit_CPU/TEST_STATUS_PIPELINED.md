@@ -1,5 +1,51 @@
 # CPU8 RTL 검증 결과
 
+## 인터럽트 추가 후 — 2026-11-03 (브랜치 `feat/8bit-soc`)
+
+EI/DI/RETI·IRQ 입력·처리 루틴 레지스터 묶음을 추가한 뒤 Windows Vivado 2024.2 XSim으로 실행한 결과다.
+- TB에는 IRQ 발생기를 넣었다. 요청은 `start + k×period`에 올라가고, 프로그램이 0xFF04에 쓰면 내려간다.
+- TB는 진입마다 `INT <EPC>`를 기록한다. 기준 모델은 RTL이 진입한 위치(그때까지 완료한 명령 수)에서 처리 루틴에 들어가 다음 세 가지를 확인한다.
+  - 진입이 합법인지(IE=1, 처리 루틴 밖)
+  - EPC가 같은지
+  - 그 뒤의 완료 추적·메모리 접근이 같은지
+
+| 검사 | 실제 결과 | 범위 / 한계 |
+|---|---|---|
+| 프로그램 회귀 (`run_cpu8_tests.py --simulator xsim`) | **PASS: 88개 프로그램, 5,993개 완료 명령, 인터럽트 진입 130회** | 기존 64개 + 인터럽트 지정 8종 × 무대기/대기 16개 + 인터럽트 무작위 8개 |
+| 기존 64개 프로그램 | 완료 명령 수·클록·stall·3단계 점유·fault **모두 이전과 같음** | 인터럽트를 쓰지 않으면 동작·성능 변화 없음 |
+| 20개 opcode | 모두 실행 확인 | |
+| ALU 전수 / 대기 중 reset | **PASS** (786,432건 / RESET_PASS) | |
+| SVA (`cpu8_ahb_checker.sv` + `cpu8_irq_checker.sv`) | **위반 0건** | 인터럽트 규칙: 진입 조건, 진입한 명령 미발행, 진입 클록에 데이터 주소 단계 없음, 진입·복귀 후 상태, 묶음은 진입·RETI로만 바뀜. 기존 AHB 규칙(데이터 주소 수락 = LD/ST 발행 등)도 그대로 통과 |
+| 인터럽트 지연 | 요청부터 진입까지 최대 **6클록** (TB 한도 64) | 메모리 대기 포함 시험 조건 |
+| 경계 상황 | 진입 130, 메모리 대기 뒤 진입 19, LD/ST를 버리고 진입 26, 분기를 버리고 진입 22, 붙잡힌 데이터 주소 단계 때문에 미룸 2, RETI 직후 재진입 44, IE=0 중 요청 1,032클록, 처리 중 요청 1,328클록 | 모두 1회 이상이어야 runner가 통과 |
+| MMIO 부작용 | `irq_mmio`: 프로그램과 처리 루틴이 모두 RX(0xFF00)를 pop. pop 횟수·값이 모델과 일치 | 버려진 LD가 pop하지 않음 |
+
+변이 시험(임시 사본, 모두 FAIL):
+
+| 변이 | 잡은 검사 |
+|---|---|
+| 인터럽트 대기 중에도 데이터 주소 단계를 냄 | SVA `a_d_issue` |
+| 붙잡힌 데이터 주소 단계를 무시하고 진입 | TB "data address phase changed while waiting" |
+| MEM/WB 완료를 기다리지 않고 진입 | SVA `a_int_cond` |
+| EPC = PC+1 | 기준 모델 EPC 비교 |
+| 진입 때 묶음을 바꾸지 않음 | SVA `a_int_state` |
+| 진입 때 IE를 끄지 않음 | SVA `a_int_state` |
+| RETI가 IE를 켜지 않음 | SVA `a_reti_state` |
+| RETI를 처리 루틴 밖에서도 허용 | WATCHDOG(EPC=0으로 무한 반복) |
+| DI 무시 | 기준 모델 "interrupt entry ... IE=0" |
+| 진입과 발행이 동시에 일어남 | SVA `a_int_no_issue` |
+
+등가 변이: 쓰기 묶음을 `r_m_bank` 대신 현재 묶음 `r_bank`로 바꾸는 변이다. 묶음은 MEM/WB가 비었거나 완료하는 에지에서만 바뀌므로 결과가 같다.
+
+합성 (WSL Linux Vivado 2024.2, `xc7z020clg400-1` out-of-context, CLAUDE.md TS-B7):
+
+| | LUT | FF | F7 MUX | latch | 100 MHz WNS(합성 추정) |
+|---|---|---|---|---|---|
+| 인터럽트 추가 전 | 280 | 312 | 0 | 0 | +2.88 ns |
+| 추가 후 | 345 | 383 | 16 | 0 | +2.10 ns |
+
+`TOOLS/synth_cpu8.tcl`은 `read_verilog -include_dirs`(Vivado 2024.2에 없는 옵션) 때문에 실행되지 않았다. 그래서 include 경로를 `synth_design -include_dirs`로 옮겼다. 위 두 결과 모두 고친 스크립트로 얻었다.
+
 ## AHB-Lite 포트 변경 후 — 2026-11-03 (브랜치 `feat/cpu-ahb-port`)
 
 두 메모리 포트를 AHB-Lite master로 바꾼 뒤 Windows Vivado 2024.2 XSim으로 실행한 결과다. TB의 메모리 모델은 대기·2클록 ERROR를 넣을 수 있는 AHB-Lite slave 2개로 바꿨다.

@@ -1,14 +1,16 @@
 `timescale 1ns/1ps
 `default_nettype none
 `include "cpu8_isa.vh"
-// Separate from the preserved MIPS decoder: 6/2/8 ISA, four writable GPRs.
+// Separate from the preserved MIPS decoder: 6/2/8 ISA, four writable GPRs,
+// 20 instructions (17 + EI/DI/RETI).
 module cpu8_decoder (
     input wire [15:0] i_instruction,
     output wire [5:0] o_opcode,
     output wire [1:0] o_rd, o_rs,
     output reg o_legal, o_read_rd, o_read_rs, o_read_flags, o_read_x,
     output reg o_write_reg, o_write_flags, o_write_x,
-    output reg o_memory, o_store, o_branch, o_halt
+    output reg o_memory, o_store, o_branch, o_halt,
+    output reg o_ei, o_di, o_reti
 );
     assign o_opcode = i_instruction[15:10];
     assign o_rd = i_instruction[9:8];
@@ -18,6 +20,7 @@ module cpu8_decoder (
         o_read_rd=1'b0; o_read_rs=1'b0; o_read_flags=1'b0; o_read_x=1'b0;
         o_write_reg=1'b0; o_write_flags=1'b0; o_write_x=1'b0;
         o_memory=1'b0; o_store=1'b0; o_branch=1'b0; o_halt=1'b0;
+        o_ei=1'b0; o_di=1'b0; o_reti=1'b0;
         case (o_opcode)
             `CPU8_OP_HALT: begin
                 o_legal=(i_instruction[9:0]==10'b0); o_halt=1'b1;
@@ -51,6 +54,11 @@ module cpu8_decoder (
                 o_legal=(i_instruction[9:8]==2'b0); o_branch=1'b1;
                 o_read_flags=(o_opcode!=`CPU8_OP_JMP);
             end
+            // Interrupt control. RETI is legal only inside the handler; the
+            // top level adds that check.
+            `CPU8_OP_EI: begin o_legal=(i_instruction[9:0]==10'b0); o_ei=1'b1; end
+            `CPU8_OP_DI: begin o_legal=(i_instruction[9:0]==10'b0); o_di=1'b1; end
+            `CPU8_OP_RETI: begin o_legal=(i_instruction[9:0]==10'b0); o_reti=1'b1; end
             default: begin end
         endcase
     end
