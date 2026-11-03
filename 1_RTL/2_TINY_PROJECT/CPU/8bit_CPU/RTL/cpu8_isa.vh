@@ -17,4 +17,9 @@
 `define CPU8_OP_JZ   6'h15
 `define CPU8_OP_JC   6'h17
 `define CPU8_OP_SBC  6'h1a
+`define CPU8_OP_EI   6'h18
+`define CPU8_OP_DI   6'h19
+`define CPU8_OP_RETI 6'h1b
+// Interrupt entry: fixed word address of the handler.
+`define CPU8_IRQ_VECTOR 16'h0002
 `endif

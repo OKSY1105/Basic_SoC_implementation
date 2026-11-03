@@ -11,6 +11,7 @@
     ],
     "tb": [
       "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TB/cpu8_ahb_checker.sv",
+      "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TB/cpu8_irq_checker.sv",
       "../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TB/tb_cpu8_top.sv"
     ],
     "include": [

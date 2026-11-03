@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Assembler for the documented 17-instruction CPU8 ISA; no dependencies."""
+"""Assembler for the documented 20-instruction CPU8 ISA; no dependencies."""
 import argparse,re
 from pathlib import Path
 
 OPS={"HALT":1,"LDI":2,"MOV":3,"LD":4,"ST":5,"LDXL":6,"LDXH":7,"INX":8,
-     "ADD":9,"ADC":10,"SUB":11,"CMP":12,"AND":13,"JMP":20,"JZ":21,"JC":23,"SBC":26}
+     "ADD":9,"ADC":10,"SUB":11,"CMP":12,"AND":13,"JMP":20,"JZ":21,"JC":23,"SBC":26,
+     "EI":24,"DI":25,"RETI":27}
 RR={"MOV","ADD","ADC","SUB","SBC","CMP","AND"}
 BR={"JMP","JZ","JC"}
+NOARG={"HALT","INX","EI","DI","RETI"}
+IRQ_VECTOR=2
 
 def number(s):
     try:return int(s,0)
@@ -46,7 +49,7 @@ def assemble(text):
                 if not 0<=word<=65535:raise ValueError("word out of range")
             else:
                 if op not in OPS:raise ValueError("unknown opcode "+op)
-                if op in {"HALT","INX"}:
+                if op in NOARG:
                     if a:raise ValueError("instruction takes no operands")
                 elif op in RR:
                     if len(a)!=2:raise ValueError("two registers required")

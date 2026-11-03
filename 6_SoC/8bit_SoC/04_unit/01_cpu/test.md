@@ -6,6 +6,17 @@
 
 기대: `CPU8_DEMO_PASS: 10 + 20 = 30`, R0=30/R1=20/regs=0000141E/pc=4/halted=1/fault=0. BUS·실제 RAM/UART와 연결한 시험은 아직 아니다.
 
+## 2026-11-03 — 인터럽트 추가(M11) 후
+
+- 전체 회귀(공용 runner `TOOLS/run_cpu8_tests.py`, Windows Vivado 2024.2 XSim)
+  - 프로그램 88개(인터럽트 24개 포함), 완료 명령 5,993개, 인터럽트 진입 130회, 최대 지연 6클록
+  - ALU 786,432건, 대기 중 reset, SVA 위반 0건
+  - 기존 64개 프로그램의 완료 명령·클록·stall은 이전과 같다.
+  - 변이 10개를 모두 검출했다.
+  - 상세는 [TEST_STATUS](../../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/TEST_STATUS_PIPELINED.md) 인터럽트 절.
+- SoC 단위 실행(`scripts/run_unit.py all`, WSL Vivado): `CPU8_DEMO_PASS` 유지. `sources.json`·`create_vivado.tcl`에 `TB/cpu8_irq_checker.sv`를 추가했다.
+- 합성(WSL Vivado OOC): LUT 280→345, FF 312→383, latch 0, 100 MHz WNS +2.10 ns.
+
 ## 2026-10-30 — 새 SoC 경로에서 확인
 
 기록 시각: 2026-10-30T10:29:12+09:00. 시험 기록 시각: 2026-10-30T10:28:23+09:00. 기준 HEAD: 26113681a818e79aaac595fe1d28bc75b67c89a0 + 이번 미커밋 경로 개편. Vivado 2024.2 xvlog/xelab/XSim, 새 공용 runner all 실행.
