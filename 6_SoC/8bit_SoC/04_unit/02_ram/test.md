@@ -41,3 +41,43 @@
   - `DRAM_CONTROLLER_PASS: CL=10 CWL=11 tRCD=12 checks=30833 completions=4121 RD=4124 WR=2060 commits=2060`
 
 도구: Vivado 2024.2 xvlog/xelab/XSim. UART는 compile/elaboration 범위다. 외부 soc_library_restore_20261030/test_logs와 verification.json에 로그·원본 SHA-256을 보관한다. 실제 보드·전체 SoC 시험은 미실행이다.
+
+## 2026-11-03 — M3: 줄 포트와 DQ/DQS 분리
+
+변경: 제어기 로직을 `dram_controller_core`(DQ/DQS 분리)로 옮기고, `dram_controller`는 3상태 래퍼로 두었다. 줄 포트(`i_line`, `i_line_wdata`, `o_line_rdata`)를 추가했다. 규칙은 [DRAM 제어기 README](../../../../1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER/README.md)에 있다. 기존 TB는 내부 신호 참조 3곳을 `dut.u_core.*`로 바꾸고 줄 포트 입력을 0으로 묶었다.
+
+결과 (Windows Vivado 2024.2 XSim):
+
+| TB | 결과 |
+|---|---|
+| `tb_dram_controller` (기존) | `DRAM_CONTROLLER_PASS: CL=9 CWL=10 tRCD=9 checks=30833 completions=4121 RD=4124 WR=2060 commits=2060`. 변경 전과 수치·종료 시각(6,187,690 ns) 동일 |
+| `tb_dram_controller_alt` (기존) | `DRAM_CONTROLLER_PASS: CL=10 CWL=11 tRCD=12 checks=30833 ...`. 변경 전과 수치·종료 시각(7,177,130 ns) 동일 |
+| `tb_dram_line` (신규) | `DRAM_LINE_PASS CL=9 CWL=10 tRCD=9 completions=2089 RD=1296 WR=1001 commits=1001`. 지연: 줄 읽기 94~95, 줄 쓰기 106~107, 바이트 읽기 94, 바이트 쓰기 202클록 |
+| `tb_dram_line_alt` (신규) | `DRAM_LINE_PASS CL=10 CWL=11 tRCD=12 ...`. 지연: 110~111 / 122~123 / 110 / 234클록 |
+| [`tb_cache_dram`](../../tb/ram/tb_cache_dram.sv) (신규, 캐시 + 제어기 + 모델) | `CACHE_DRAM_PASS accesses=3412 hit_rate=59% misses=1382 writebacks=574 miss_wait_avg=143 miss_wait_max=207`. 캐시 miss = RD 명령, 되쓰기 = WR = 모델 기록 |
+
+실행 (빈 작업 폴더에서):
+
+```sh
+L=<저장소>/1_RTL/2_TINY_PROJECT; R=<저장소>
+xvlog.bat $L/DRAM_CONTEOLLER/dram_controller.v $L/DRAM/dram.v
+xvlog.bat --sv -d AHB_LITE_SVA $L/BUS/ahb_lite_master_bfm.sv $L/BUS/ahb_lite_slave_checker.sv $L/Cache/cache.v $R/6_SoC/8bit_SoC/tb/ram/tb_cache_dram.sv
+xelab.bat tb_cache_dram -s tb_cache_dram
+xsim.bat tb_cache_dram -runall
+```
+
+변이 시험(임시 사본, `tb_dram_line` 두 설정 모두 PASS 없음):
+
+| 변이 | 첫 FAIL |
+|---|---|
+| 줄 쓰기를 RMW 경로로 | `FAIL line write: RD+1 WR+1 commit+1, expected 0/1/1` |
+| 줄 쓰기 데이터를 담지 않음 | `FAIL line write 00 not in the model` |
+| `o_line_rdata` 상·하위 뒤바꿈 | `FAIL line read 00 = ..., expected ...` |
+| 코어 DQ 입력을 자기 출력에 연결 | `FAIL line read 00 = 5858...` (기존 바이트 TB도 FAIL) |
+| 줄 읽기를 쓰기로 처리 | `FAIL line read 00 = 0000...`, 이후 전체 시간 한도 |
+| 래퍼 DQ 구동을 DQS enable로 | `FAIL DQ driven (10) without the controller's DQ enable` |
+
+- 마지막 변이는 처음 TB에서 **PASS(놓침)**였다. DQS enable이 쓰기 burst 끝에서 DQ enable보다 반 phase 길어 DQ를 더 구동하지만, 동작 모델은 그 시간에 DQ를 쓰지 않아 데이터 결과가 같았기 때문이다. "양쪽 enable이 0이면 DQ/DQS는 Z" 검사를 추가했다. 동작 모델은 reset이 없어 첫 ACT 전 enable이 X이므로, 확실한 0일 때만 판정한다. 그 뒤 검출했다.
+- 처음 판의 줄 쓰기 표시 레지스터 `r_line`은 쓰이지 않는 로직이어서 제거했다. 줄 쓰기는 READ 상태를 지나지 않기 때문이다. 제거 뒤 다섯 TB를 다시 실행해 수치가 같음을 확인했다.
+
+합성 (WSL Linux Vivado 2024.2, `dram_controller_core`, `xc7z020clg400-1` out-of-context): LUT 335, FF 155, F7 MUX 8, 3상태 셀 0, latch 0, 100 MHz WNS +3.70 ns(합성 추정).

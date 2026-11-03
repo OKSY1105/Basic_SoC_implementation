@@ -32,6 +32,7 @@ module tb_dram_controller #(
         .CL_CYCLES(CL_CYCLES), .CWL_CYCLES(CWL_CYCLES)
     ) dut (
         .i_clk(clk), .i_rst_n(rst_n), .i_req(req), .i_write(write),
+        .i_line(1'b0), .i_line_wdata(64'd0), .o_line_rdata(),
         .i_addr(addr), .i_wdata(wdata), .o_ready(ready), .o_rdata(rdata),
         .o_error(error), .o_busy(busy), .o_initialized(initialized),
         .o_dram_ck_t(ck_t), .o_dram_ck_c(ck_c), .o_dram_cke(cke),
@@ -62,7 +63,7 @@ module tb_dram_controller #(
         input [8*160-1:0] message;
         begin
             $display("DRAM_CONTROLLER_FAIL: %0s time=%0t addr=%03h state=%0d cycle=%0d",
-                     message, $time, addr, dut.r_state, dut.r_cycle);
+                     message, $time, addr, dut.u_core.r_state, dut.u_core.r_cycle);
             $fatal(1, "DRAM_CONTROLLER_FAIL");
             $finish;
         end
@@ -86,7 +87,7 @@ module tb_dram_controller #(
     always @(posedge clk) begin
         if (rst_n && req && ready) host_completions = host_completions + 1;
         if (!rst_n && ready === 1'b1) fail("completion during reset");
-        if (dut.r_dq_oe === 1'b1 && memory_model.dq_oe === 1'b1)
+        if (dut.u_core.r_dq_oe === 1'b1 && memory_model.dq_oe === 1'b1)
             fail("controller/model DQ contention");
     end
 

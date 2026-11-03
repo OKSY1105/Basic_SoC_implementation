@@ -6,7 +6,7 @@
 |---|---|
 | 용량 | 16행×16열×8바이트 = 2KiB |
 | 로컬 주소 | 11bit: row[10:7], column[6:3], offset[2:0] |
-| 요청 | i_req/i_write/i_addr/i_wdata, 동시에 1개 |
+| 요청 | i_req/i_write/i_addr/i_wdata, 동시에 1개. 2026-11-03부터 `i_line`=1이면 64bit 줄 접근(`i_line_wdata`/`o_line_rdata`, 주소 [10:3], BL8 1회, RMW 없음) |
 | 완료 | clk 상승 에지 req&&ready, ready 1클록, 다음 IDLE에서 재수락 |
 | 바이트 대응 | offset 0→[7:0], 쓰기 RMW로 다른 7바이트 보존 |
 | 클록 | 모델 CK는 i_clk/4, 실제 DDR 기준 클록으로 확정하지 않음 |
@@ -24,13 +24,13 @@ PRE/REF·refresh·뱅크 스케줄링·training·PHY/보드 검증은 미구현�
 
 ```text
 AHB 디코더 → 캐시(Cache/cache.v) → DRAM 제어기 → DRAM 동작 모델
-             AHB-Lite slave,      (줄 단위 포트 추가 필요)  (시뮬레이션: dram.v / 보드: BRAM 기반 합성 가능 모델, 신규)
-             8줄×8B, write-back
+             AHB-Lite slave,      줄 단위 포트(M3)    (시뮬레이션: dram.v ← dram_controller
+             8줄×8B, write-back                         보드: BRAM 기반 합성 가능 모델 ← dram_controller_core, M4)
 ```
 
 | 항목 | 상태 |
 |---|---|
 | 캐시 | [Cache/README.md](../../../1_RTL/2_TINY_PROJECT/Cache/README.md) — 직접 사상 8줄×8바이트, write-back·write-allocate, AHB-Lite slave 단자(RAM AHB 래퍼를 합침), 단독 시험 통과 |
-| 제어기 줄 단위 포트 | 캐시의 64bit 줄 요청을 받아 RD/WR burst 1회로 처리(바이트 RMW 불필요). 미구현 |
-| DQ/DQS 분리 | FPGA 내부에는 양방향 버퍼가 없으므로 출력·입력·출력 enable로 나눈다. 미구현 |
+| 제어기 줄 단위 포트 | **구현(M3)**: 캐시의 64bit 줄 요청을 RD 1회(줄 읽기) 또는 WR 1회(줄 쓰기, RMW 없음)로 처리한다. 지연은 줄 읽기 94클록, 줄 쓰기 106클록이다(CL=9·CWL=10·tRCD=9, 바이트 쓰기는 202클록). 캐시와 연결한 짝 시험에서 miss 대기는 평균 143·최대 207클록이었다 |
+| DQ/DQS 분리 | **구현(M3)**: `dram_controller_core`는 출력·출력 enable·입력으로 나눈 판이다(3상태 없음, 합성 확인). 기존 이름 `dram_controller`는 3상태 버퍼만 둔 래퍼로, 행동 모델 `dram.v`에 연결한다. 읽기 데이터는 생성 CK의 정해진 phase에서 받으므로 코어에 DQS 입력이 없다 |
 | 합성 가능 DRAM 모델 | BRAM 저장 + 시스템 클록 기준 명령·지연 카운터. 기존 제어기 TB를 기존 모델과 새 모델 양쪽으로 통과시켜 동작 일치를 확인한다. 미구현 |
