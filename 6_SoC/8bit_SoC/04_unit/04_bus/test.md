@@ -54,19 +54,28 @@ AHB_BUS_PASS transfers=16306 unmapped=3222 cancels=1416 resets=21 max_wait=7
   - 커버리지 항목 모두 1 이상: 각 응답 종류, APB 대기 0과 최대, 연속 브리지 전송, 다른 slave 대기 중 브리지 주소 단계 유지, 취소, SETUP·ACCESS 중 reset, ACCESS 밖 `PREADY`=1. 최소 지연은 2클록이어야 한다.
   - `APB_BRIDGE_PASS` 출력
 
-결과 (2026-11-03, Windows Vivado 2024.2 XSim):
+결과 (2026-11-04, WSL Vivado 2024.2 XSim, `apb_checker` 6번 검사 `a_access_entry` 추가 후):
 
 ```text
-COVER bridge read_ok=3210 write_ok=3084 read_slverr=180 write_slverr=200 hsize_err=639 | apb wait0=1131 wait5=1115
-COVER b2b=2695 cross_hold=4127 idle_bridge=718 cancels=424 resets setup/access=14/6 junk_pready=18997 latency=2..7 other=4821
-APB_BRIDGE_PASS apb_transfers=6674 slverr=380 hsize_err=639 latency=2..7 resets=20
+COVER bridge read_ok=3143 write_ok=3179 read_slverr=203 write_slverr=162 hsize_err=562 | apb wait0=1128 wait5=1092
+COVER b2b=2646 cross_hold=4144 idle_bridge=722 cancels=431 resets setup/access=11/9 junk_pready=18969 latency=2..7 other=4882
+APB_BRIDGE_PASS apb_transfers=6687 slverr=365 hsize_err=562 latency=2..7 resets=20
 ```
 
-변이 시험(저장소에 반영하지 않은 임시 사본, 모두 PASS 없음):
+- 2026-11-03 결과는 `apb_transfers=6674 slverr=380 hsize_err=639`였다. 검사가 하나 늘면 `$urandom` 시드 배정이 바뀌어 무작위 전송 수가 달라진다. 이전 검사기로 다시 실행하면 2026-11-03 값이 그대로 나온다(2026-11-04 확인).
+
+APB 검사기 자체 시험 (VR-008-I1 대응, 2026-11-04): Codex 검증 VR-008에서 `apb_checker`가 SETUP 없이 IDLE에서 바로 ACCESS로 가는 전송을 놓친다는 반례가 나왔다. 주소·방향·쓰기 데이터가 미리 고정되어 있으면 5개 검사가 모두 통과했다. 6번 검사(ACCESS 직전 클록은 SETUP이거나 `PREADY`를 기다린 ACCESS)를 추가하고 `tb_apb_checker.sv`로 확인했다. 실행 명령은 BUS README의 APB3 시험 도구 절에 있다.
+
+| 검사기 | 결과 |
+|---|---|
+| 6번 추가 후 | `APB_CHECKER_PASS legal=5 illegal=9 detections=10`. Codex 반례 TB도 `FAIL SVA a_access_entry`로 검출 |
+| 6번 추가 전(이전 커밋) | `APB_CHECKER_FAIL errors=2` — `idle_to_access_stable`·`idle_to_access_stable_wait` 미검출 |
+
+변이 시험(저장소에 반영하지 않은 임시 사본, 모두 PASS 없음). 아래 표는 2026-11-03에 검사 5개 판 `apb_checker`로 실행한 결과이고, 첫 행만 2026-11-04에 6번 검사를 넣은 판으로 다시 실행했다.
 
 | 변이 | 첫 FAIL |
 |---|---|
-| SETUP 생략(바로 ACCESS) | `FAIL SVA a_access_stable` |
+| SETUP 생략(바로 ACCESS) | `FAIL SVA a_access_entry`와 `FAIL SVA a_access_stable`(같은 클록). 2026-11-03 기록의 `a_access_stable` 검출은 이 TB에서 IDLE과 ACCESS 사이에 주소가 바뀌었기 때문이며, 주소가 고정된 경우는 6번 검사가 잡는다 |
 | ACCESS에서 `PREADY` 무시 | `FAIL SVA a_access_wait` |
 | `PSLVERR` 무시 | `FAIL bridge HADDR=ff0f PSLVERR=1 AHB resp=0, expected 1` |
 | `HSIZE` 검사 제거 | `FAIL bridge HADDR=ff02 HSIZE=1: resp=0 wait=5, expected ERROR after 1` |

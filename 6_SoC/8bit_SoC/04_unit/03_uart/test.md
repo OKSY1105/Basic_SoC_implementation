@@ -77,13 +77,15 @@ xelab.bat --timescale 1ns/1ps tb_soc8_uart_apb -s tb_u
 xsim.bat tb_u -runall
 ```
 
-결과 (2026-11-03, Windows Vivado 2024.2 XSim):
+결과 (2026-11-04, WSL Vivado 2024.2 XSim, `apb_checker` 6번 검사 추가 후):
 
 ```text
-COVER rx ok=161 empty=2918 write=345 | tx ok=229 full=1663 read=373 | status=2462 st_write=249 | clear=619 clear_read=229 | irq_en w=615 r=995 | unmapped=1447 hsize=1
-COVER irq rx/tx/parity/frame/overrun=1/1/1/1/1 flags oe/pe/fe=1/1/1 resets=1 tx_frames=227 rx_bytes=161
-UART_APB_PASS apb_transfers=12305 tx_bytes=227 rx_bytes=161 irq_sources=3 resets=1
+COVER rx ok=161 empty=2898 write=408 | tx ok=230 full=1642 read=344 | status=2460 st_write=261 | clear=606 clear_read=252 | irq_en w=637 r=988 | unmapped=1492 hsize=1
+COVER irq rx/tx/parity/frame/overrun=1/1/1/1/1 flags oe/pe/fe=1/1/1 resets=1 tx_frames=228 rx_bytes=161
+UART_APB_PASS apb_transfers=12379 tx_bytes=228 rx_bytes=161 irq_sources=3 resets=1
 ```
+
+- 2026-11-03 결과는 `apb_transfers=12305 tx_bytes=227`이었다. 검사가 하나 늘면 `$urandom` 시드 배정이 바뀌어 무작위 접근 수가 달라진다. 이전 검사기로 다시 실행하면 2026-11-03 값이 그대로 나온다(2026-11-04 확인). 검사기 변경 내용은 [BUS 단위 검증](../04_bus/test.md) M8 절.
 
 변이 시험(저장소에 반영하지 않은 임시 사본, 최종 TB 기준 모두 PASS 없음):
 

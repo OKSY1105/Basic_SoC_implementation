@@ -17,7 +17,19 @@
 | 파일 | 역할 |
 |---|---|
 | `apb_slave_model.sv` | APB3 slave 모델. 전송마다 `MIN_WAIT`~`MAX_WAIT` ACCESS 대기, `PADDR[3:0]`=F는 `PSLVERR`, 읽기 데이터는 `ID`에 따른 주소 함수다. ACCESS 밖에서는 `PREADY`·`PSLVERR`·`PRDATA`를 무작위로 낸다(`JUNK`). 완료한 전송(주소·방향·데이터·`PSLVERR`·대기 수)을 `log[]`에 기록한다 |
-| `apb_checker.sv` | APB3 master 쪽 규칙 SVA(`APB_SVA` 정의 시): `PENABLE`은 `PSEL`과 함께, SETUP 1클록 뒤 ACCESS, ACCESS 동안 `PADDR`·`PWRITE`·`PWDATA` 유지, `PREADY`까지 ACCESS 유지, 마지막 ACCESS 뒤 `PENABLE` 내림 |
+| `apb_checker.sv` | APB3 master 쪽 규칙 SVA(`APB_SVA` 정의 시): `PENABLE`은 `PSEL`과 함께, SETUP 1클록 뒤 ACCESS, ACCESS 동안 `PADDR`·`PWRITE`·`PWDATA` 유지, `PREADY`까지 ACCESS 유지, 마지막 ACCESS 뒤 `PENABLE` 내림, ACCESS는 SETUP(또는 `PREADY`를 기다린 ACCESS) 다음에만 시작(6번, VR-008-I1) |
+| `tb_apb_checker.sv` | `apb_checker` 자체 시험. 합법 순서 5개는 검출 0, 위반 순서 9개는 정해진 검출 수(합계 10)여야 `APB_CHECKER_PASS`를 낸다. 검사기가 내는 `FAIL SVA` 10줄은 의도된 검출이고, 사례가 기대와 다르면 `FAIL <사례>:` 줄이 나온다 |
+
+검사기 자체 시험 실행(WSL Vivado 2024.2, 빈 작업 폴더에서):
+
+```sh
+B=<저장소>/1_RTL/2_TINY_PROJECT/BUS
+xvlog --sv -d APB_SVA $B/apb_checker.sv $B/tb_apb_checker.sv
+xelab tb_apb_checker -s tb_chk
+xsim tb_chk -runall
+```
+
+결과 (2026-11-04): `APB_CHECKER_PASS legal=5 illegal=9 detections=10`. 6번 검사를 넣기 전 검사기로는 SETUP 없이 IDLE에서 바로 ACCESS로 가는 두 사례(`idle_to_access_stable`, `idle_to_access_stable_wait`)가 검출되지 않는다.
 
 ## AHB→APB3 브리지 — `ahb_apb_bridge.v`
 
@@ -49,7 +61,7 @@ xelab.bat tb_ahb_apb_bridge -s tb_br
 xsim.bat tb_br -runall
 ```
 
-결과 (2026-11-03, Windows Vivado 2024.2 XSim): `APB_BRIDGE_PASS apb_transfers=6674 slverr=380 hsize_err=639 latency=2..7 resets=20`. 변이 시험 9개와 합성 결과는 [BUS 단위 검증](../../../6_SoC/8bit_SoC/04_unit/04_bus/test.md)에 있다.
+결과 (2026-11-04, WSL Vivado 2024.2 XSim, `apb_checker` 6번 검사 추가 후): `APB_BRIDGE_PASS apb_transfers=6687 slverr=365 hsize_err=562 latency=2..7 resets=20`. 검사가 하나 늘면 시뮬레이터의 `$urandom` 시드 배정이 바뀌어 무작위 전송 수가 달라진다(이전 검사기로는 2026-11-03 값 `apb_transfers=6674 slverr=380 hsize_err=639`가 그대로 나온다). 변이 시험 9개와 합성 결과는 [BUS 단위 검증](../../../6_SoC/8bit_SoC/04_unit/04_bus/test.md)에 있다.
 
 ## 리셋 동기화기 — `reset_sync.v`
 
