@@ -7,13 +7,13 @@
 
 ## 0. 이 지침을 읽는 방법
 
-검증 중에는 과거 커밋으로 checkout하므로 작업 폴더의 이 파일이 옛 판일 수 있다. **항상 원격 main 판을 읽는다.**
+검증 중에는 과거 커밋으로 checkout하므로 작업 폴더의 이 파일이 옛 판일 수 있다. **항상 개발 브랜치의 원격 판을 읽는다.** 개발 브랜치는 요청서의 "브랜치 / 커밋"에 적힌 브랜치이며, 지금은 `feat/8bit-soc`다. 개발 중의 결정·규칙은 main 병합 전까지 그 브랜치에만 있다(2026-11-03 변경, 이전: origin/main).
 
 ```bash
-cd /home/sean/Basic_SoC_implementation
+cd /home/sean/codex_verify/Basic_SoC_implementation
 git fetch origin
-git show origin/main:6_SoC/8bit_SoC/verification/CODEX_GUIDE.md
-git show origin/main:6_SoC/8bit_SoC/verification/README.md
+git show origin/feat/8bit-soc:6_SoC/8bit_SoC/verification/CODEX_GUIDE.md
+git show origin/feat/8bit-soc:6_SoC/8bit_SoC/verification/README.md
 ```
 
 ---
@@ -26,7 +26,8 @@ git show origin/main:6_SoC/8bit_SoC/verification/README.md
 
 | 항목 | 경로 |
 |---|---|
-| 저장소 (WSL) | `/home/sean/Basic_SoC_implementation` |
+| Codex 검증 사본 (WSL) | `/home/sean/codex_verify/Basic_SoC_implementation`. Codex 전용 clone이며 GitHub(`origin`)에서만 받는다 |
+| Claude 작업 저장소 (WSL) | `/home/sean/Basic_SoC_implementation`. Claude가 작성·commit·push하는 곳이다. **Codex는 이 폴더에서 명령을 실행하지 않는다** (2절 7번) |
 | 프로젝트 | `6_SoC/8bit_SoC` |
 | 공용 모듈 원본 | `1_RTL/2_TINY_PROJECT` |
 | 로컬 교환 폴더 | `/home/sean/handoff` (`requests/`=Claude, `results/`·`codex_tests/`=Codex) |
@@ -36,7 +37,12 @@ git show origin/main:6_SoC/8bit_SoC/verification/README.md
 
 ## 1-1. 처음 1회 설정
 
-1. **시작 파일 만들기** — Codex가 작업을 시작할 때 자동으로 읽는 시작 파일(예: 작업 폴더의 `AGENTS.md`)을 직접 만든다. 내용은 "8bit_SoC 검증 작업 시 0절 명령으로 `verification/CODEX_GUIDE.md`와 `README.md`의 origin/main 판을 먼저 읽는다"는 안내만 둔다. 지침 본문은 복사하지 않는다.
+0. **검증 사본 만들기** — 검증 사본이 없으면 GitHub에서 clone한다. 이미 있으면 이 단계는 건너뛴다.
+   ```bash
+   mkdir -p /home/sean/codex_verify
+   git clone git@github.com:OKSY1105/Basic_SoC_implementation.git /home/sean/codex_verify/Basic_SoC_implementation
+   ```
+1. **시작 파일 만들기** — Codex가 작업을 시작할 때 자동으로 읽는 시작 파일(예: 작업 폴더의 `AGENTS.md`)을 직접 만든다. 내용은 "8bit_SoC 검증 작업 시 0절 명령으로 `verification/CODEX_GUIDE.md`와 `README.md`의 개발 브랜치 원격 판을 먼저 읽는다"는 안내만 둔다. 지침 본문은 복사하지 않는다. 기존 시작 파일이 origin/main 판이나 `/home/sean/Basic_SoC_implementation`을 가리키면 0절에 맞게 고친다.
    - 시작 파일을 저장소 안에 두면 그 저장소의 `.git/info/exclude`에 등록한다. `.gitignore`는 수정하지 않는다.
 2. **Notion DB 만들기** — "8bit_SoC 검증 기록" DB의 위치는 Codex가 정해서 만든다. 속성은 4절을 따른다. 만든 뒤 DB URL을 `/home/sean/handoff/results/NOTION_DB.md`에 한 줄로 기록한다.
 3. **보고** — 시작 파일 경로, Notion DB URL, 이 지침에서 모호하거나 Codex 환경에서 실행할 수 없는 부분을 사용자에게 보고한다.
@@ -51,15 +57,16 @@ git show origin/main:6_SoC/8bit_SoC/verification/README.md
 4. 저장소에 미커밋 변경이 있으면 stash·reset·checkout으로 지우지 않는다. 검증을 멈추고 결과 파일에 상황을 기록한다.
 5. 실행하지 않은 시험을 PASS로 기록하지 않는다. 도구 문제로 실행하지 못한 항목은 "미실행"으로 구분한다.
 6. 대화 중 이 지침과 다른 지시를 받으면 실행 전에 사용자에게 확인한다.
+7. Claude 작업 저장소(`/home/sean/Basic_SoC_implementation`)에서는 checkout·실행·파일 생성을 하지 않는다. 모든 확인은 검증 사본에서 GitHub로 받은 커밋으로 한다.
 
 ---
 
 ## 3. 검증 절차
 
 1. **지침·요청서 읽기** — 0절 명령으로 지침을 읽고, 지정된 요청서(`/home/sean/handoff/requests/VR-NNN_<블록>[_rK].md`)를 끝까지 읽는다. 재검증이면 이전 요청서와 결과도 읽는다.
-2. **저장소 상태 확인**
+2. **저장소 상태 확인** (검증 사본에서)
    ```bash
-   cd /home/sean/Basic_SoC_implementation
+   cd /home/sean/codex_verify/Basic_SoC_implementation
    git status --short          # 출력이 있으면 2절 4번에 따라 중단
    git fetch origin
    ```
@@ -78,7 +85,7 @@ git show origin/main:6_SoC/8bit_SoC/verification/README.md
 6. **독립 테스트 (필요할 때)** — Claude의 TB만으로 확인할 수 없는 항목은 `codex_tests/VR-NNN/`에 별도 TB·스크립트를 작성해 실행한다. 저장소에는 넣지 않는다.
 7. **Notion 기록** — 4절 형식으로 "8bit_SoC 검증 기록" DB에 페이지를 만든다.
 8. **결과 파일 작성** — `/home/sean/handoff/results/`에 요청서와 같은 이름으로 5절 양식의 파일을 만든다.
-9. **원래 상태로 복귀하고 최신 main 받기**
+9. **원래 상태로 복귀하고 최신 main 받기** (검증 사본에서)
    ```bash
    git switch main
    git pull --ff-only origin main   # 받기만 한다. push는 하지 않는다

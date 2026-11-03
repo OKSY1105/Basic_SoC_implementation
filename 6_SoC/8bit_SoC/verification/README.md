@@ -10,14 +10,21 @@
 
 검증자 지침: [CODEX_GUIDE.md](CODEX_GUIDE.md)
 
+| 저장소 (WSL, 2026-11-03부터) | 쓰는 쪽 | 용도 |
+|---|---|---|
+| `/home/sean/Basic_SoC_implementation` | Claude | 작성·자체 시뮬레이션·commit·push (SSH) |
+| `/home/sean/codex_verify/Basic_SoC_implementation` | Codex | GitHub clone. 요청서의 커밋을 받아 실행·검토 (push 없음) |
+
+두 쪽은 GitHub를 통해서만 코드를 주고받는다. Codex는 Claude 작업 저장소에서 명령을 실행하지 않는다.
+
 ---
 
 ## 1. 진행 흐름
 
-1. Claude: RTL·TB 작성 → 자체 시뮬레이션(Windows Vivado 2024.2 XSim) → `feat/<블록>` 브랜치 push
+1. Claude: RTL·TB 작성 → 자체 시뮬레이션(WSL Vivado 2024.2 XSim) → push 전 `git fetch`로 원격이 앞서 있지 않은지 확인 → `feat/<블록>` 브랜치 push
 2. Claude: 검증 요청서 작성 (작업 중에는 로컬 교환 폴더 `handoff/requests/`)
 3. 사용자: Codex에 검증 지시
-4. Codex: 요청서의 커밋을 checkout해 실행·검토(Vivado XSim 등) → Notion 상세 기록 → 결과 파일 작성 (`handoff/results/`)
+4. Codex: 검증 사본에서 `git fetch` 후 요청서의 커밋을 checkout해 실행·검토(Vivado XSim 등) → Notion 상세 기록 → 결과 파일 작성 (`handoff/results/`)
 5. Claude: 결과 확인 → FAIL이면 수정 후 재검증 요청(`_rK`)
 6. PASS: 7절 병합 규칙에 따라 Claude가 main에 병합
 7. Claude: 해당 블록의 모든 회차 요청서·결과를 이 폴더의 `VR-NNN_<블록>/`에 **원문 그대로** 커밋해 공개
