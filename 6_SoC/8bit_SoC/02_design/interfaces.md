@@ -9,6 +9,7 @@
 | UART host | THR write/RHR read pulse, 데이터와 FIFO/LSR 상태 | 기존 구현(오류 flag 지우기 입력 추가). APB 래퍼(M9)가 0xFF00~0xFF04 레지스터와 IRQ로 연결 — 구현, [uart.md](uart.md) |
 | CPU→BUS→slave | 선택·보관·오류·완료 시간표 | AHB 디코더·응답 선택기·기본 slave(M6), AHB→APB3 브리지(M8) 구현 — [bus.md](bus.md) |
 | UART IRQ → CPU | 1bit level, `i_clk` 동기(UART 래퍼 `o_irq` 레지스터 출력 → CPU `i_irq`) | 구현(M9·M11). 벡터 PC 0x0002 — [cpu.md](cpu.md)·[uart.md](uart.md) |
+| 리셋 | 보드 reset(버튼 AND MMCM locked, active low) → `reset_sync`(비동기 assert·동기 해제) → 모든 모듈의 active-low reset. CPU·DRAM 제어기는 동기식, 캐시·ROM·버스·UART는 비동기식으로 받는다 | 구현(M10) — [BUS README](../../../1_RTL/2_TINY_PROJECT/BUS/README.md) |
 | PC→FPGA→STM32 | signed8 요청·signed16 결과·몫/나머지 | 응용 목표, wire packet 미정 |
 
 ## 기존 CPU TB 주소 모델
