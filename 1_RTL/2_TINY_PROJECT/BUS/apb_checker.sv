@@ -40,5 +40,12 @@ module apb_checker #(
     a_access_end: assert property (@(posedge clk) disable iff (!rstn)
         psel && penable && pready |=> !penable)
         else begin $display("FAIL SVA a_access_end t=%0t", $time); fails++; end
+    // 6. ACCESS is entered only from SETUP: the cycle before an ACCESS cycle
+    //    is SETUP or an ACCESS cycle that waited (PREADY low). Check 2 alone
+    //    misses IDLE -> ACCESS, and check 3 misses it when PADDR/PWRITE/
+    //    PWDATA were already stable (VR-008-I1).
+    a_access_entry: assert property (@(posedge clk) disable iff (!rstn)
+        psel && penable |-> $past(psel) && (!$past(penable) || !$past(pready)))
+        else begin $display("FAIL SVA a_access_entry t=%0t", $time); fails++; end
 `endif
 endmodule
