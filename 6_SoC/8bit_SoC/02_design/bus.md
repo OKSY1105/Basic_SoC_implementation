@@ -1,6 +1,6 @@
 # BUS 설계 과제 — 구현 중
 
-재사용 BUS 원본 개발 위치는 [1_RTL BUS](../../../1_RTL/2_TINY_PROJECT/BUS)이며, SoC별 주소 디코더/어댑터는 [rtl/bus](../rtl/bus), 통합 시험은 [tb/bus](../tb/bus)에 둔다. 데이터 포트 디코더·응답 선택기·기본 slave(M6)는 [soc8_ahb_bus.v](../rtl/bus/soc8_ahb_bus.v)에, ROM(M5)은 [soc8_rom.v](../rtl/rom/soc8_rom.v)에, AHB→APB3 브리지(M8)는 공용 [ahb_apb_bridge.v](../../../1_RTL/2_TINY_PROJECT/BUS/ahb_apb_bridge.v)에 구현했다. UART 래퍼·SoC top은 아직 없다.
+재사용 BUS 원본 개발 위치는 [1_RTL BUS](../../../1_RTL/2_TINY_PROJECT/BUS)이며, SoC별 주소 디코더/어댑터는 [rtl/bus](../rtl/bus), 통합 시험은 [tb/bus](../tb/bus)에 둔다. 데이터 포트 디코더·응답 선택기·기본 slave(M6)는 [soc8_ahb_bus.v](../rtl/bus/soc8_ahb_bus.v)에, ROM(M5)은 [soc8_rom.v](../rtl/rom/soc8_rom.v)에, AHB→APB3 브리지(M8)는 공용 [ahb_apb_bridge.v](../../../1_RTL/2_TINY_PROJECT/BUS/ahb_apb_bridge.v)에, UART APB 래퍼(M9)는 [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)에 구현했다. SoC top은 아직 없다.
 
 ## 결정 — 2026-10-30
 
@@ -47,6 +47,6 @@ UART 래퍼 IRQ ─────────────────────�
 | 기본 slave (M6) | 미할당 주소의 NONSEQ는 2클록 ERROR, IDLE은 대기 없는 OKAY. 마지막 오류 주소와 횟수를 디버그 출력(ILA용) |
 | 로컬 주소 | 각 slave가 하위 bit를 사용(캐시 `HADDR[10:0]`, ROM `[12:0]`, 브리지 `[11:0]`). 상위 bit 검사는 디코더가 맡으므로 별칭이 없음 |
 | AHB→APB3 브리지 (M8) | 전송 1건 = SETUP 1클록 + ACCESS(`PREADY`까지), 그다음 클록에 AHB 완료(대기 최소 2클록). `PSLVERR` → AHB 2클록 ERROR. `PCLK`=`HCLK`. APB slave가 UART 래퍼 하나라 `PSEL`을 직접 연결. 세부는 [BUS README](../../../1_RTL/2_TINY_PROJECT/BUS/README.md) |
-| APB slave (M9) | UART 래퍼가 `PADDR`(0x000~0xFFF = `HADDR` 0xF000~0xFFFF) 중 0xF00~0xF04(`HADDR` 0xFF00~0xFF04)만 사용하고 나머지·잘못된 방향은 `PSLVERR` (예정) |
+| APB slave (M9) | UART 래퍼가 `PADDR`(0x000~0xFFF = `HADDR` 0xF000~0xFFFF) 중 0xF00~0xF04(`HADDR` 0xFF00~0xFF04)만 사용하고 나머지·잘못된 방향은 `PSLVERR`. `PREADY`=1(대기 없음). 레지스터·IRQ는 [uart.md](uart.md) M9 절 |
 
 시험 결과는 [BUS 단위 검증](../04_unit/04_bus/test.md).

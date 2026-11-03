@@ -26,6 +26,7 @@ module uart_top #(
     o_lsr_fe,
     o_lsr_pe,
     o_lsr_oe,
+    i_lsr_clr,
 
     // Debug / verification
     o_tx_fifo_full,
@@ -50,6 +51,8 @@ output                      o_lsr_temt;
 output                      o_lsr_fe;
 output                      o_lsr_pe;
 output                      o_lsr_oe;
+// Clear sticky FE/PE/OE: [0] OE, [1] FE, [2] PE (tie to 0 to keep them)
+input      [2:0]            i_lsr_clr;
 
 output                      o_tx_fifo_full;
 output                      o_rx_fifo_full;
@@ -152,6 +155,7 @@ u_uart_rx (
 
     .o_rhr_rdata    (o_rhr_rdata),
     .i_rhr_re       (i_rhr_re),
+    .i_lsr_clr      (i_lsr_clr),
 
     .o_lsr_dr       (o_lsr_dr),
     .o_lsr_fe       (o_lsr_fe),

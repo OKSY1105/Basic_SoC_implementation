@@ -7,6 +7,33 @@
 - 상태: data ready, THR empty, transmitter empty, frame/parity/overrun, FIFO full.
 - 파라미터: CLK_FREQ_HZ, BAUD_RATE, DATA_BIT, FIFO_DEPTH. 기존 기본값을 전체 SoC 확정값으로 간주하지 않는다.
 
-CPU req/ready와 UART의 FIFO pulse 포트는 직접 같은 신호가 아니다. BUS MMIO 어댑터가 읽기/쓰기 부작용을 완료당 한 번만 발생시키고 FIFO full/empty·wait/reset·오류 상태를 처리해야 한다. RX 준비 전 읽기를 기다릴지 오류로 응답할지, TX full에서의 정책, status bit 배치와 초기값은 아직 결정해야 한다.
+CPU 쪽 연결은 APB 래퍼(M9) [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)가 맡는다(아래 M9 절). 읽기/쓰기 부작용은 성공한 전송의 ACCESS 클록에 한 번만 일어난다. 빈 RX 읽기와 가득 찬 TX 쓰기는 기다리지 않고 ERROR로 응답한다. status bit 배치와 초기값은 레지스터 표를 따른다. CPU는 인터럽트(IRQ)로 동작한다(history H046).
+
+## 코어 변경 — 2026-11-03
+
+- 프레임은 코어에 고정된 8E1(데이터 8bit, 짝수 parity, stop 1bit)이다. RX FIFO와 TX FIFO는 맨 앞 데이터가 조합으로 보이는 구조(`o_r_data = mem[r_ptr]`)다.
+- FE·PE·OE는 reset 전까지 유지되는 sticky bit였다. 래퍼의 ERROR_CLEAR(W1C)를 위해 `uart_rx`·`uart_top`에 `i_lsr_clr[2:0]`([0] OE, [1] FE, [2] PE)를 추가했다. 1이면 그 bit를 지우고, 같은 클록에 새 오류가 생기면 새 오류가 우선한다.
+- 0으로 묶으면 기존 동작과 같다. `tb_uart.v`·`zybo_uart_top.v`에는 `3'b000`을 연결했다. 변경 뒤 기존 TB 결과도 같다(`tb_error=0`, `tb_done=1`, `$stop` 795,235 ns).
+- 알려진 사항: `fifo.v`는 메모리를 비동기 reset always 블록 안에서 쓴다. 그래서 Vivado가 FIFO 메모리를 LUTRAM이 아닌 레지스터로 구현하고 set/reset 우선순위 경고를 낸다. 기능 문제는 아니며 이번에는 수정하지 않았다.
+
+## M9 UART APB 래퍼 — 2026-11-03
+
+[soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)는 `uart_top`을 감싼 APB3 slave다. AHB→APB3 브리지가 `PSEL`을 직접 연결하며, `PADDR` = `HADDR[11:0]`이다.
+
+| HADDR | PADDR | 이름 | 접근 | 동작 |
+|---|---|---|---|---|
+| FF00 | F00 | RX_DATA | R | RX FIFO에서 1바이트 pop. 비어 있으면 ERROR |
+| FF01 | F01 | TX_DATA | W | TX FIFO에 1바이트 push. 가득 차 있으면 ERROR |
+| FF02 | F02 | STATUS | R | [0] RX_VALID, [1] TX_FULL, [2] TX_BUSY(FIFO 또는 송신 중), [3] OVERRUN, [4] FRAME_ERR, [5] PARITY_ERR, [6] TX_EMPTY(TX FIFO 빔). reset 값 0x40 |
+| FF03 | F03 | ERROR_CLEAR | W | bit 3/4/5에 1을 쓰면 해당 flag를 지움(W1C). 나머지 bit 무시 |
+| FF04 | F04 | IRQ_EN | R/W | [0] RX_VALID, [1] TX_EMPTY, [2] 오류(OVERRUN·FRAME_ERR·PARITY_ERR). reset 0 |
+
+- `PREADY`는 항상 1이다(대기 없음). AHB 쪽에서 UART 접근 1건은 브리지 대기 2클록을 포함해 3클록이 걸린다.
+- `PSLVERR`(→ AHB ERROR, 부작용 없음): 잘못된 방향(RX_DATA·STATUS 쓰기, TX_DATA·ERROR_CLEAR 읽기), 0xF00~0xF04 밖의 `PADDR`, 빈 RX 읽기, 가득 찬 TX 쓰기.
+- `o_irq` = 레지스터에 담은 (RX_VALID & EN0) | (TX_EMPTY & EN1) | ((OVERRUN | FRAME_ERR | PARITY_ERR) & EN2).
+  - level 방식이다. 원인을 처리할 때까지 유지된다: RX를 읽거나, TX를 채우거나 EN1을 끄거나, flag를 지운다.
+  - 상태보다 1클록 늦게 따라간다.
+- reset: FIFO·flag 비움, IRQ_EN=0, `o_irq`=0.
+- 시험: [04_unit/03_uart/test.md](../04_unit/03_uart/test.md) M9 절.
 
 PC→FPGA RX와 FPGA TX→STM32 RX의 물리 연결, 공통 GND·레벨·최종 baud를 확인한다. 추가 양방향 통신이나 UART 인스턴스 수는 핀/통신 요구를 보고 결정한다. 패킷 문법·체크섬·시간초과·오류 응답은 후속 명세다.

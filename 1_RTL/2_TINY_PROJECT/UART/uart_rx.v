@@ -9,6 +9,7 @@ module uart_rx #(
 
     o_rhr_rdata,
     i_rhr_re,
+    i_lsr_clr,
 
     o_lsr_dr,
     o_lsr_fe,
@@ -22,6 +23,9 @@ input                       i_rst_n;
 input                       i_os_tick;
 input                       w_uart_rxd;
 input                       i_rhr_re;
+// Clear sticky error flags: [0] OE, [1] FE, [2] PE. Tie to 0 to keep them
+// until reset. A new error in the same clock wins over the clear.
+input      [2:0]            i_lsr_clr;
 
 output     [DATA_BITS-1:0]  o_rhr_rdata;
 output                      o_lsr_dr;
@@ -128,6 +132,11 @@ always @(posedge i_clk or negedge i_rst_n) begin
     else begin
         // RX FIFO write enable is a one-clock pulse
         r_fifo_w_en <= 1'b0;
+
+        // Error flag clear (the set below in the same clock overrides it)
+        if(i_lsr_clr[0]) o_lsr_oe <= 1'b0;
+        if(i_lsr_clr[1]) o_lsr_fe <= 1'b0;
+        if(i_lsr_clr[2]) o_lsr_pe <= 1'b0;
 
         case(r_state)
             S_IDLE: begin
