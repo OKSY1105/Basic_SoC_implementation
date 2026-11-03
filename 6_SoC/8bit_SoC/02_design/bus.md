@@ -1,6 +1,6 @@
 # BUS 설계 과제 — 구현 중
 
-재사용 BUS 원본 개발 위치는 [1_RTL BUS](../../../1_RTL/2_TINY_PROJECT/BUS)이며, SoC별 주소 디코더/어댑터는 [rtl/bus](../rtl/bus), 통합 시험은 [tb/bus](../tb/bus)에 둔다. 데이터 포트 디코더·응답 선택기·기본 slave(M6)는 [soc8_ahb_bus.v](../rtl/bus/soc8_ahb_bus.v)에 구현했다. ROM·APB 브리지·UART 래퍼·SoC top은 아직 없다.
+재사용 BUS 원본 개발 위치는 [1_RTL BUS](../../../1_RTL/2_TINY_PROJECT/BUS)이며, SoC별 주소 디코더/어댑터는 [rtl/bus](../rtl/bus), 통합 시험은 [tb/bus](../tb/bus)에 둔다. 데이터 포트 디코더·응답 선택기·기본 slave(M6)는 [soc8_ahb_bus.v](../rtl/bus/soc8_ahb_bus.v)에, ROM(M5)은 [soc8_rom.v](../rtl/rom/soc8_rom.v)에 구현했다. APB 브리지·UART 래퍼·SoC top은 아직 없다.
 
 ## 결정 — 2026-10-30
 
