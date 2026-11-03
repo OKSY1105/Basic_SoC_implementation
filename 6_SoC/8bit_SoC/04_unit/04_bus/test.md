@@ -79,3 +79,27 @@ APB_BRIDGE_PASS apb_transfers=6674 slverr=380 hsize_err=639 latency=2..7 resets=
 합성 (WSL Linux Vivado 2024.2, `xc7z020clg400-1` out-of-context, CLAUDE.md TS-B7): LUT 11, FF 27, latch 0, 100 MHz WNS +6.83 ns(합성 추정).
 
 시험 작성 중 XSim 2024.2가 결과 확인 루프에서 `FATAL_ERROR: Vivado Simulator kernel has discovered an exceptional condition`으로 중단했다. 원인은 중첩 블록 안에서 다른 모듈의 구조체 큐 원소를 직접 읽은 부분으로 보인다. 값을 지역 변수로 먼저 복사하도록 고친 뒤 정상 동작했다.
+
+## M10 리셋 동기화기
+
+- 대상: [reset_sync.v](../../../../1_RTL/2_TINY_PROJECT/BUS/reset_sync.v), TB: [tb_reset_sync.sv](../../../../1_RTL/2_TINY_PROJECT/BUS/tb_reset_sync.sv). 규칙과 실행 명령은 [BUS README](../../../../1_RTL/2_TINY_PROJECT/BUS/README.md) 리셋 동기화기 절.
+- 결과 (2026-11-03, Windows Vivado 2024.2 XSim):
+
+```text
+COVER pulses=206 glitches_without_edge=29 near_after=1 near_before=1 reassert=1 stopped_clock=1
+RESET_SYNC_PASS pulses=206 glitches=29
+```
+
+- 첫 실행의 FAIL 1건은 TB의 시점 경합이었다. 무작위 펄스 시작이 "에지 +0.5 ns" 검사와 같은 시각(0.01 ns 단위)에 겹쳤다. 그래서 검사 시점을 +0.505 ns로 옮겼다. DUT 변경은 없다.
+
+변이 시험(임시 사본, 모두 PASS 없음):
+
+| 변이 | 첫 FAIL |
+|---|---|
+| assert를 동기식으로(`negedge i_rst_n` 제거) | `FAIL output not low right after assertion` |
+| 출력을 첫 단에서 꺼냄 | `FAIL power-up: release on edges 1/1, expected 2/3` |
+| 해제를 비동기로(출력 = 입력) | `FAIL STAGES=3 output rose between edges` |
+| 모든 단을 한 번에 1로 | `FAIL power-up: release on edges 1/1, expected 2/3` |
+| reset 값을 1로 | `FAIL STAGES=3 output rose between edges` |
+
+합성 (WSL Linux Vivado 2024.2, `xc7z020clg400-1` out-of-context, `STAGES`=2): FDCE 2개(`ASYNC_REG`=1), LUT1 1개(reset 극성 반전), latch 0. `STAGES`=1은 elaboration 오류(`reset_sync_STAGES_must_be_at_least_2` 미정의 모듈)로 막힌다.
