@@ -10,4 +10,4 @@
 | `ahb_lite_slave_model.sv` | slave 모델. 전송마다 `MIN_WAIT`~`MAX_WAIT` 무작위 대기, `HADDR[3:0]`=F는 2클록 ERROR, 읽기 데이터는 `ID`에 따른 주소 함수다. 데이터 단계를 갖지 않을 때는 출력을 무작위로 낸다(`JUNK`). 완료한 전송을 `log[]`에 기록한다 |
 | `ahb_lite_slave_checker.sv` | slave 응답 규칙 SVA(`AHB_LITE_SVA` 정의 시): IDLE은 대기 없는 OKAY, ERROR는 2클록, OKAY 대기 상한. 위반 시 `FAIL` 줄을 출력하고 `fails`를 증가시킨다. 버스 전체를 master 쪽에서 볼 때는 `hsel`=1, `hreadyout`=버스 `HREADY`로 연결한다 |
 
-사용 예: [8bit SoC AHB 버스 TB](../../../6_SoC/8bit_SoC/tb/bus/tb_soc8_ahb_bus.sv). 예정: AHB→APB3 브리지, 리셋 동기화기, APB 규칙 검사기.
+사용 예: [8bit SoC AHB 버스 TB](../../../6_SoC/8bit_SoC/tb/bus/tb_soc8_ahb_bus.sv), [8bit SoC ROM TB](../../../6_SoC/8bit_SoC/tb/rom/tb_soc8_rom.sv). 예정: AHB→APB3 브리지, 리셋 동기화기, APB 규칙 검사기.

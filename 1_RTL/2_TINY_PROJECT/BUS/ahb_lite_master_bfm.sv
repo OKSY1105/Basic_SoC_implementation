@@ -37,6 +37,7 @@ module ahb_lite_master_bfm #(
         int unsigned       id;
         logic [ADDR_W-1:0] addr;
         bit                write;
+        bit [2:0]          size;
         logic [DATA_W-1:0] wdata;
         logic [DATA_W-1:0] rdata;
         bit                resp;          // 1 = ERROR
@@ -83,7 +84,7 @@ module ahb_lite_master_bfm #(
             // The data phase in progress completes at this edge.
             if (dp_valid) begin
                 res_t r;
-                r.id = dp.id; r.addr = dp.addr; r.write = dp.write;
+                r.id = dp.id; r.addr = dp.addr; r.write = dp.write; r.size = dp.size;
                 r.wdata = dp.wdata; r.rdata = hrdata; r.resp = hresp;
                 r.wait_cycles = dp_wait;
                 results.push_back(r);
