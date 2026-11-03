@@ -69,7 +69,7 @@ APB 검사기 자체 시험 (VR-008-I1 대응, 2026-11-04): Codex 검증 VR-008�
 | 검사기 | 결과 |
 |---|---|
 | 6번 추가 후 | `APB_CHECKER_PASS legal=5 illegal=9 detections=10`. Codex 반례 TB도 `FAIL SVA a_access_entry`로 검출 |
-| 6번 추가 전(이전 커밋) | `APB_CHECKER_FAIL errors=2` — `idle_to_access_stable`·`idle_to_access_stable_wait` 미검출 |
+| 6번 추가 전(이전 커밋) | `APB_CHECKER_FAIL errors=3` — `idle_to_access_stable`·`idle_to_access_stable_wait`는 검출 0(놓침), `access_kept_after_pready`는 6번 검사 몫이 빠져 검출 1(기대 2) |
 
 변이 시험(저장소에 반영하지 않은 임시 사본, 모두 PASS 없음). 아래 표는 2026-11-03에 검사 5개 판 `apb_checker`로 실행한 결과이고, 첫 행만 2026-11-04에 6번 검사를 넣은 판으로 다시 실행했다.
 
