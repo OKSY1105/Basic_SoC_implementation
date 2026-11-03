@@ -135,6 +135,7 @@ u_uart_top (
     .o_lsr_fe       (w_lsr_fe),
     .o_lsr_pe       (w_lsr_pe),
     .o_lsr_oe       (w_lsr_oe),
+    .i_lsr_clr      (3'b000),
 
     .o_tx_fifo_full (w_tx_fifo_full),
     .o_rx_fifo_full (w_rx_fifo_full)
