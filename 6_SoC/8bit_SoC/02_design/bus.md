@@ -10,7 +10,7 @@
 | 버스 | 직접 정의한 req/ready 대신 표준 AMBA 프로토콜 | 사용자 확정 |
 | 프로토콜 조합 | AHB-Lite(ROM·RAM) + AHB-to-APB 브리지 + APB3(UART) | 사용자 확정(2026-11-02) |
 | 단계 | 1차: 명령 포트(AHB-Lite)→ROM 포트 A 점대점, 데이터 포트(AHB-Lite)→디코더(단일 master). 2차: 명령 포트를 버스에 연결하고 중재기 추가 | 추천안, 진행 기준 |
-| CPU 코어 | ISA·3단계·stall 유지, 명령·데이터 포트를 AHB-Lite master로 변경(변환기 없음). 경로·시간표·대기·분기 취소 규칙은 [CPU AHB 포트 변경안](cpu_ahb_port.md) | 사용자 확정(2026-11-02), RTL 미반영 |
+| CPU 코어 | ISA·3단계·stall 유지, 명령·데이터 포트를 AHB-Lite master로 변경(변환기 없음). 경로·시간표·대기·분기 취소 규칙은 [CPU AHB 포트 변경안](cpu_ahb_port.md) | 사용자 확정(2026-11-02), 구현(M1, `feat/8bit-soc`) |
 
 아래 표의 각 항목은 이 결정을 기준으로 AHB-Lite/APB 신호(HTRANS·HREADY·HRESP, PSEL·PENABLE·PREADY·PSLVERR)로 구체화한다.
 

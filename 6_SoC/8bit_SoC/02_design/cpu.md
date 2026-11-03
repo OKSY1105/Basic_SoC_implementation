@@ -7,7 +7,7 @@
 - 17개 ISA: HALT, LDI, MOV, LD, ST, LDXL, LDXH, INX, ADD, ADC, SUB, SBC, CMP, AND, JMP, JZ, JC.
 - IF / ID·EX / MEM·WB, 데이터 의존성과 메모리 대기에서 stall.
 - 분리된 외부 instruction/data 포트. PC는 16bit word 주소, 데이터 주소는 16bit byte 주소.
-- 두 포트는 AHB-Lite master다(명령 `HADDR`=17bit `{PC,1'b0}`, 데이터 `HADDR`=X). [CPU AHB 포트 변경안](cpu_ahb_port.md) 기준으로 `feat/cpu-ahb-port`에 구현했고 Codex 검증 후 main에 병합한다.
+- 두 포트는 AHB-Lite master다(명령 `HADDR`=17bit `{PC,1'b0}`, 데이터 `HADDR`=X). [CPU AHB 포트 변경안](cpu_ahb_port.md) 기준으로 구현했다(M1). 통합 브랜치 `feat/8bit-soc`에 있으며, 모든 모듈 설계를 마친 뒤 모듈별 Codex 검증을 거쳐 main에 병합한다.
 
 | 기본 TB 명령 | 해석 | 결과 |
 |---|---|---|
