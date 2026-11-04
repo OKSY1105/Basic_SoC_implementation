@@ -3,6 +3,9 @@
 # Usage: bash scripts/run_soc8_top_tb.sh [BUILD_DIR]
 #   BUILD_DIR  run folder outside the repository (default /tmp/soc8_top_tb)
 #   VIVADO_BIN Vivado bin folder (default /home/sean/Vivado/2024.2/bin)
+#   SOC8_DRAM_MODEL  dram (default: behavioral dram.v through
+#              sim/models/soc8_dram_model.v) or bram (board model
+#              DRAM/dram_bram_model.v wired as on the board, -d SOC8_BRAM_DRAM)
 # Steps: assemble tb/soc/programs/*.asm, compile with the AHB/APB/CPU SVA
 # checkers, run two snapshots:
 #   fast  BAUD=3125000 (32 clocks per bit), FULL=1: all tests
@@ -19,14 +22,20 @@ C=$L/CPU/8bit_CPU
 U=$L/UART
 V=${VIVADO_BIN:-/home/sean/Vivado/2024.2/bin}
 B=${1:-/tmp/soc8_top_tb}
+M=${SOC8_DRAM_MODEL:-dram}
+case $M in
+    dram) mdef="" ;;
+    bram) mdef="-d SOC8_BRAM_DRAM" ;;
+    *) echo "SOC8_DRAM_MODEL must be dram or bram"; exit 1 ;;
+esac
 
 rm -rf "$B" && mkdir -p "$B/programs" && cd "$B" || exit 1
 for f in "$S8"/tb/soc/programs/*.asm "$S8"/firmware/*.asm; do
     python3 -I "$C/TOOLS/cpu8_asm.py" "$f" -o "$B/programs/$(basename "$f" .asm).mem" || exit 1
 done
 "$V/xvlog" "$U/baud_rate_gen.v" "$U/fifo.v" "$U/uart_rx.v" "$U/uart_tx.v" "$U/uart_top.v" \
-    "$L/DRAM/dram.v" > xvlog_v.log 2>&1 || { grep ERROR xvlog_v.log; exit 1; }
-"$V/xvlog" --sv -d AHB_LITE_SVA -d APB_SVA -d CPU8_SVA -i "$C/RTL" \
+    "$L/DRAM/dram.v" "$L/DRAM/dram_bram_model.v" > xvlog_v.log 2>&1 || { grep ERROR xvlog_v.log; exit 1; }
+"$V/xvlog" --sv $mdef -d AHB_LITE_SVA -d APB_SVA -d CPU8_SVA -i "$C/RTL" \
     "$C/RTL/cpu8_alu.v" "$C/RTL/cpu8_decoder.v" "$C/RTL/cpu8_regfile.v" "$C/RTL/cpu8_top.v" \
     "$C/TB/cpu8_ahb_checker.sv" "$C/TB/cpu8_irq_checker.sv" \
     "$L/BUS/reset_sync.v" "$L/BUS/ahb_apb_bridge.v" "$L/BUS/ahb_lite_slave_checker.sv" \
@@ -47,5 +56,5 @@ for run in fast real; do
     grep -q "^SOC8_TOP_PASS" "sim_$run.log" || status=1
     if grep -q "^FAIL" "sim_$run.log"; then status=1; fi
 done
-echo "RESULT status=$status logs=$B"
+echo "RESULT status=$status model=$M logs=$B"
 exit $status

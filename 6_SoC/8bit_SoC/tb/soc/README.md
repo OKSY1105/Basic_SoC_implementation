@@ -37,6 +37,12 @@ bash 6_SoC/8bit_SoC/scripts/run_soc8_top_tb.sh /tmp/soc8_top_tb    # 저장소 �
 
 스크립트가 프로그램을 어셈블(`cpu8_asm.py`)하고, SVA를 켜서(`-d AHB_LITE_SVA -d APB_SVA -d CPU8_SVA`) 두 설정을 실행한다. 실행 폴더는 저장소 밖이다.
 
+`SOC8_DRAM_MODEL=bram`을 주면 DRAM 자리에 보드용 모델 [`dram_bram_model.v`](../../../../1_RTL/2_TINY_PROJECT/DRAM/dram_bram_model.v)(M4)를 보드와 같은 방식(3상태 없이 core의 분리 핀에 직접)으로 붙인다(`-d SOC8_BRAM_DRAM`, 2026-11-04). 기본값은 행동 모델이다.
+
+```sh
+SOC8_DRAM_MODEL=bram bash 6_SoC/8bit_SoC/scripts/run_soc8_top_tb.sh /tmp/soc8_top_tb_bram
+```
+
 ## 결과 (2026-11-04, 계산기 시험 추가 후)
 
 ```text
@@ -62,6 +68,34 @@ SOC8_TOP_PASS baud=115200 tests=4 uart_tx=21 irq_entries=403 resets=0
 
 - `reset_mid_run`의 reset 시점 분포(READ drain 4·WRITE drain 11)는 계산기 시험을 넣기 전(2·4)과 다르다. TB 코드가 늘면 `$urandom` 시드 배정이 바뀌기 때문이다(CLAUDE.md TS-B10과 같은 현상).
 - `uart_tx`·`COVER`의 송신 바이트 수에는 계산기 응답이 들어가지 않는다(응답은 `calc`의 `replies`로 센다).
+
+### 보드용 DRAM 모델로 실행 (2026-11-04, `SOC8_DRAM_MODEL=bram`)
+
+두 설정 모두 `SOC8_TOP_PASS`, `FAIL` 줄 0개(`RESULT status=0 model=bram`). 같은 날 기본 모델 실행은 위 결과와 모든 줄이 같다(TB 변경이 기본 실행을 바꾸지 않았다).
+
+```text
+== fast
+CASE ram_basic accesses=512 misses=64 writebacks=32 RD=64 WR=32 sum=80
+CASE uart_echo_irq(sender x1.000) bytes=40 entries=40 uart_accesses=81
+CASE uart_echo_irq(sender x1.015) bytes=24 entries=24 uart_accesses=49
+CASE uart_echo_irq(sender x0.985) bytes=24 entries=24 uart_accesses=49
+CASE fault_unmapped code=3 pc=0009 err_addr=4000
+CASE fault_rom_write code=3 pc=0006
+CASE reset_mid_run resets=20 in_read=5 in_write=3 other=12 short=2
+CASE calc lines=191 chars=1086 replies=132 error_replies=41 entries=1086 random=1
+COVER tests=8 uart_tx=99 irq_entries=1174 resets=20 rst_in_read=5 rst_in_write=3 rst_short=2
+SOC8_TOP_PASS baud=3125000 tests=8 uart_tx=99 irq_entries=1174 resets=20
+== real
+CASE ram_basic accesses=512 misses=64 writebacks=32 RD=64 WR=32 sum=80
+CASE uart_echo_irq(sender x1.000) bytes=8 entries=8 uart_accesses=17
+CASE uart_echo_irq(sender x1.015) bytes=8 entries=8 uart_accesses=17
+CASE calc lines=71 chars=387 replies=54 error_replies=22 entries=387 random=0
+COVER tests=4 uart_tx=21 irq_entries=403 resets=0 rst_in_read=0 rst_in_write=0 rst_short=0
+SOC8_TOP_PASS baud=115200 tests=4 uart_tx=21 irq_entries=403 resets=0
+```
+
+- 무작위가 들어가지 않는 줄(`ram_basic`, 에코 바이트·처리 루틴 수, 두 fault, 115200 bps의 `calc`)은 기본 모델과 같다. RAM 경로의 miss 64·write-back 32·RD 64·WR 32도 같다.
+- `reset_mid_run`의 reset 시점 분포와 빠른 baud `calc`의 무작위 줄(문자 수·응답 수)은 다르다. 모델 파일이 바뀌면 프로세스 수가 달라져 `$urandom` 시드 배정이 바뀌어, 무작위 요청열 자체가 다르기 때문이다. 판정은 두 실행 모두 TB 안의 독립 기준 모델과 일치했다.
 
 ### 이 TB가 찾은 결함
 
