@@ -1,6 +1,8 @@
 `timescale 1ns/1ps
 // Integration TB for soc8_top (step 2 of integration, 05_integration I01/I02).
-// DUT: soc8_top + sim/models/soc8_dram_model.v (behavioral dram.v).
+// DUT: soc8_top + sim/models/soc8_dram_model.v (behavioral dram.v), or with
+// -d SOC8_BRAM_DRAM the board model DRAM/dram_bram_model.v wired as on the
+// board (scripts/run_soc8_top_tb.sh: SOC8_DRAM_MODEL=bram).
 // Programs: tb/soc/programs/*.asm, assembled to <PROG_DIR>/<name>.mem
 // (+PROG_DIR=...). Each test holds reset, loads its image into the ROM array
 // (TB back door, also kept as the TB's own copy) and releases reset.
@@ -61,10 +63,24 @@ module tb_soc8_top;
         .o_cache_access_count(n_acc), .o_cache_miss_count(n_miss),
         .o_cache_writeback_count(n_wb), .o_bus_err_addr(err_addr), .o_bus_err_count(err_cnt));
 
+`ifdef SOC8_BRAM_DRAM
+    // Board memory: the BRAM-based model on the core's split pins, wired as
+    // on the board (no tri-state; the model's DQ output is the core's input).
+    wire bram_dq_oe;
+    dram_bram_model mem_bram (
+        .i_clk(clk), .i_ck_t(ck_t), .i_ck_c(ck_c), .i_cke(cke), .i_csn(csn),
+        .i_actn(actn), .i_bg(bg), .i_ba(ba), .i_a(a), .i_dq(dq_o),
+        .o_dq(dq_i), .o_dq_oe(bram_dq_oe), .i_dqs_t(dqs_t), .i_dqs_c(dqs_c));
+    `define SOC8_MODEL mem_bram
+    `define SOC8_MODEL_LINE(l) mem_bram.mem[l]
+`else
     soc8_dram_model mem (
         .i_ck_t(ck_t), .i_ck_c(ck_c), .i_cke(cke), .i_csn(csn), .i_actn(actn),
         .i_bg(bg), .i_ba(ba), .i_a(a), .i_dq(dq_o), .i_dq_oe(dq_oe), .o_dq(dq_i),
         .i_dqs_t(dqs_t), .i_dqs_c(dqs_c), .i_dqs_oe(dqs_oe));
+    `define SOC8_MODEL mem.u_dram
+    `define SOC8_MODEL_LINE(l) mem.u_dram.mem[(l) / 16][(l) % 16]
+`endif
 
     // ---------------------------------------------------------------- checkers
     ahb_lite_slave_checker #(.MAX_WAIT(600)) chk_bus (
@@ -184,7 +200,7 @@ module tb_soc8_top;
     always @(posedge ck_t) begin
         if (w_opcode == 5'b01101) n_rd_cmd++;
         if (w_opcode == 5'b01100) n_wr_cmd++;
-        if (mem.u_dram.data_write === 1'b1) n_commit++;
+        if (`SOC8_MODEL.data_write === 1'b1) n_commit++;
     end
     always @(posedge clk) begin
         if (dut.w_mem_ack === 1'b1) begin
@@ -198,7 +214,7 @@ module tb_soc8_top;
                      dut.u_dram_ctrl.r_addr[10:3], dut.u_dram_ctrl.r_write,
                      dut.w_mem_address, dut.w_mem_write));
         end
-        if (dut.u_dram_ctrl.r_dq_oe === 1'b1 && mem.u_dram.dq_oe === 1'b1) fail("DQ contention");
+        if (dut.u_dram_ctrl.r_dq_oe === 1'b1 && `SOC8_MODEL.dq_oe === 1'b1) fail("DQ contention");
     end
 
     // ----------------------------------------------------- interrupt entries
@@ -271,7 +287,7 @@ module tb_soc8_top;
             if (!ram_known[b]) continue;
             l = b >> 3; idx = l % 8; tg = l >> 3;
             if (dut.u_cache.r_valid[idx] && dut.u_cache.r_tag[idx] == tg) ln = dut.u_cache.r_data[idx];
-            else ln = mem.u_dram.mem[l / 16][l % 16];
+            else ln = `SOC8_MODEL_LINE(l);
             if (ln[(b % 8) * 8 +: 8] !== ram_ref[b]) begin
                 bad++;
                 if (bad <= 5) fail($sformatf("%s: RAM byte %03h = %02h, expected %02h",
@@ -621,3 +637,5 @@ module tb_soc8_top;
         $finish;
     end
 endmodule
+`undef SOC8_MODEL
+`undef SOC8_MODEL_LINE
