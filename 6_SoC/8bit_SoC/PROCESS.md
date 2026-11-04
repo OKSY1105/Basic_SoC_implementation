@@ -14,7 +14,7 @@
 
 ## 지금 이어갈 순서
 
-2026-11-04 현재 1~5는 시뮬레이션 기준으로 마쳤다(통합 Codex 검증 전). 단계별 상태는 [통합 기록](05_integration/README.md)과 [단위 시험 결과](04_unit/README.md)에 있다.
+2026-11-04 현재 1~5는 시뮬레이션 기준으로 마쳤다(통합 Codex 검증 PASS, main 병합). 6은 진행 중이다: 보드용 DRAM 모델과 보드 XDC를 만들었고, 보드 top(MMCM·reset·모델 연결)은 Vivado에서 구성한다. 단계별 상태는 [통합 기록](05_integration/README.md)과 [단위 시험 결과](04_unit/README.md)에 있다.
 
 1. CPU req/ready, DRAM 제어기 완료/재수락, UART FIFO 상태를 공통 시간표로 맞춘다.
 2. BUS의 주소 디코딩·오류 응답과 UART MMIO 어댑터 계약을 정한다. AMBA 채택 여부는 별도 결정한다.
