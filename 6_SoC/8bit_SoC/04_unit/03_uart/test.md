@@ -122,4 +122,4 @@ UART_APB_PASS apb_transfers=12431 tx_bytes=228 rx_bytes=209 irq_sources=3 resets
 - 처음 판의 TB는 "오류 IRQ에서 OVERRUN 제외" 변이를 잡지 못했다(PASS). IRQ_EN 오류 bit를 켠 상태에서 OVERRUN만 단독으로 생기는 경우가 없었기 때문이다. FRAME_ERR 단독도 같은 빈틈이 있었다. 두 경우를 시나리오 8에 넣은 뒤 두 변이 모두 FAIL로 잡혔다.
 - 등가 변이(결과로 구별되지 않음): RX pop·TX push 조건에서 `!w_err`를 빼는 변이. 빈 FIFO의 pop과 가득 찬 FIFO의 push는 FIFO 자체가 무시한다. 다만 TB의 코어 신호 검사는 이 차이도 FAIL로 잡는다.
 
-합성 (WSL Linux Vivado 2024.2, `xc7z020clg400-1` out-of-context, UART 코어 포함, 기본 115200 baud): LUT 217, FF 343, latch 0, 100 MHz WNS +5.76 ns(합성 추정). 경고는 위 `fifo.v` 메모리 구현 방식과 `PREADY` 상수 1뿐이다.
+합성 (WSL Linux Vivado 2024.2, `xc7z020clg400-1` out-of-context, UART 코어 포함, 기본 115200 baud, 2026-11-04 수신 수정 뒤): LUT 219, FF 343, latch 0, 100 MHz WNS +5.76 ns(합성 추정). 수정 전(2026-11-03)에는 LUT 217이었다(이전 `uart_rx.v`로 다시 합성해 확인). 경고는 위 `fifo.v` 메모리 구현 방식과 `PREADY` 상수 1뿐이다.
