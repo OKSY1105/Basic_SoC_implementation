@@ -27,9 +27,10 @@ UART o_irq ── CPU i_irq (level, 처리 루틴 벡터 워드 0x0002)
 vivado -mode batch -nojournal -source scripts/synth_soc8_top.tcl   # 8bit_SoC 폴더 기준, WSL Vivado 2024.2
 ```
 
-- 결과 (2026-11-04, `xc7z020clg400-1`, 10 ns 클록): `SOC8_SYNTH_PASS part=xc7z020clg400-1 lut=988 ff=1025 bram=2 lutram=69 latch=0 loops=0 wns_100mhz=0.459`
+- 결과 (2026-11-04, `xc7z020clg400-1`, 10 ns 클록, UART 수신 수정 `f92f26d` 반영): `SOC8_SYNTH_PASS part=xc7z020clg400-1 lut=994 ff=1025 bram=2 lutram=69 latch=0 loops=0 wns_100mhz=0.459`
+- 수신 수정 전(`ce09fa4`)에는 `lut=988`이었고 나머지 값은 같았다. 이전 `uart_rx.v`로 다시 합성해 988이 그대로 나오는 것을 확인했다.
 - 스크립트는 latch 0과 조합 루프 0(DRC LUTLP-1)을 확인한다. `SOC8_ROM_FILE`이 없으면 채운 의사 난수 ROM 이미지를 만들어 쓴다. 빈 ROM이면 합성이 CPU 대부분을 상수 논리로 지우기 때문이다.
-- 같은 합성 결과를 한 번 배치·배선(opt·place·route, out-of-context, 핀 제약 없음)했을 때 WNS +0.991 ns, TNS 0, WHS +0.077 ns였다. 이 실행은 스크립트에 넣지 않은 1회 측정이다.
+- 수신 수정 전 합성 결과(LUT 988)를 한 번 배치·배선(opt·place·route, out-of-context, 핀 제약 없음)했을 때 WNS +0.991 ns, TNS 0, WHS +0.077 ns였다. 이 실행은 스크립트에 넣지 않은 1회 측정이다.
 - 가장 느린 경로: 캐시 hit 판정(태그 비교) → 버스 `HREADY` → CPU 발행·분기 판단 → 명령 인출 주소 → ROM BRAM 읽기 enable(합성 기준 논리 8단). 데이터 포트 `HREADY`가 같은 클록 안에서 명령 인출 주소를 정하는 구조 때문이다. 보드 단계에서 타이밍이 부족하면 이 경로(예: 캐시 hit 판정을 주소 단계에서 미리 레지스터에 담기)를 먼저 본다.
 
 ## 연결 확인 (2026-11-04)
