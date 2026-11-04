@@ -39,6 +39,19 @@
 | 변경 전 | `tb_error=0 tb_done=1`, `$stop` 795,235 ns |
 | 변경 후 | `tb_error=0 tb_done=1`, `$stop` 795,235 ns (같음). `zybo_uart_top` elaboration PASS |
 
+## 2026-11-04 — 수신 stop bit 판정 시점 수정과 기존 TB 모델 수정
+
+③ 통합 TB(`tb/soc/tb_soc8_top.sv`)의 인터럽트 에코 시험이 연속 바이트에서 한 바이트를 잃었다. 원인과 수정은 [uart.md](../../02_design/uart.md) 코어 변경 절(2026-11-04 항목)에 있다. `uart_rx.v`는 stop bit 중간(tick 10)에서 판정하고 대기 상태로 돌아간다.
+
+- 기존 TB `tb_uart.v`의 NUCLEO 모델은 에코를 보내는 동안 FPGA TX를 듣지 못했다(반이중 모델). 수정 뒤에는 FPGA가 수신을 반 bit 일찍 끝내고 다음 바이트를 보내므로, 모델이 에코의 stop bit를 보내는 중에 FPGA의 start bit가 와서 놓치고 깨진 바이트(A5 → A9)를 되돌려 보냈다. 실제 NUCLEO UART는 송수신이 동시에 되므로, 모델의 송신을 별도 프로세스(`event`)로 옮겼다. 이 모델 수정만으로는 기존 결과가 그대로다(이전 `uart_rx`와 함께 실행: `$stop` 795,235 ns, `tb_error=0`).
+- UART 래퍼 TB에 시나리오 11을 추가했다: 간격 없는 연속 프레임을 송신 클록 정상·2% 빠름·2% 느림으로 FIFO 깊이(16)만큼씩 보내고, 오류 flag 없이 모두 순서대로 읽히는지 본다(`COVER … b2b=48`). 이전 TB의 RX 모델은 프레임마다 idle bit를 하나 넣어 이 경우를 시험하지 않았다.
+
+| 시험 | 결과 (WSL Vivado 2024.2 XSim) |
+|---|---|
+| 기존 TB `tb_uart.v`(모델 수정) | `tb_error=0 tb_done=1`, `$stop` 766,615 ns(수신이 일찍 끝나 28.6 µs 빨라짐) |
+| 보드 예제 `zybo_uart_top` | elaboration PASS |
+| UART 래퍼 TB | 아래 결과 절 |
+
 ## M9 UART APB 래퍼
 
 - 대상: [soc8_uart_apb.v](../../rtl/uart/soc8_uart_apb.v), TB: [tb_soc8_uart_apb.sv](../../tb/uart/tb_soc8_uart_apb.sv)
@@ -65,6 +78,7 @@
   8. IRQ 원인별 발생·해제(RX, TX 빔, parity·frame·overrun 각각 단독)
   9. TX 송신 중·RX 데이터 대기 중 reset
   10. RXD로 120바이트(parity·frame 오류 포함)를 받는 동안 무작위 레지스터 접근
+  11. 간격 없는 연속 프레임 16바이트 × 송신 클록 3종(정상, 2% 빠름, 2% 느림): 오류 flag 없음, 전부 순서대로 수신(2026-11-04 추가)
 - 통과 조건: `FAIL` 줄이 없고, 커버리지 항목이 모두 1 이상이며, `UART_APB_PASS`를 출력한다.
 
 실행 (Windows, 빈 작업 폴더에서. WSL은 `xvlog`·`xelab`·`xsim`):
@@ -77,14 +91,15 @@ xelab.bat --timescale 1ns/1ps tb_soc8_uart_apb -s tb_u
 xsim.bat tb_u -runall
 ```
 
-결과 (2026-11-04, WSL Vivado 2024.2 XSim, `apb_checker` 6번 검사 추가 후):
+결과 (2026-11-04, WSL Vivado 2024.2 XSim, 수신 stop bit 수정과 시나리오 11 추가 후):
 
 ```text
-COVER rx ok=161 empty=2898 write=408 | tx ok=230 full=1642 read=344 | status=2460 st_write=261 | clear=606 clear_read=252 | irq_en w=637 r=988 | unmapped=1492 hsize=1
-COVER irq rx/tx/parity/frame/overrun=1/1/1/1/1 flags oe/pe/fe=1/1/1 resets=1 tx_frames=228 rx_bytes=161
-UART_APB_PASS apb_transfers=12379 tx_bytes=228 rx_bytes=161 irq_sources=3 resets=1
+COVER rx ok=209 empty=2901 write=408 | tx ok=230 full=1642 read=344 | status=2460 st_write=261 | clear=607 clear_read=252 | irq_en w=637 r=988 | unmapped=1492 hsize=1
+COVER irq rx/tx/parity/frame/overrun=1/1/1/1/1 flags oe/pe/fe=1/1/1 resets=1 tx_frames=228 rx_bytes=209 b2b=48
+UART_APB_PASS apb_transfers=12431 tx_bytes=228 rx_bytes=209 irq_sources=3 resets=1
 ```
 
+- 시나리오 11 추가 전(`apb_checker` 6번 검사 추가 후) 결과는 `apb_transfers=12379 rx_bytes=161`이었다. 늘어난 APB 전송 52건은 시나리오 11의 ERROR_CLEAR 쓰기 1, RX_DATA 읽기 48, 빈 RX 읽기(ERROR) 3이다.
 - 2026-11-03 결과는 `apb_transfers=12305 tx_bytes=227`이었다. 검사가 하나 늘면 `$urandom` 시드 배정이 바뀌어 무작위 접근 수가 달라진다. 이전 검사기로 다시 실행하면 2026-11-03 값이 그대로 나온다(2026-11-04 확인). 검사기 변경 내용은 [BUS 단위 검증](../04_bus/test.md) M8 절.
 
 변이 시험(저장소에 반영하지 않은 임시 사본, 최종 TB 기준 모두 PASS 없음):
@@ -102,6 +117,7 @@ UART_APB_PASS apb_transfers=12379 tx_bytes=228 rx_bytes=161 irq_sources=3 resets
 | 오류 IRQ에서 FRAME_ERR 제외 | `FAIL IRQ=0, expected 1` |
 | IRQ_EN 쓰기 bit를 [3:1]로 | `FAIL IRQ=0, expected 1` |
 | 코어: FE 지우기 무시 | `FAIL ERROR_CLEAR 010: flags PE/FE/OE 111, before 111` |
+| 코어: stop bit 판정을 tick 15로 되돌림(2026-11-04 수정 전 동작) | `FAIL back-to-back burst 0: STATUS 71, expected 41 (bit 320.0 ns)` |
 
 - 처음 판의 TB는 "오류 IRQ에서 OVERRUN 제외" 변이를 잡지 못했다(PASS). IRQ_EN 오류 bit를 켠 상태에서 OVERRUN만 단독으로 생기는 경우가 없었기 때문이다. FRAME_ERR 단독도 같은 빈틈이 있었다. 두 경우를 시나리오 8에 넣은 뒤 두 변이 모두 FAIL로 잡혔다.
 - 등가 변이(결과로 구별되지 않음): RX pop·TX push 조건에서 `!w_err`를 빼는 변이. 빈 FIFO의 pop과 가득 찬 FIFO의 push는 FIFO 자체가 무시한다. 다만 TB의 코어 신호 검사는 이 차이도 FAIL로 잡는다.

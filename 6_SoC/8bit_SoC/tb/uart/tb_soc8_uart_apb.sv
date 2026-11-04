@@ -16,6 +16,8 @@
 //     APB writes; directed rise and fall per source (RX, TX empty, parity,
 //     frame and overrun errors each alone).
 //   - ERROR_CLEAR clears exactly the written flags; reset clears all state.
+//   - Back-to-back RX frames (no idle bit) with the sender clock nominal,
+//     2% fast and 2% slow: every byte received, no error flag.
 //   - SVA: APB master rules and the bridge AHB response rules.
 // Prints UART_APB_PASS only if no check failed and every coverage count is
 // at least 1.
@@ -188,6 +190,24 @@ module tb_soc8_uart_apb;
         rxd <= !bad_stop; repeat (BIT) @(posedge clk);
         rxd <= 1'b1; repeat (BIT) @(posedge clk);
         if (keep) rx_expect.push_back(d);
+    endtask
+
+    // RXD driver for back-to-back frames (no idle bit between them) from a
+    // sender whose bit time is bit_ns (32 clocks = 320 ns is nominal), so the
+    // sender clock can be faster or slower than the receiver's.
+    int unsigned n_b2b = 0;
+    task automatic send_burst(input int unsigned n, input real bit_ns);
+        for (int i = 0; i < n; i++) begin
+            logic [7:0] d;
+            d = 8'($urandom);
+            rxd = 1'b0; #(bit_ns);
+            for (int j = 0; j < 8; j++) begin rxd = d[j]; #(bit_ns); end
+            rxd = ^d; #(bit_ns);
+            rxd = 1'b1; #(bit_ns);
+            rx_expect.push_back(d);
+            n_b2b++;
+        end
+        #(bit_ns);
     endtask
 
     // TXD monitor: samples mid-bit, checks parity and stop.
@@ -436,6 +456,22 @@ module tb_soc8_uart_apb;
         do acc(RX, 1'b0, 8'h00, r, rd); while (!r);
         tx_drain();
 
+        // 11. Back-to-back frames (no idle bit) from a sender with a nominal,
+        //     2% fast and 2% slow clock: DEPTH bytes each, no error flag, all
+        //     bytes read back in order (final check against rx_expect).
+        ok(EC, 1'b1, 8'h38);
+        for (int s = 0; s < 3; s++) begin
+            real bt;
+            bt = (s == 0) ? 320.0 : (s == 1) ? 320.0 / 1.02 : 320.0 / 0.98;
+            send_burst(DEPTH, bt);
+            wait_cycles(BIT);
+            v = {1'b0, c_thre, c_pe, c_fe, c_oe, !c_temt, c_full, c_dr};
+            if (v !== 8'h41)
+                fail($sformatf("back-to-back burst %0d: STATUS %h, expected 41 (bit %0.1f ns)", s, v, bt));
+            for (int i = 0; i < DEPTH; i++) ok(RX, 1'b0, 8'h00);
+            err(RX, 1'b0, 8'h00);
+        end
+
         // Final checks.
         if (!same(tx_seen, tx_written))
             fail($sformatf("TXD bytes (%0d) differ from TX_DATA writes (%0d)", tx_seen.size(), tx_written.size()));
@@ -468,13 +504,13 @@ module tb_soc8_uart_apb;
                  n_st_wr && n_ec && n_ec_rd && n_ie_wr && n_ie_rd && n_unmapped && n_hsize &&
                  n_irq_rx && n_irq_tx && n_irq_err && n_irq_fe && n_irq_oe &&
                  n_oe && n_pe && n_fe && n_resets &&
-                 n_tx_fill == DEPTH + 1;
+                 n_tx_fill == DEPTH + 1 && n_b2b == 3 * DEPTH;
         $display("COVER rx ok=%0d empty=%0d write=%0d | tx ok=%0d full=%0d read=%0d | status=%0d st_write=%0d | clear=%0d clear_read=%0d | irq_en w=%0d r=%0d | unmapped=%0d hsize=%0d",
                  n_rx_ok, n_rx_empty, n_rx_wr, n_tx_ok, n_tx_full, n_tx_rd, n_st, n_st_wr,
                  n_ec, n_ec_rd, n_ie_wr, n_ie_rd, n_unmapped, n_hsize);
-        $display("COVER irq rx/tx/parity/frame/overrun=%0d/%0d/%0d/%0d/%0d flags oe/pe/fe=%0d/%0d/%0d resets=%0d tx_frames=%0d rx_bytes=%0d",
+        $display("COVER irq rx/tx/parity/frame/overrun=%0d/%0d/%0d/%0d/%0d flags oe/pe/fe=%0d/%0d/%0d resets=%0d tx_frames=%0d rx_bytes=%0d b2b=%0d",
                  n_irq_rx, n_irq_tx, n_irq_err, n_irq_fe, n_irq_oe, n_oe, n_pe, n_fe, n_resets,
-                 n_tx_frames, rx_read.size());
+                 n_tx_frames, rx_read.size(), n_b2b);
         if (!cov_ok) fail("coverage count below 1 (see COVER lines)");
 
         if (fails == 0)

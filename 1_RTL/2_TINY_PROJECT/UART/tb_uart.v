@@ -234,6 +234,15 @@ endtask
 // ============================================================
 // FPGA TX -> NUCLEO RX -> Echo
 // ============================================================
+// The receiver hands each byte to a separate sender process, as a real
+// full-duplex UART does, so it keeps listening while the echo is still being
+// sent: the FPGA may start its next byte before the echo's stop bit ends.
+
+reg [DATA_BIT-1:0] nucleo_echo_data;
+event              nucleo_echo_ev;
+
+always @(nucleo_echo_ev)
+    nucleo_send_byte(nucleo_echo_data);
 
 initial begin
 
@@ -306,10 +315,9 @@ initial begin
                 tb_error = 1'b1;
 
 
-            // 받은 데이터 Echo
-            nucleo_send_byte(
-                nucleo_rx_data
-            );
+            // 받은 데이터 Echo (sender process above)
+            nucleo_echo_data = nucleo_rx_data;
+            -> nucleo_echo_ev;
 
         end
 
