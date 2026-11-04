@@ -1,6 +1,6 @@
 # BUS 설계 과제 — 구현 중
 
-재사용 BUS 원본 개발 위치는 [1_RTL BUS](../../../1_RTL/2_TINY_PROJECT/BUS)이며, SoC별 주소 디코더/어댑터는 [rtl/bus](../rtl/bus), 통합 시험은 [tb/bus](../tb/bus)에 둔다. 데이터 포트 디코더·응답 선택기·기본 slave(M6)는 [soc8_ahb_bus.v](../rtl/bus/soc8_ahb_bus.v)에, ROM(M5)은 [soc8_rom.v](../rtl/rom/soc8_rom.v)에, AHB→APB3 브리지(M8)는 공용 [ahb_apb_bridge.v](../../../1_RTL/2_TINY_PROJECT/BUS/ahb_apb_bridge.v)에, UART APB 래퍼(M9)는 [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)에 구현했다. SoC top은 아직 없다.
+재사용 BUS 원본 개발 위치는 [1_RTL BUS](../../../1_RTL/2_TINY_PROJECT/BUS)이며, SoC별 주소 디코더/어댑터는 [rtl/bus](../rtl/bus), 통합 시험은 [tb/bus](../tb/bus)에 둔다. 데이터 포트 디코더·응답 선택기·기본 slave(M6)는 [soc8_ahb_bus.v](../rtl/bus/soc8_ahb_bus.v)에, ROM(M5)은 [soc8_rom.v](../rtl/rom/soc8_rom.v)에, AHB→APB3 브리지(M8)는 공용 [ahb_apb_bridge.v](../../../1_RTL/2_TINY_PROJECT/BUS/ahb_apb_bridge.v)에, UART APB 래퍼(M9)는 [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)에 구현했다. 이 모듈들은 SoC top [soc8_top.v](../rtl/soc/README.md)에서 연결한다(2026-11-04).
 
 ## 결정 — 2026-10-30
 

@@ -1,6 +1,6 @@
 # SoC top — `soc8_top.v`
 
-③ 통합 1단계(2026-11-04)에서 구현했다. 모듈 검증(VR-003~VR-010)을 통과한 모듈을 연결한다. 통합 TB는 다음 단계에서 `tb/soc/`에 만들고 [통합 기준](../../05_integration/README.md)으로 검증한다.
+③ 통합 1단계(2026-11-04)에서 구현했다. 모듈 검증(VR-003~VR-010)을 통과한 모듈을 연결한다. 통합 TB는 [`tb/soc`](../../tb/soc/README.md)에 있고, [통합 기준](../../05_integration/README.md) I01~I03을 시뮬레이션에서 통과했다.
 
 ```text
 CPU 명령 포트 ── ROM 포트 A (점대점, 16bit)
@@ -36,4 +36,4 @@ vivado -mode batch -nojournal -source scripts/synth_soc8_top.tcl   # 8bit_SoC �
 
 - `soc8_top`과 `soc8_dram_model`의 xvlog·xelab elaboration은 경고 없이 통과했다.
 - 저장소 밖 임시 smoke 시험: ROM 프로그램이 RAM 0x8000·0x8040(같은 캐시 index)에 쓰고 0x8000을 다시 읽은 뒤 UART TX_DATA로 보내고 HALT했다. fault 없음, 읽은 값 0x5A, 캐시 접근 3·miss 3·write-back 2, 버스 오류 0, DRAM 모델에 두 줄이 write-back되었고, UART TX 줄에서 0x5A(parity·stop 정상)를 받았다.
-- 판정을 갖춘 통합 TB는 [`tb/soc`](../../tb/soc/README.md)에 있다(③ 통합 2단계, I01·I02 시뮬레이션 PASS).
+- 판정을 갖춘 통합 TB는 [`tb/soc`](../../tb/soc/README.md)에 있다(③ 통합 2·3단계, I01~I03 시뮬레이션 PASS).
