@@ -1,6 +1,9 @@
 `timescale 1ns / 1ps
 // Line-port test for dram_controller with the behavioral model ../DRAM/dram.v.
-// Compile this file, dram_controller.v and ../DRAM/dram.v.
+// Compile this file, dram_controller.v and ../DRAM/dram.v (or, with
+// -d DRAM_BRAM_MODEL, ../DRAM/dram_bram_model.v: the board model). With
+// both models and -d DRAM_MODEL_MATCH, the board model also runs beside
+// dram.v and is compared with it (see the DRAM_MODEL_MATCH block).
 // Tops: tb_dram_line (CL=9, CWL=10, tRCD=9) and tb_dram_line_alt (10/11/12).
 // Reference: 256 lines x 64 bit, preloaded into the model array (as in
 // tb_dram_controller) so that every line has a known nonzero value.
@@ -52,9 +55,22 @@ module tb_dram_line #(
         .o_dram_ba(ba), .o_dram_a(a), .io_dram_dq(dq),
         .io_dram_dqs_t(dqs_t), .io_dram_dqs_c(dqs_c));
 
+`ifdef DRAM_BRAM_MODEL
+    // Board model (see tb_dram_controller.v): split DQ on the same net.
+    wire [7:0] model_dq;
+    wire model_dq_oe;
+    dram_bram_model memory_model (
+        .i_clk(clk), .i_ck_t(ck_t), .i_ck_c(ck_c), .i_cke(cke), .i_csn(csn),
+        .i_actn(actn), .i_bg(bg), .i_ba(ba), .i_a(a), .i_dq(dq),
+        .o_dq(model_dq), .o_dq_oe(model_dq_oe), .i_dqs_t(dqs_t), .i_dqs_c(dqs_c));
+    assign dq = model_dq_oe ? model_dq : 8'bz;
+    `define TBL_MODEL_WORD(r, c) memory_model.mem[(r) * 16 + (c)]   // mem[{row, column}]
+`else
     dram memory_model (
         .ck_t(ck_t), .ck_c(ck_c), .cke(cke), .csn(csn), .actn(actn),
         .bg(bg), .ba(ba), .a(a), .dq(dq), .dqs_t(dqs_t), .dqs_c(dqs_c));
+    `define TBL_MODEL_WORD(r, c) memory_model.mem[r][c]
+`endif
 
     reg [63:0] ref_line [0:255];
     int unsigned fails = 0;
@@ -87,8 +103,38 @@ module tb_dram_line #(
             fail("DQS driven without the controller's DQS enable");
     end
 
+`ifdef DRAM_MODEL_MATCH
+    // Side-by-side check (compile dram.v and dram_bram_model.v with
+    // -d DRAM_MODEL_MATCH): the board model watches the same pins as dram.v,
+    // drives nothing, and must give the same read DQ enable and data in every
+    // clock and the same array and CL/CWL at the end.
+    wire [7:0] shadow_dq;
+    wire shadow_dq_oe;
+    dram_bram_model shadow (
+        .i_clk(clk), .i_ck_t(ck_t), .i_ck_c(ck_c), .i_cke(cke), .i_csn(csn),
+        .i_actn(actn), .i_bg(bg), .i_ba(ba), .i_a(a), .i_dq(dq),
+        .o_dq(shadow_dq), .o_dq_oe(shadow_dq_oe), .i_dqs_t(dqs_t), .i_dqs_c(dqs_c));
+    int unsigned n_match_clk = 0, n_match_data = 0;
+    always @(negedge clk) if (memory_model.dq_oe === 1'b0 || memory_model.dq_oe === 1'b1) begin
+        n_match_clk++;
+        if (shadow_dq_oe !== memory_model.dq_oe)
+            fail($sformatf("board model DQ enable %b, dram.v %b", shadow_dq_oe, memory_model.dq_oe));
+        else if (shadow_dq_oe && shadow_dq !== dq)
+            fail($sformatf("board model read DQ %h, dram.v %h", shadow_dq, dq));
+        else if (shadow_dq_oe) n_match_data++;
+    end
+    task automatic check_shadow();
+        for (int l = 0; l < 256; l++)
+            if (shadow.mem[l] !== memory_model.mem[l / 16][l % 16])
+                fail($sformatf("board model line %02h = %h, dram.v %h", l,
+                     shadow.mem[l], memory_model.mem[l / 16][l % 16]));
+        if (shadow.tCL !== memory_model.tCL || shadow.tCWL !== memory_model.tCWL)
+            fail("board model CL/CWL differ");
+    endtask
+`endif
+
     function automatic logic [63:0] model_line(input logic [7:0] l);
-        return memory_model.mem[l[7:4]][l[3:0]];
+        return `TBL_MODEL_WORD(l[7:4], l[3:0]);
     endfunction
 
     task automatic check_all_lines(input string what);
@@ -238,7 +284,10 @@ module tb_dram_line #(
                 b = l * 8 + k;
                 ref_line[l][k*8 +: 8] = 8'((b * 37) ^ (b >> 3) ^ (b >> 8) ^ 8'h5a);
             end
-        for (int l = 0; l < 256; l++) memory_model.mem[l / 16][l % 16] = ref_line[l];
+        for (int l = 0; l < 256; l++) `TBL_MODEL_WORD(l / 16, l % 16) = ref_line[l];
+`ifdef DRAM_MODEL_MATCH
+        for (int l = 0; l < 256; l++) shadow.mem[l] = ref_line[l];
+`endif
 
         repeat (4) @(negedge clk);
         rst_n = 1'b1;
@@ -272,6 +321,10 @@ module tb_dram_line #(
         reset_line_write(1'b1, 200, 8'hEE);
         reset_line_read(8'h33);
         if (n_wr != n_commit) fail($sformatf("WR commands %0d, commits %0d", n_wr, n_commit));
+`ifdef DRAM_MODEL_MATCH
+        check_shadow();
+        $display("MODEL_MATCH clocks=%0d read_dq_samples=%0d lines=256", n_match_clk, n_match_data);
+`endif
 
         if (!(n_pairs && n_rst_cancel && n_rst_drain >= 2 && n_rst_read && lat_n[0] && lat_n[1] && lat_n[2] && lat_n[3]))
             fail("coverage count below 1");
@@ -293,6 +346,7 @@ module tb_dram_line #(
         $finish;
     end
 endmodule
+`undef TBL_MODEL_WORD
 
 module tb_dram_line_alt;
     tb_dram_line #(.T_RCD_CYCLES(12), .CL_CYCLES(10), .CWL_CYCLES(11)) test();

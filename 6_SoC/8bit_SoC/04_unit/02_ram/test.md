@@ -81,3 +81,41 @@ xsim.bat tb_cache_dram -runall
 - 처음 판의 줄 쓰기 표시 레지스터 `r_line`은 쓰이지 않는 로직이어서 제거했다. 줄 쓰기는 READ 상태를 지나지 않기 때문이다. 제거 뒤 다섯 TB를 다시 실행해 수치가 같음을 확인했다.
 
 합성 (WSL Linux Vivado 2024.2, `dram_controller_core`, `xc7z020clg400-1` out-of-context): LUT 335, FF 155, F7 MUX 8, 3상태 셀 0, latch 0, 100 MHz WNS +3.70 ns(합성 추정).
+
+## 2026-11-04 — M4: 보드용 BRAM DRAM 모델
+
+변경: 보드용 모델 [`dram_bram_model.v`](../../../../1_RTL/2_TINY_PROJECT/DRAM/dram_bram_model.v)를 추가했다(규칙은 [DRAM README](../../../../1_RTL/2_TINY_PROJECT/DRAM/README.md)의 보드용 모델 절). 제어기 TB 두 개에 모델 선택(`-d DRAM_BRAM_MODEL`)을, `tb_dram_line.sv`에 두 모델 나란히 비교(`-d DRAM_MODEL_MATCH`)를 추가했다. 정의 없이 컴파일하면 이전과 같은 시험이다(모델 배열 접근만 매크로를 거친다).
+
+결과 (WSL Vivado 2024.2 XSim, `scripts/run_dram_models_tb.sh`, `RESULT status=0`):
+
+| TB | `dram.v` | `dram_bram_model.v` |
+|---|---|---|
+| `tb_dram_controller` | `DRAM_CONTROLLER_PASS: CL=9 CWL=10 tRCD=9 checks=30833 completions=4121 RD=4124 WR=2060 commits=2060`, 종료 6,187,690 ns(이전 기록과 같음) | 수치·종료 시각 모두 같음 |
+| `tb_dram_controller_alt` | `DRAM_CONTROLLER_PASS: CL=10 CWL=11 tRCD=12 ...`(같은 수치), 종료 7,177,130 ns | 수치·종료 시각 모두 같음 |
+| `tb_dram_line` | `DRAM_LINE_PASS ... completions=2089 RD=1296 WR=1001 commits=1001`(이전 기록과 같음) | `DRAM_LINE_PASS ... completions=2075 RD=1306 WR=1032 commits=1032`. 지연 줄 읽기 94~95, 줄 쓰기 106~107, 바이트 읽기 94, 바이트 쓰기 202클록(같음) |
+| `tb_dram_line_alt` | `DRAM_LINE_PASS ... completions=2087 RD=1288 WR=1038 commits=1038` | `DRAM_LINE_PASS ... completions=2082 RD=1323 WR=984 commits=984`. 지연 110~111 / 122~123 / 110 / 234클록(같음) |
+
+- 무작위가 없는 바이트 포트 TB는 두 모델에서 수치와 종료 시각이 ns까지 같다.
+- 줄 포트 TB의 명령 수 차이: 모델 파일이 바뀌면 프로세스 수가 달라져 XSim의 프로세스별 `$urandom` 시드 배정이 바뀐다. 그래서 무작위 요청열 자체가 다르다. 정의 없는 기본 빌드는 이전 기록과 같은 수치이므로 TB 변경이 기존 시험을 바꾸지 않았다. 무작위 경로의 동작 일치는 아래 나란히 비교로 판정한다.
+- 나란히 비교(`DRAM_MODEL_MATCH`, 행동 모델이 핀을 구동하고 보드용 모델이 같은 핀을 본다): `tb_dram_line` `MODEL_MATCH clocks=235481 read_dq_samples=20864 lines=256`, `tb_dram_line_alt` `MODEL_MATCH clocks=271769 read_dq_samples=21024 lines=256`, 둘 다 `DRAM_LINE_PASS`. 매 클록 읽기 DQ enable이 같고, enable 동안 데이터가 같으며, 끝에서 배열 256줄과 CL/CWL이 같다.
+
+변이 시험(임시 사본, 보드용 모델로 실행, 모두 FAIL):
+
+| 변이 | 첫 FAIL |
+|---|---|
+| CK high 첫 클록의 카운트 보정(`cnt + 1`) 제거 | `FAIL line read 00 = 39b1cbb42b6982zz, expected 3917cbb12bb48269` |
+| 첫 beat의 짝수·홀수 바이트 뒤바꿈 | `FAIL line read 00 = 3917cbb12bb46982, expected 3917cbb12bb48269` |
+| 쓰기 DQS_t·DQS_c 검출 뒤바꿈 | `FAIL line write 00 not in the model` |
+| ACT의 행 주소 무시 | `FAIL line write 10 not in the model` |
+| MR0의 CL 설정 무시(9 고정, `tb_dram_line_alt`) | `FAIL line read 00 = zzzz86ffa26f47be, expected 86ffa26f47be4367` |
+
+합성 (WSL Vivado 2024.2, `scripts/synth_dram_bram.tcl`, 제어기 core + 보드용 모델 out-of-context, `xc7z020clg400-1`): `DRAM_BRAM_SYNTH_PASS` 전체 LUT 411, FF 240, BRAM 1(RAMB36E1), 모델만 LUT 81, FF 87, BRAM 1, latch 0, loop 0, 100 MHz WNS +3.367 ns(합성 추정, 최악 경로는 core 내부 `r_cycle` → `r_burst`).
+
+- 처음 판은 배열을 `dram.v`와 같은 2차원 `mem[15:0][15:0]`으로 두었다. Vivado가 원소마다 "not inferred as ram due to incorrect usage"를 내고 레지스터로 풀었고, 스크립트의 BRAM 검사가 합성을 중단시켰다. 1차원 `mem[{row, col}]`으로 바꾸었고 TB는 매크로로 접근한다.
+
+실행 (WSL, 저장소 루트 기준):
+
+```sh
+bash 6_SoC/8bit_SoC/scripts/run_dram_models_tb.sh /tmp/dram_models_tb
+SOC8_SYNTH_BUILD=/tmp/dram_bram_synth vivado -mode batch -nojournal -source 6_SoC/8bit_SoC/scripts/synth_dram_bram.tcl
+```

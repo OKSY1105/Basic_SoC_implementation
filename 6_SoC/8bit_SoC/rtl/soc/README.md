@@ -18,7 +18,7 @@ UART o_irq ── CPU i_irq (level, 처리 루틴 벡터 워드 0x0002)
 | 클록 | `i_clk` 하나. 보드에서는 보드 top의 MMCM이 125 MHz 입력으로 100 MHz를 만든다. PCLK = HCLK, DRAM CK = `i_clk` / 4 |
 | reset | `i_rst_n`(비동기, active low; 보드에서는 버튼 AND MMCM locked) → `reset_sync` → 모든 모듈. CPU·DRAM 제어기는 동기식, 나머지는 비동기식으로 받는다. 동기화된 reset은 `o_rst_n`으로도 낸다 |
 | UART | `i_uart_rxd`·`o_uart_txd`(8E1). 보드 연결은 [계산기 통신 규약](../../02_design/calculator.md) 1절 |
-| DRAM 핀 | 제어기 core의 분리 DQ/DQS(출력·출력 enable·입력, 3상태 없음). 시뮬레이션은 [`sim/models/soc8_dram_model.v`](../../sim/models/soc8_dram_model.v)(3상태 + 동작 모델 `dram.v`), 보드는 BRAM 기반 합성 가능 모델(M4)을 붙인다. 캐시는 64bit 줄 요청만 쓰며 줄 번호 = RAM 바이트 주소 `[10:3]`이다 |
+| DRAM 핀 | 제어기 core의 분리 DQ/DQS(출력·출력 enable·입력, 3상태 없음). 시뮬레이션은 [`sim/models/soc8_dram_model.v`](../../sim/models/soc8_dram_model.v)(3상태 + 동작 모델 `dram.v`), 보드는 BRAM 기반 합성 가능 모델 [`dram_bram_model.v`](../../../../1_RTL/2_TINY_PROJECT/DRAM/dram_bram_model.v)(M4)를 붙인다. 캐시는 64bit 줄 요청만 쓰며 줄 번호 = RAM 바이트 주소 `[10:3]`이다 |
 | 디버그 출력 | CPU halt·fault·fault 코드·PC, IRQ·처리 루틴 실행 중, DRAM 초기화 완료, 캐시 접근·miss·write-back 수, 기본 slave 오류 주소·횟수(보드에서 ILA로 본다) |
 
 ## 합성 (out-of-context)

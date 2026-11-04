@@ -83,3 +83,21 @@ always @(posedge ck_t)
 | `data_write = 1` | 채집통(`mem`)에 털어 넣음 (실제 기록) |
 ## 코드
 [dram.v](dram.v) 참고
+
+## 보드용 모델 `dram_bram_model.v` (2026-11-04)
+
+`dram.v`는 3상태 DQ와 DQS 에지 클록을 쓰는 시뮬레이션 전용 모델이라 FPGA에 올릴 수 없다. Zybo Z7-20의 DDR3는 PS 전용이어서 직접 만든 제어기가 구동할 수 없으므로, 보드에서는 [dram_bram_model.v](dram_bram_model.v)를 FPGA 안에 두고 `dram_controller_core`에 바로 연결한다.
+
+| 항목 | `dram.v` | `dram_bram_model.v` |
+|---|---|---|
+| 클록 | CK 상승(`posedge ck_t`), DQS 상승 | 시스템 클록 `i_clk` 하나. CK·DQS 핀을 `i_clk`로 표본화해 상승을 검출한다(같은 에지를 1 `i_clk` 늦게 본다) |
+| 저장 | `mem[row][col]` 레지스터 배열 | BRAM, `mem[{row, col}]` 256워드 × 64bit (2차원 배열은 Vivado가 BRAM으로 추론하지 않는다) |
+| DQ | inout(3상태) | 입력 `i_dq`, 출력 `o_dq`·`o_dq_oe` |
+| 읽기 DQS | `ck_t`·`ck_c`를 그대로 낸다 | 내지 않는다(제어기 core는 CK의 고정 위상에서 읽는다) |
+| 명령·지연 | ACT/RD/WR/MRS, CL 9·10(MR0), CWL 10·11(MR2), 마지막 쓰기 바이트 뒤 CK 2에지에 배열 기록 | 같다 |
+| 초기값 | X | 0(FPGA 구성 때) |
+| 사용 조건 | — | CK = `i_clk` / 4(제어기 규칙: 2클록 high, 2클록 low) |
+
+- 쓰기: DQS 상승을 검출한 `i_clk` 끝에서 DQ 바이트를 받는다. 바이트 위치는 위 표와 같다.
+- 읽기: 카운트가 CL~CL+3인 동안 DQ를 낸다. CK high 첫 `i_clk`에서는 카운트가 그 클록 끝에 갱신되므로 `cnt + 1`을 쓴다. CK high 동안 짝수 바이트, low 동안 홀수 바이트를 내고, 제어기는 CK 에지 1/4주기 뒤에 읽는다.
+- 시험: 제어기 TB 두 개를 `-d DRAM_BRAM_MODEL`로 이 모델에서 실행하고, `-d DRAM_MODEL_MATCH`로 `dram.v` 옆에서 매 클록 비교한다([DRAM 제어기 README](../DRAM_CONTEOLLER/README.md), 결과는 [SoC RAM 단위 검증](../../../6_SoC/8bit_SoC/04_unit/02_ram/test.md)).
