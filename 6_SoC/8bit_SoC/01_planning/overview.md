@@ -21,4 +21,4 @@ STM32 LCD 표시 ← STM32 UART RX ← FPGA UART TX ← 계산 결과
 | UART | 115200 bps, 8E1. PC 터미널·STM32도 같은 설정(2026-11-04) |
 | 통신 규약 | 줄 단위 ASCII 요청·응답과 오류 응답 — [계산기 통신 규약](../02_design/calculator.md)(2026-11-04) |
 
-계산기 ROM 프로그램·SoC top·STM32 펌웨어는 후속 구현이다. 요청·응답 형식, 음수 나눗셈의 몫·나머지 부호, 0으로 나누기와 잘못된 입력의 응답은 [계산기 통신 규약](../02_design/calculator.md)에 정했다. RAM은 데이터 캐시 + 직접 만든 DRAM 제어기 구조다([RAM](../02_design/ram.md)).
+SoC top과 계산기 ROM 프로그램은 구현해 시뮬레이션에서 통과했다(2026-11-04, [통합 기록](../05_integration/README.md)). PC 도구·STM32 펌웨어와 보드 구현은 후속 단계다. 요청·응답 형식, 음수 나눗셈의 몫·나머지 부호, 0으로 나누기와 잘못된 입력의 응답은 [계산기 통신 규약](../02_design/calculator.md)에 정했다. RAM은 데이터 캐시 + 직접 만든 DRAM 제어기 구조다([RAM](../02_design/ram.md)).

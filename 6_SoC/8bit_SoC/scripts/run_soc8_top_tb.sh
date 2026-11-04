@@ -6,8 +6,8 @@
 # Steps: assemble tb/soc/programs/*.asm, compile with the AHB/APB/CPU SVA
 # checkers, run two snapshots:
 #   fast  BAUD=3125000 (32 clocks per bit), FULL=1: all tests
-#   real  BAUD=115200, FULL=0: ram_basic and uart_echo_irq (8 bytes, sender
-#         clock nominal and 1.5% fast)
+#   real  BAUD=115200, FULL=0: ram_basic, uart_echo_irq (8 bytes, sender
+#         clock nominal and 1.5% fast) and calc without the random lines
 # Exit status 0 only if both logs have SOC8_TOP_PASS and no line starting
 # with FAIL.
 set -u
