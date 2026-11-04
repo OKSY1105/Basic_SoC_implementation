@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Assembler for the documented 20-instruction CPU8 ISA; no dependencies.
 Directives: .org ADDR, .word VALUE, .equ NAME, VALUE. Immediates take a
-number, a .equ name or a character literal 'c'."""
+number, a .equ name defined on an earlier line or a character literal 'c'."""
 import argparse,re
 from pathlib import Path
 
@@ -25,10 +25,14 @@ def register(s):
     if not re.fullmatch(r"R[0-3]",s.upper()):raise ValueError("register must be R0..R3: "+s)
     return int(s[-1])
 def assemble(text):
-    labels={};consts={};rows=[];pc=0
-    # Immediates, .org and .word take a number, a character or a .equ name.
-    def value(s):
-        return consts[s] if s in consts else number(s)
+    labels={};consts={};defined={};rows=[];pc=0
+    # Immediates, .org and .word take a number, a character or a .equ name
+    # defined on an earlier line.
+    def value(s,line_no):
+        if s in consts:
+            if defined[s]>=line_no:raise ValueError(f".equ {s} used before its definition")
+            return consts[s]
+        return number(s)
     for line_no,line in enumerate(text.splitlines(),1):
         line=line.split(";",1)[0].strip()
         if not line:continue
@@ -45,12 +49,13 @@ def assemble(text):
             if len(args)!=2 or not re.fullmatch(r"[A-Za-z_]\w*",args[0]) or \
                args[0] in consts or re.fullmatch(r"[Rr][0-3]",args[0]):
                 raise ValueError(f"line {line_no}: .equ takes a new name and a value")
-            try:consts[args[0]]=value(args[1])
+            try:consts[args[0]]=value(args[1],line_no)
             except ValueError as e:raise ValueError(f"line {line_no}: {e}") from e
+            defined[args[0]]=line_no
             continue
         if head==".ORG":
             if len(args)!=1:raise ValueError(".org takes one word address")
-            pc=value(args[0])
+            pc=value(args[0],line_no)
             if not 0<=pc<=65535:raise ValueError(".org out of range")
             continue
         rows.append((pc,head,args,line_no));pc+=1
@@ -63,7 +68,7 @@ def assemble(text):
             rd=0;operand=0
             if op==".WORD":
                 if len(a)!=1:raise ValueError(".word takes one value")
-                word=value(a[0])
+                word=value(a[0],line_no)
                 if not 0<=word<=65535:raise ValueError("word out of range")
             else:
                 if op not in OPS:raise ValueError("unknown opcode "+op)
@@ -74,12 +79,12 @@ def assemble(text):
                     rd=register(a[0]);operand=register(a[1])
                 elif op=="LDI":
                     if len(a)!=2:raise ValueError("register and imm8 required")
-                    rd=register(a[0]);operand=value(a[1])
+                    rd=register(a[0]);operand=value(a[1],line_no)
                     if not -128<=operand<=255:raise ValueError("imm8 out of range")
                     operand&=255
                 elif op in {"LDXL","LDXH"}:
                     if len(a)!=1:raise ValueError("one imm8 required")
-                    operand=value(a[0])
+                    operand=value(a[0],line_no)
                     if not 0<=operand<=255:raise ValueError("X byte out of range")
                 elif op in {"LD","ST"}:
                     if len(a)!=2:raise ValueError("register and [X] required")
@@ -91,7 +96,7 @@ def assemble(text):
                     if a[0] in labels:
                         operand=(labels[a[0]]-(pc+1))&65535
                         if operand>=32768:operand-=65536
-                    else:operand=value(a[0])
+                    else:operand=value(a[0],line_no)
                     if not -128<=operand<=127:raise ValueError("rel8 branch out of range")
                     operand&=255
                 word=(OPS[op]<<10)|(rd<<8)|operand
