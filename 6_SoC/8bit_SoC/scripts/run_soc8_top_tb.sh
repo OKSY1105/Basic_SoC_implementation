@@ -21,7 +21,7 @@ V=${VIVADO_BIN:-/home/sean/Vivado/2024.2/bin}
 B=${1:-/tmp/soc8_top_tb}
 
 rm -rf "$B" && mkdir -p "$B/programs" && cd "$B" || exit 1
-for f in "$S8"/tb/soc/programs/*.asm; do
+for f in "$S8"/tb/soc/programs/*.asm "$S8"/firmware/*.asm; do
     python3 -I "$C/TOOLS/cpu8_asm.py" "$f" -o "$B/programs/$(basename "$f" .asm).mem" || exit 1
 done
 "$V/xvlog" "$U/baud_rate_gen.v" "$U/fifo.v" "$U/uart_rx.v" "$U/uart_tx.v" "$U/uart_top.v" \
