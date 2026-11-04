@@ -31,4 +31,4 @@ CPU는 기본 데모, RAM은 기본·대체 타이밍 self-check를 실행한다
 
 `cpu`, `ram`, `uart` 중 하나를 선택한다. 생성된 프로젝트는 `build/vivado_<블록>/` 아래에 있으며 자동 Run Simulation/합성/보드 programming은 하지 않는다. GUI에서 simulation top을 확인하고 Run Behavioral Simulation을 실행한다.
 
-최종 보드/FPGA part·입력 클록·핀·전압·baud는 실물 통합 전에 확인한다. 기존 Zybo XDC는 보드 예제로 보관한다. [공용 원본 복원 기록](migration.md)을 참고한다.
+보드 조건(2026-11-04 결정): Digilent Zybo Z7-20, part `xc7z020clg400-1`. 보드 PL 입력 클록은 125 MHz(K17)이며 SoC 보드 top의 MMCM으로 설계 클록 100 MHz를 만든다. reset은 버튼 AND MMCM locked를 `reset_sync`에 넣는다. UART는 115200 bps 8E1이다. 핀·전압은 FPGA 단계에서 XDC로 정한다. 기존 Zybo XDC(125 MHz, UART_LED 예제)는 보드 예제로 보관한다. [공용 원본 복원 기록](migration.md)을 참고한다.

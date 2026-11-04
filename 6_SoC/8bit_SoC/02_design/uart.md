@@ -36,4 +36,4 @@ CPU 쪽 연결은 APB 래퍼(M9) [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)�
 - reset: FIFO·flag 비움, IRQ_EN=0, `o_irq`=0.
 - 시험: [04_unit/03_uart/test.md](../04_unit/03_uart/test.md) M9 절.
 
-PC→FPGA RX와 FPGA TX→STM32 RX의 물리 연결, 공통 GND·레벨·최종 baud를 확인한다. 추가 양방향 통신이나 UART 인스턴스 수는 핀/통신 요구를 보고 결정한다. 패킷 문법·체크섬·시간초과·오류 응답은 후속 명세다.
+보드 연결과 설정(2026-11-04 결정): UART 인스턴스는 1개다. PC TX → FPGA RXD이고, FPGA TXD 한 선을 STM32 RX와 PC RX에 함께 연결한다. 115200 bps, 8E1, 3.3 V 레벨, 공통 GND다. 설계 클록 100 MHz에서 16배 오버샘플 분주는 54(실제 115,741 bps, +0.47%)다. Zybo Z7-20의 보드 USB-UART는 PS 쪽이므로 PC는 PL 핀의 외부 USB-UART 변환기로 연결하며, 핀은 FPGA 단계에서 정한다. 요청·응답 형식과 오류 응답은 [계산기 통신 규약](calculator.md)에 있다.
