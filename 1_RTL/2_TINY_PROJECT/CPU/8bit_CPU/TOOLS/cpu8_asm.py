@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Assembler for the documented 20-instruction CPU8 ISA; no dependencies."""
+"""Assembler for the documented 20-instruction CPU8 ISA; no dependencies.
+Directives: .org ADDR, .word VALUE, .equ NAME, VALUE. Immediates take a
+number, a .equ name or a character literal 'c'."""
 import argparse,re
 from pathlib import Path
 
@@ -12,6 +14,9 @@ NOARG={"HALT","INX","EI","DI","RETI"}
 IRQ_VECTOR=2
 
 def number(s):
+    # 'c': character code (any printable character except , ; : which the
+    # line parser splits on; use .equ for those).
+    if len(s)==3 and s[0]==s[2]=="'":return ord(s[1])
     try:return int(s,0)
     except ValueError:
         if re.fullmatch(r"-?\d+",s):return int(s,10)
@@ -20,7 +25,10 @@ def register(s):
     if not re.fullmatch(r"R[0-3]",s.upper()):raise ValueError("register must be R0..R3: "+s)
     return int(s[-1])
 def assemble(text):
-    labels={};rows=[];pc=0
+    labels={};consts={};rows=[];pc=0
+    # Immediates, .org and .word take a number, a character or a .equ name.
+    def value(s):
+        return consts[s] if s in consts else number(s)
     for line_no,line in enumerate(text.splitlines(),1):
         line=line.split(";",1)[0].strip()
         if not line:continue
@@ -32,20 +40,30 @@ def assemble(text):
             if not line:continue
         head,*tail=line.split(None,1);head=head.upper()
         args=[s.strip() for s in tail[0].split(",")] if tail else []
+        if head==".EQU":
+            # .equ NAME, value: a constant, defined before it is used.
+            if len(args)!=2 or not re.fullmatch(r"[A-Za-z_]\w*",args[0]) or \
+               args[0] in consts or re.fullmatch(r"[Rr][0-3]",args[0]):
+                raise ValueError(f"line {line_no}: .equ takes a new name and a value")
+            try:consts[args[0]]=value(args[1])
+            except ValueError as e:raise ValueError(f"line {line_no}: {e}") from e
+            continue
         if head==".ORG":
             if len(args)!=1:raise ValueError(".org takes one word address")
-            pc=number(args[0])
+            pc=value(args[0])
             if not 0<=pc<=65535:raise ValueError(".org out of range")
             continue
         rows.append((pc,head,args,line_no));pc+=1
         if pc>65536:raise ValueError("program address overflow")
+    clash=sorted(set(labels)&set(consts))
+    if clash:raise ValueError("name used as both label and .equ: "+", ".join(clash))
     words={}
     for pc,op,a,line_no in rows:
         try:
             rd=0;operand=0
             if op==".WORD":
                 if len(a)!=1:raise ValueError(".word takes one value")
-                word=number(a[0])
+                word=value(a[0])
                 if not 0<=word<=65535:raise ValueError("word out of range")
             else:
                 if op not in OPS:raise ValueError("unknown opcode "+op)
@@ -56,12 +74,12 @@ def assemble(text):
                     rd=register(a[0]);operand=register(a[1])
                 elif op=="LDI":
                     if len(a)!=2:raise ValueError("register and imm8 required")
-                    rd=register(a[0]);operand=number(a[1])
+                    rd=register(a[0]);operand=value(a[1])
                     if not -128<=operand<=255:raise ValueError("imm8 out of range")
                     operand&=255
                 elif op in {"LDXL","LDXH"}:
                     if len(a)!=1:raise ValueError("one imm8 required")
-                    operand=number(a[0])
+                    operand=value(a[0])
                     if not 0<=operand<=255:raise ValueError("X byte out of range")
                 elif op in {"LD","ST"}:
                     if len(a)!=2:raise ValueError("register and [X] required")
@@ -73,7 +91,7 @@ def assemble(text):
                     if a[0] in labels:
                         operand=(labels[a[0]]-(pc+1))&65535
                         if operand>=32768:operand-=65536
-                    else:operand=number(a[0])
+                    else:operand=value(a[0])
                     if not -128<=operand<=127:raise ValueError("rel8 branch out of range")
                     operand&=255
                 word=(OPS[op]<<10)|(rd<<8)|operand

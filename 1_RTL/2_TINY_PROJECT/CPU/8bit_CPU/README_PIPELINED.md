@@ -31,7 +31,7 @@
 | `TB/tb_cpu8_reset.sv` | 메모리 대기 중 리셋·이전 명령 폐기·재시작 |
 | `TB/cpu8_ahb_checker.sv` | 두 AHB-Lite master 포트의 규칙 SVA(`CPU8_SVA`) |
 | `TB/cpu8_irq_checker.sv` | 인터럽트 진입·복귀·레지스터 묶음 규칙 SVA(`CPU8_SVA`) |
-| `TOOLS/cpu8_asm.py` | 레이블/rel8·.org·.word를 지원하는 작은 어셈블러 |
+| `TOOLS/cpu8_asm.py` | 레이블/rel8·.org·.word를 지원하는 작은 어셈블러. 2026-11-04에 `.equ NAME, value`(이름 상수, 쓰기 전에 정의)와 문자 상수 `'c'`(`,` `;` `:`는 줄 해석에 쓰이므로 `.equ`로 적는다)를 추가했다. 기존 프로그램의 기계어는 같다(회귀 시험이 만드는 88개 프로그램과 저장소의 `.asm` 5개 대조) |
 | `TOOLS/run_cpu8_tests.py` | 독립 ISA 모델과 실제 RTL 명령 완료 상태/메모리 접근 비교 |
 | `TOOLS/check_cpu8.ys` | 일반 논리 합성·드라이버 검사·래치 없음 확인 |
 | `TOOLS/synth_cpu8.tcl` | 대표 Zynq-7020 부품의 out-of-context 합성 |
