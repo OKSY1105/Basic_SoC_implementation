@@ -4,7 +4,7 @@
 
 | 모듈 | 용도 |
 |---|---|
-| `dram_controller_core` | 제어기 본체. DQ/DQS를 출력·출력 enable·입력으로 나눈 판(3상태 없음). FPGA 안의 메모리(BRAM 기반 합성 가능 모델)에 연결한다 |
+| `dram_controller_core` | 제어기 본체. DQ/DQS를 출력·출력 enable·입력으로 나눈 판(3상태 없음). FPGA 안의 메모리(BRAM 기반 합성 가능 모델 [../DRAM/dram_bram_model.v](../DRAM/dram_bram_model.v))에 연결한다 |
 | `dram_controller` | 같은 제어기에 3상태 버퍼만 둔 래퍼. inout DQ/DQS로 행동 모델 `dram.v`에 연결한다 |
 
 ## host 포트
@@ -49,5 +49,15 @@ xvlog.bat --sv $L/DRAM_CONTEOLLER/tb_dram_line.sv
 xelab.bat tb_dram_line -s tb_dram_line
 xsim.bat tb_dram_line -runall
 ```
+
+두 TB는 메모리 모델을 고를 수 있다(2026-11-04).
+
+| 컴파일 | 메모리 모델 |
+|---|---|
+| `dram.v`, 정의 없음 | 행동 모델(기본) |
+| `dram_bram_model.v`, `-d DRAM_BRAM_MODEL` | 보드용 BRAM 모델. 같은 검사를 이 모델에서 한다 |
+| 두 파일, `-d DRAM_MODEL_MATCH` (`tb_dram_line.sv`만) | 행동 모델이 핀을 구동하고, 보드용 모델이 같은 핀을 보며 매 클록 읽기 DQ enable·데이터를 비교한다. 끝에서 배열 256줄과 CL/CWL을 비교한다 |
+
+세 방식을 모두 실행하는 스크립트는 `6_SoC/8bit_SoC/scripts/run_dram_models_tb.sh`(WSL XSim)이다. 무작위 시험의 RD/WR 수는 모델마다 다르다. 모델 파일이 바뀌면 프로세스 수가 달라져 XSim의 프로세스별 `$urandom` 시드 배정이 바뀌기 때문이다. 그래서 무작위 경로의 일치는 `DRAM_MODEL_MATCH`의 같은 실행 안 비교로 판정한다.
 
 결과와 변이 시험은 [SoC RAM 단위 검증](../../../6_SoC/8bit_SoC/04_unit/02_ram/test.md)에 있다.

@@ -4,6 +4,8 @@
 // Compile THIS file, dram_controller.v, and the existing ../DRAM/dram.v.
 // Select tb_dram_controller as simulation top and run until $finish.
 // Optional alternate top: tb_dram_controller_alt (CL=10, CWL=11, tRCD=12).
+// Board model: compile ../DRAM/dram_bram_model.v instead of dram.v and add
+// -d DRAM_BRAM_MODEL; the same checks then run on that model.
 // The TB preloads the model array with a nonzero reference pattern solely so
 // that preservation of the seven neighboring bytes can be checked. Neither
 // the controller nor reset initializes the real/model memory contents.
@@ -41,11 +43,28 @@ module tb_dram_controller #(
         .io_dram_dqs_t(dqs_t), .io_dram_dqs_c(dqs_c)
     );
 
+`ifdef DRAM_BRAM_MODEL
+    // The board model ../DRAM/dram_bram_model.v (compile with
+    // -d DRAM_BRAM_MODEL instead of dram.v): split DQ on the same tri-state
+    // net, DQS input only. Same internal names as dram.v.
+    wire [7:0] model_dq;
+    wire model_dq_oe;
+    dram_bram_model memory_model (
+        .i_clk(clk), .i_ck_t(ck_t), .i_ck_c(ck_c), .i_cke(cke), .i_csn(csn),
+        .i_actn(actn), .i_bg(bg), .i_ba(ba), .i_a(a), .i_dq(dq),
+        .o_dq(model_dq), .o_dq_oe(model_dq_oe), .i_dqs_t(dqs_t), .i_dqs_c(dqs_c)
+    );
+    assign dq = model_dq_oe ? model_dq : 8'bz;
+    // The model array is mem[{row, column}].
+    `define TBC_MODEL_WORD(r, c) memory_model.mem[(r) * 16 + (c)]
+`else
     // The unmodified repository device model is the memory under test.
     dram memory_model (
         .ck_t(ck_t), .ck_c(ck_c), .cke(cke), .csn(csn), .actn(actn),
         .bg(bg), .ba(ba), .a(a), .dq(dq), .dqs_t(dqs_t), .dqs_c(dqs_c)
     );
+    `define TBC_MODEL_WORD(r, c) memory_model.mem[r][c]
+`endif
 
     reg [7:0] expected [0:2047];
     integer checks = 0;
@@ -114,7 +133,7 @@ module tb_dram_controller #(
         begin
             base = (byte_address / 8) * 8;
             for (k = 0; k < 8; k = k + 1) begin
-                actual = memory_model.mem[base/128][(base%128)/8][k*8 +: 8];
+                actual = `TBC_MODEL_WORD(base/128, (base%128)/8)[k*8 +: 8];
                 if (actual !== expected[base+k]) begin
                     $display("byte %03h expected=%02h actual=%02h",
                              base+k, expected[base+k], actual);
@@ -261,7 +280,7 @@ module tb_dram_controller #(
         for (row = 0; row < 16; row = row + 1)
             for (col = 0; col < 16; col = col + 1)
                 for (lane = 0; lane < 8; lane = lane + 1)
-                    memory_model.mem[row][col][lane*8 +: 8] =
+                    `TBC_MODEL_WORD(row, col)[lane*8 +: 8] =
                         expected[row*128+col*8+lane];
 
         repeat (4) @(negedge clk);
@@ -332,6 +351,7 @@ module tb_dram_controller #(
         $finish;
     end
 endmodule
+`undef TBC_MODEL_WORD
 
 module tb_dram_controller_alt;
     tb_dram_controller #(
