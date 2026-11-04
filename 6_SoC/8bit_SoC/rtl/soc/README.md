@@ -35,4 +35,5 @@ vivado -mode batch -nojournal -source scripts/synth_soc8_top.tcl   # 8bit_SoC �
 ## 연결 확인 (2026-11-04)
 
 - `soc8_top`과 `soc8_dram_model`의 xvlog·xelab elaboration은 경고 없이 통과했다.
-- 저장소 밖 임시 smoke 시험: ROM 프로그램이 RAM 0x8000·0x8040(같은 캐시 index)에 쓰고 0x8000을 다시 읽은 뒤 UART TX_DATA로 보내고 HALT했다. fault 없음, 읽은 값 0x5A, 캐시 접근 3·miss 3·write-back 2, 버스 오류 0, DRAM 모델에 두 줄이 write-back되었고, UART TX 줄에서 0x5A(parity·stop 정상)를 받았다. 판정을 갖춘 통합 TB는 다음 단계다.
+- 저장소 밖 임시 smoke 시험: ROM 프로그램이 RAM 0x8000·0x8040(같은 캐시 index)에 쓰고 0x8000을 다시 읽은 뒤 UART TX_DATA로 보내고 HALT했다. fault 없음, 읽은 값 0x5A, 캐시 접근 3·miss 3·write-back 2, 버스 오류 0, DRAM 모델에 두 줄이 write-back되었고, UART TX 줄에서 0x5A(parity·stop 정상)를 받았다.
+- 판정을 갖춘 통합 TB는 [`tb/soc`](../../tb/soc/README.md)에 있다(③ 통합 2단계, I01·I02 시뮬레이션 PASS).
