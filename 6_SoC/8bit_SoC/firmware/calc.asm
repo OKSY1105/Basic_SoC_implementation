@@ -18,7 +18,7 @@
 ;   addresses, and reply text is written character by character with LDI + ST
 ;   while X stays at TX_DATA (no string table in ROM).
 ; - TX: before a reply the handler waits for TX_EMPTY (16 free FIFO places);
-;   the DIV reply (up to 18 characters) waits once more before " R:".
+;   the DIV reply (up to 17 bytes with CRLF) waits once more before " R:".
 ; - No CALL/RET and rel8 branches only (+-128 words): shared code is reached by
 ;   JMP, the number printer continues through V_PHASE, and far targets are
 ;   reached through t_*/s_* trampolines placed after unconditional jumps.
