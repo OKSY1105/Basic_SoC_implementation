@@ -23,7 +23,7 @@ CPU는 기본 데모, RAM은 기본·대체 타이밍 self-check를 실행한다
 
 ## Vivado GUI 프로젝트 생성
 
-1_RTL/2_TINY_PROJECT의 원본 RTL을 직접 참조하며 SoC 내부 사본을 만들지 않는다. part는 최종 보드에 맞춰 명시한다. 아래의 part는 Zynq-7020 예시이며 이번에 보드가 확정된 것은 아니다.
+1_RTL/2_TINY_PROJECT의 원본 RTL을 직접 참조하며 SoC 내부 사본을 만들지 않는다. part는 보드에 맞춰 명시한다. 아래의 part `xc7z020clg400-1`은 확정 보드 Zybo Z7-20의 part다(아래 보드 조건 문단).
 
 ```sh
 /home/sean/Vivado/2024.2/bin/vivado -mode batch -source scripts/create_vivado.tcl -tclargs cpu xc7z020clg400-1
