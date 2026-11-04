@@ -19,7 +19,7 @@ PC의 UART 숫자·연산 요청을 8bit CPU가 계산하고 STM32 LCD에 결과
 | UART | [1_RTL/2_TINY_PROJECT/UART](../../1_RTL/2_TINY_PROJECT/UART) |
 | DRAM 제어기/TB | [1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER](../../1_RTL/2_TINY_PROJECT/DRAM_CONTEOLLER) |
 | DRAM 행동 모델 | [1_RTL/2_TINY_PROJECT/DRAM](../../1_RTL/2_TINY_PROJECT/DRAM) |
-| BUS | [1_RTL/2_TINY_PROJECT/BUS](../../1_RTL/2_TINY_PROJECT/BUS) — AHB-Lite 시험 도구. AHB→APB3 브리지·리셋 동기화기 예정 |
+| BUS | [1_RTL/2_TINY_PROJECT/BUS](../../1_RTL/2_TINY_PROJECT/BUS) — AHB-Lite·APB3 시험 도구, AHB→APB3 브리지, 리셋 동기화기 |
 | 데이터 캐시 | [1_RTL/2_TINY_PROJECT/Cache](../../1_RTL/2_TINY_PROJECT/Cache) — AHB-Lite slave 단자 포함 |
 
 이 SoC에는 위 모듈의 사본이나 경로 심볼릭 링크를 두지 않는다. [sources.json](sources.json)과 [Vivado 생성 Tcl](scripts/create_vivado.tcl)이 원본 RTL/TB를 직접 참조한다.
@@ -44,6 +44,6 @@ PC의 UART 숫자·연산 요청을 8bit CPU가 계산하고 STM32 LCD에 결과
 └── scripts/            원본 모듈 참조·단위 실행·프로젝트 생성
 ```
 
-CPU 기본 데모와 DRAM 두 타이밍 설정에는 실행 PASS 근거가 있다. UART는 compile/elaboration과 자동 기능 시험을 구분한다. BUS·ROM 래퍼·SoC top·signed16 계산기 프로그램·PC 도구·STM32 LCD 펌웨어는 계속 후속 구현 단계다. 현재 검증 결과는 history와 단위 test.md를 따른다.
+모듈(CPU·캐시·DRAM 제어기·ROM·AHB 버스·APB 브리지·UART 래퍼·리셋 동기화기)은 Codex 모듈 검증(VR-003~VR-010)을 통과해 main에 병합했다(2026-11-04). SoC top([rtl/soc](rtl/soc/README.md))은 구현했고 통합 TB는 진행 중이다. signed16 계산기 프로그램·PC 도구·STM32 LCD 펌웨어는 후속 구현 단계다. 현재 검증 결과는 history와 단위 test.md를 따른다.
 
 과거 CPU/RAM 결정 기록은 Windows C:/codex_project의 각 history에 보존한다. 기존 Sercurity는 별도 프로젝트다. 구성은 [logistics-automation](https://github.com/hwoo97/logistics-automation/tree/80bc1b80edac121d81cb52f1bc222814af64de7d)의 일곱 단계 구분을 SoC에 맞게 참고했다.
