@@ -127,11 +127,11 @@ module tb_soc8_top;
     // ------------------------------------------------------ UART driver (RXD)
     // One 8E1 frame with no idle bit after it; bit_ns models the sender clock
     // (BIT_NS is the nominal baud, BIT_NS / 1.015 a sender 1.5% fast).
-    task automatic send_byte(input logic [7:0] b, input real bit_ns);
+    task automatic send_byte(input logic [7:0] b, input real bit_ns, input bit bad_par = 1'b0);
         rxd = 1'b0;
         #(bit_ns);
         for (int i = 0; i < 8; i++) begin rxd = b[i]; #(bit_ns); end
-        rxd = ^b;
+        rxd = (^b) ^ bad_par;
         #(bit_ns);
         rxd = 1'b1;
         #(bit_ns);
@@ -418,6 +418,176 @@ module tb_soc8_top;
                  k, cov_rst_read, cov_rst_write, cov_rst_other, cov_rst_short);
     endtask
 
+    // ------------------------------------------------ calculator (firmware)
+    // Reference of 02_design/calculator.md, written here from the spec.
+    bit ref_ok = 1'b0;
+    int ref_a = 0, ref_b = 0;
+
+    function automatic bit is_digit(input byte c);
+        return c >= "0" && c <= "9";
+    endfunction
+    function automatic bit is_letter(input byte c);
+        return (c >= "A" && c <= "Z") || (c >= "a" && c <= "z");
+    endfunction
+
+    // Reply expected for one line (terminator excluded); "" = no reply.
+    function automatic string ref_reply(input string s, input bit uart_err);
+        int n;
+        n = s.len();
+        if (uart_err) return "ERR SYNTAX";
+        if (n == 0) return "";
+        if (n > 15) return "ERR SYNTAX";
+        if (is_letter(s[0])) begin
+            string u;
+            if (n != 3) return "ERR SYNTAX";
+            for (int i = 0; i < n; i++) if (!is_letter(s[i])) return "ERR SYNTAX";
+            u = s.toupper();
+            if (u != "ADD" && u != "SUB" && u != "MUL" && u != "DIV") return "ERR SYNTAX";
+            if (!ref_ok) return "ERR NOARG";
+            if (u == "ADD") return $sformatf("ADD:%0d", ref_a + ref_b);
+            if (u == "SUB") return $sformatf("SUB:%0d", ref_a - ref_b);
+            if (u == "MUL") return $sformatf("MUL:%0d", ref_a * ref_b);
+            if (ref_b == 0) return "ERR DIV0";
+            return $sformatf("DIV Q:%0d R:%0d", ref_a / ref_b, ref_a % ref_b);
+        end
+        if (s[0] == "-" || is_digit(s[0])) begin
+            int i, v[2];
+            bit rng;
+            i = 0; rng = 1'b0;
+            for (int k = 0; k < 2; k++) begin
+                bit neg;
+                int nd, mag;
+                neg = 1'b0; nd = 0; mag = 0;
+                if (i < n && s[i] == "-") begin neg = 1'b1; i++; end
+                while (i < n && is_digit(s[i])) begin mag = mag * 10 + (s[i] - "0"); nd++; i++; end
+                if (nd < 1 || nd > 3) return "ERR SYNTAX";
+                if (k == 0) begin
+                    if (i >= n || s[i] != ",") return "ERR SYNTAX";
+                    i++;
+                end else if (i != n) return "ERR SYNTAX";
+                if ((!neg && mag > 127) || (neg && mag > 128)) rng = 1'b1;
+                v[k] = neg ? -mag : mag;
+            end
+            if (rng) return "ERR RANGE";
+            ref_a = v[0]; ref_b = v[1]; ref_ok = 1'b1;
+            return "";
+        end
+        return "ERR SYNTAX";
+    endfunction
+
+    int unsigned calc_chars = 0, calc_lines = 0, calc_replies = 0, calc_errors = 0;
+
+    // Send a line and its terminator (0: CRLF, 1: CR, 2: LF); bad_at >= 0
+    // sends that character with a parity error.
+    task automatic send_line(input string s, input int term, input int bad_at = -1);
+        for (int i = 0; i < s.len(); i++) begin
+            send_byte(s[i], BIT_NS, i == bad_at);
+            calc_chars++;
+        end
+        if (term != 2) begin send_byte(8'h0D, BIT_NS); calc_chars++; end
+        if (term != 1) begin send_byte(8'h0A, BIT_NS); calc_chars++; end
+    endtask
+
+    // Next reply line from TX (CRLF removed); "" after the timeout.
+    task automatic get_reply(output string r, input real max_ns);
+        real t0;
+        int k;
+        t0 = $realtime;
+        r = "";
+        forever begin
+            k = -1;
+            for (int i = 0; i + 1 < tx_q.size(); i++)
+                if (tx_q[i] == 8'h0D && tx_q[i + 1] == 8'h0A) begin k = i; break; end
+            if (k >= 0 || $realtime - t0 >= max_ns) break;
+            #(BIT_NS);
+        end
+        if (k < 0) return;
+        for (int i = 0; i < k; i++) r = {r, string'(tx_q[i])};
+        repeat (k + 2) void'(tx_q.pop_front());
+    endtask
+
+    // One line: reference reply, send, and check the reply if one is due.
+    task automatic calc_step(input string s, input int term, input int bad_at = -1);
+        string e, r;
+        e = ref_reply(s, bad_at >= 0);
+        send_line(s, term, bad_at);
+        calc_lines++;
+        if (e != "") begin
+            get_reply(r, 400 * BIT_NS);
+            calc_replies++;
+            if (e.substr(0, 2) == "ERR") calc_errors++;
+            if (r != e) fail($sformatf("calc: line \"%s\": reply \"%s\", expected \"%s\"", s, r, e));
+        end
+    endtask
+
+    task automatic test_calc(input bit with_random);
+        string dir [$], bursts [$], e [$];
+        int t;
+        ref_ok = 1'b0;
+        calc_chars = 0; calc_lines = 0; calc_replies = 0; calc_errors = 0;
+        start_program("calc");
+        repeat (300) @(posedge clk);
+        // Directed lines: calculator.md section 5 and boundary cases.
+        dir = '{"ADD", "10,20", "ADD", "SUB", "MUL", "DIV", "20,10", "DIV",
+                "-128,-128", "MUL", "-128,-1", "DIV", "-128,127", "MUL", "ADD", "SUB",
+                "127,-128", "SUB", "ADD", "-7,2", "DIV", "7,-2", "DIV", "-7,-2", "DIV",
+                "-127,2", "DIV", "-128,-3", "DIV", "10,0", "DIV", "MUL", "ADD",
+                "200,1", "ADD", "-129,0", "1,128", "128,1", "10 ,20", "1020", "ADDX", "AD", "A",
+                "1234,1", "5,", "-", "--5,1", "5,--1", "5,1,2", "+5,1", "5-3,1",
+                "0000000000000000", "add", "Sub", "mUl", "007,-0", "DIV", "SUB", "",
+                "99,99", "MUL", "0,-5", "DIV", "MUL"};
+        t = 0;
+        foreach (dir[i]) begin calc_step(dir[i], t); t = (t + 1) % 3; end
+        // Back-to-back lines without waiting, then all replies.
+        bursts = '{"5,6", "ADD", "SUB", "MUL", "DIV"};
+        foreach (bursts[i]) begin
+            string x;
+            x = ref_reply(bursts[i], 1'b0);
+            if (x != "") e.push_back(x);
+            send_line(bursts[i], 0);
+            calc_lines++;
+        end
+        foreach (e[i]) begin
+            string r;
+            get_reply(r, 400 * BIT_NS);
+            calc_replies++;
+            if (r != e[i]) fail($sformatf("calc burst: reply %0d \"%s\", expected \"%s\"", i, r, e[i]));
+        end
+        // A receive (parity) error inside a line: ERR SYNTAX, A and B kept.
+        calc_step("10,20", 0, 4);
+        calc_step("ADD", 0);
+        if (with_random) begin
+            for (int i = 0; i < 120; i++) begin
+                int p;
+                string s;
+                p = $urandom_range(99);
+                if (p < 45) s = $sformatf("%0d,%0d", $signed(8'($urandom)), $signed(8'($urandom)));
+                else if (p < 85) begin
+                    string ops [4];
+                    ops = '{"add", "sub", "mul", "div"};
+                    s = ops[$urandom_range(3)];
+                    if ($urandom_range(1)) s = s.toupper();
+                end else if (p < 92) s = $sformatf("%0d,%0d", $urandom_range(400, 128), $signed(8'($urandom)));
+                else begin
+                    string bad [6];
+                    bad = '{"1,2,3", "ab", "12a,1", "-,4", "MULT", "4 ,4"};
+                    s = bad[$urandom_range(5)];
+                end
+                calc_step(s, $urandom_range(2));
+            end
+        end
+        repeat (2000) @(posedge clk);
+        if (tx_q.size() != 0) fail($sformatf("calc: %0d unexpected TX bytes at the end", tx_q.size()));
+        if (irq_entries != calc_chars)
+            fail($sformatf("calc: %0d handler entries for %0d characters", irq_entries, calc_chars));
+        if (halted !== 1'b0 || fault !== 1'b0) fail("calc: CPU stopped");
+        if (n_err != 0 || err_cnt != 0) fail("calc: bus error");
+        if (dut.u_uart.w_fe || dut.u_uart.w_pe || dut.u_uart.w_oe) fail("calc: UART error flag left set");
+        n_tests++; total_irq += irq_entries;
+        $display("CASE calc lines=%0d chars=%0d replies=%0d error_replies=%0d entries=%0d random=%0d",
+                 calc_lines, calc_chars, calc_replies, calc_errors, irq_entries, with_random);
+    endtask
+
     initial begin
         if (!$value$plusargs("PROG_DIR=%s", prog_dir)) prog_dir = ".";
         test_ram_basic();
@@ -428,9 +598,11 @@ module tb_soc8_top;
             test_fault_unmapped();
             test_fault_rom_write();
             test_reset_mid_run(20);
+            test_calc(1'b1);
         end else begin
             test_uart_echo_irq(8, 1.0);
             test_uart_echo_irq(8, 1.015);
+            test_calc(1'b0);
         end
         fails += chk_bus.fails + chk_ram.fails + chk_apb.fails;
         $display("COVER tests=%0d uart_tx=%0d irq_entries=%0d resets=%0d rst_in_read=%0d rst_in_write=%0d rst_short=%0d",
