@@ -236,7 +236,12 @@ always @(posedge i_clk or negedge i_rst_n) begin
                     if(r_os_cnt == 4'd9)
                         r_sample9 <= r_rxd_ff2;
 
-                    if(r_os_cnt == 4'd15) begin
+                    // Decide in the middle of the stop bit, as soon as the
+                    // three samples are in (tick 10), and go back to S_IDLE.
+                    // Waiting for the end of the stop bit (tick 15) misses the
+                    // next start edge when frames come back to back, or when
+                    // the sender's clock is slightly faster than ours.
+                    if(r_os_cnt == 4'd10) begin
                         r_os_cnt <= 4'd0;
 
                         // Stop bit must be 1

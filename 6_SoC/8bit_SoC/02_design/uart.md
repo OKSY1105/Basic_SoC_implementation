@@ -14,6 +14,7 @@ CPU 쪽 연결은 APB 래퍼(M9) [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)�
 - 프레임은 코어에 고정된 8E1(데이터 8bit, 짝수 parity, stop 1bit)이다. RX FIFO와 TX FIFO는 맨 앞 데이터가 조합으로 보이는 구조(`o_r_data = mem[r_ptr]`)다.
 - FE·PE·OE는 reset 전까지 유지되는 sticky bit였다. 래퍼의 ERROR_CLEAR(W1C)를 위해 `uart_rx`·`uart_top`에 `i_lsr_clr[2:0]`([0] OE, [1] FE, [2] PE)를 추가했다. 1이면 그 bit를 지우고, 같은 클록에 새 오류가 생기면 새 오류가 우선한다.
 - 0으로 묶으면 기존 동작과 같다. `tb_uart.v`·`zybo_uart_top.v`에는 `3'b000`을 연결했다. 변경 뒤 기존 TB 결과도 같다(`tb_error=0`, `tb_done=1`, `$stop` 795,235 ns).
+- 2026-11-04 수신 수정(③ 통합 시험에서 발견): `uart_rx`는 stop bit를 끝(16배 표본 tick 15)에서 판정하고 그때서야 대기 상태로 돌아갔다. start bit의 하강 에지는 대기 상태에서만 보므로, 바이트가 간격 없이 이어지면 다음 start bit를 놓치고 다음 프레임의 중간 하강 에지를 start로 잘못 잡았다. 송신 측 클록이 1% 빠르면 115200 bps에서도 생겼다(PC 터미널은 한 줄을 연속으로 보낸다). 이제 세 표본이 모두 모인 stop bit 중간(tick 10)에서 판정·저장하고 대기 상태로 돌아간다. 송신 측이 약 2.5% 빨라도 다음 start bit를 잡는다(남는 시간 = 11 bit − 10.625 bit − tick 위상). 시험: [03_uart/test.md](../04_unit/03_uart/test.md) 2026-11-04 절, [통합 TB](../tb/soc/README.md).
 - 알려진 사항: `fifo.v`는 메모리를 비동기 reset always 블록 안에서 쓴다. 그래서 Vivado가 FIFO 메모리를 LUTRAM이 아닌 레지스터로 구현하고 set/reset 우선순위 경고를 낸다. 기능 문제는 아니며 이번에는 수정하지 않았다.
 
 ## M9 UART APB 래퍼 — 2026-11-03
