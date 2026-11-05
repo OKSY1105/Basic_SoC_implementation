@@ -76,7 +76,7 @@ critical_warnings=0
 | 클록 | `sys_clk_pin` 125 MHz(입력), `w_clk100_mmcm` 100 MHz(SoC), `w_clkfb_mmcm` 125 MHz(되먹임) |
 
 - `check_timing`: 제약이 없는 내부 끝점 0. 입력 지연이 없는 입력 2개(`i_btn_rst`, `i_uart_rxd`)와 출력 지연이 없는 출력 5개(`o_uart_txd`, `o_led[3:0]`)는 모두 XDC의 `set_false_path` 대상이다.
-- DRC 경고 `REQP-1839`(RAMB36 async control check) 20건: 모두 ROM BRAM(`u_soc/u_rom/r_a_data_reg_0`)의 주소 핀이다. 이 주소를 만드는 캐시·ROM 레지스터가 비동기 reset을 쓰기 때문이다. 경고 내용은 reset이 assert될 때 메모리 내용이나 읽은 값이 깨질 수 있다는 것이다. ROM은 동작 중 쓰지 않으므로 내용이 바뀌지 않고, reset 동안 읽은 값은 CPU도 reset 중이라 쓰이지 않는다. 그래서 이 설계에서는 영향이 없다고 판단해 두었다. `PDRC-138/142/144/146` 5건은 같은 slice의 LUT 쌍 배치 경고다.
+- DRC 경고 `REQP-1839`(RAMB36 async control check): 한 건은 (BRAM 제어 핀, 그 핀에 닿는 비동기 reset 레지스터) 한 쌍이다. DRC 보고서는 규칙마다 20건까지만 적으므로(`CHECK-3` Report rule limit reached) 20건만 나오며, 모두 ROM BRAM `u_soc/u_rom/r_a_data_reg_0`의 `ADDRARDADDR[14]` 한 핀에 대한 것이다(구동 레지스터: 캐시 상태·주소·valid, ROM 오류, UART IRQ). 배선된 checkpoint에서 BRAM 제어 핀(주소·enable·write enable·reset)의 입력 쪽을 따라가면, 실제 비동기 reset을 쓰는 레지스터가 조합 논리를 거쳐 닿는 핀은 ROM BRAM 2개(`r_a_data_reg_0`·`_1`)의 `ADDRARDADDR`·`ENARDEN`·`ENBWREN` 핀 각 14개다. 구동 레지스터는 캐시·버스·APB 브리지·UART·ROM·`reset_sync`에 있다. 명령 인출 주소와 ROM 선택이 이 레지스터들에서 같은 클록 안에 조합으로 정해지기 때문이다. M4 BRAM에는 해당 핀이 없다(Vivado power 최적화가 넣은 플립플롭은 CLR이 GND다). 경고 내용은 reset이 assert될 때 메모리 내용이나 읽은 값이 깨질 수 있다는 것이다. ROM BRAM의 write enable은 상수 0이므로 내용이 바뀌지 않고, reset 동안 읽은 값은 CPU도 reset 중이라 쓰이지 않는다. 그래서 이 설계에서는 영향이 없다고 판단해 두었다. `PDRC-138/142/144/146` 5건은 같은 slice의 LUT 쌍 배치 경고다.
 - 합성 단계 추정(`rtl/soc/README.md`, `soc8_top` OOC)은 LUT 994·WNS +0.459 ns였다. 보드 top은 MMCM·M4가 더해지고 배치·배선 뒤 값이다.
 
 ## 보드에 올리기
