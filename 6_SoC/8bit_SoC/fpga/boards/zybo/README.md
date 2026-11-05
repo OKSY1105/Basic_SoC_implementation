@@ -94,7 +94,10 @@ WSL에는 USB(JTAG) 연결이 없으므로 이 단계는 Windows Vivado Hardware
 
 5. 확인: LD0·LD1 켜짐, LD2·LD3 꺼짐. PC 터미널을 115200 bps, 8 데이터 bit, even parity, stop 1로 열고 `10,20` Enter → `ADD` Enter를 보내면 `ADD:30`이 와야 한다. BTN0을 누르면 reset된다.
 
-작업 PC의 Windows Vivado 2024.2는 합성이 실패한 기록이 있어 합성·구현은 WSL에서 한다. Hardware Manager batch 실행은 2026-11-05에 보드를 연결하지 않은 상태로 확인했다: UNC 경로의 Tcl·bitstream 읽기, hw_server 기동, JTAG 대상 0개 오류와 `RESULT status=1`. 장치를 찾은 뒤의 쓰기·DONE 확인은 보드를 연결해 처음 실행할 때 확인한다.
+작업 PC의 Windows Vivado 2024.2는 합성이 실패한 기록이 있어 합성·구현은 WSL에서 한다. Hardware Manager batch 실행은 2026-11-05에 확인했다.
+
+- 보드 미연결: UNC 경로의 Tcl·bitstream 읽기, hw_server 기동, JTAG 대상 0개 오류와 `RESULT status=1`.
+- 보드 연결(J12, FTDI FT2232H — JTAG 채널 A, 채널 B는 PS UART용 COM 포트): JTAG 대상 1개(`xilinx_tcf/Digilent/…`), xc7z020 장치 1개(`xc7z020_1`, JTAG index 1), "End of startup status: HIGH", `SOC8_ZYBO_PROGRAM_PASS … done=1`, `RESULT status=0`. 약 35초 걸린다.
 
 ## 기존 Zybo UART 보드 래퍼 참조
 
