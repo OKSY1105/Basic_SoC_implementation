@@ -83,7 +83,7 @@ critical_warnings=0
 
 WSL에는 USB(JTAG) 연결이 없으므로 이 단계는 Windows Vivado Hardware Manager에서 한다.
 
-1. 위 빌드를 실행한다. bitstream은 Windows에서 `\\wsl.localhost\Ubuntu-22.04\tmp\zybo_build\soc8_zybo_top.bit`로 열 수 있다. WSL `/tmp`는 WSL을 다시 시작하면 비워지므로 그때는 빌드를 다시 실행한다.
+1. bitstream을 저장소 밖의 영구 폴더에 빌드한다: `bash 6_SoC/8bit_SoC/scripts/build_zybo.sh /home/sean/zybo_build`. Windows에서는 `\\wsl.localhost\Ubuntu-22.04\home\sean\zybo_build\soc8_zybo_top.bit`로 연다. WSL 배포판은 실행 중인 프로세스가 없으면 곧 멈추고, 다시 시작할 때 `/tmp`를 비운다(systemd `tmpfiles`의 `/tmp` 규칙). 그래서 `/tmp`에 둔 bitstream은 Windows에서 열 때 이미 없을 수 있다.
 2. 배선: USB-UART 변환기의 TX → FPGA RX(W15), RX → FPGA TX(V15), GND → Pmod GND. 3.3 V 변환기만 쓴다. 커넥터 핀 번호는 Zybo Z7 참조 설명서로 확인한다.
 3. 보드에 SD·QSPI 부팅 이미지가 있으면 PS가 PL을 다시 구성할 수 있으므로, 부팅 모드 점퍼(JP5)를 JTAG로 두기를 권장한다(참조 설명서로 확인).
 4. Vivado → Open Hardware Manager → Open Target → Auto Connect → Program Device에서 위 `.bit`를 고른다.
