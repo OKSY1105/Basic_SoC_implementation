@@ -18,7 +18,7 @@ FPGA UART TXD ─┬───────────────────►
 | UART 인스턴스 | 1개(M9, 0xFF00~0xFF04). TX 한 선을 STM32와 PC 두 수신기에 함께 연결한다 |
 | 속도·프레임 | 115200 bps, 8E1(데이터 8bit, 짝수 parity, stop 1bit). PC 터미널과 STM32를 이 설정에 맞춘다 |
 | STM32 설정 | HAL 기준 `WordLength = UART_WORDLENGTH_9B`, `Parity = UART_PARITY_EVEN`(8B로 두면 데이터가 7bit가 된다) |
-| 전기 조건 | 3.3 V 레벨, 공통 GND. Zybo Z7-20의 보드 USB-UART는 PS(MIO 48·49)에 연결되어 있으므로 PC는 PL 핀에 외부 USB-UART 변환기로 잇는다. 핀은 FPGA 단계에서 정한다 |
+| 전기 조건 | 3.3 V 레벨, 공통 GND. Zybo Z7-20의 보드 USB-UART는 PS(MIO 48·49)에 연결되어 있으므로 PC는 PL 핀에 외부 USB-UART 변환기로 잇는다. 핀은 Pmod JC(TX V15, RX W15, [보드 XDC](../fpga/constraints/soc8_zybo_z7_20.xdc)) |
 
 ## 2. 요청 (PC → FPGA)
 
