@@ -86,10 +86,15 @@ WSL에는 USB(JTAG) 연결이 없으므로 이 단계는 Windows Vivado Hardware
 1. bitstream을 저장소 밖의 영구 폴더에 빌드한다: `bash 6_SoC/8bit_SoC/scripts/build_zybo.sh /home/sean/zybo_build`. Windows에서는 `\\wsl.localhost\Ubuntu-22.04\home\sean\zybo_build\soc8_zybo_top.bit`로 연다. WSL 배포판은 실행 중인 프로세스가 없으면 곧 멈추고, 다시 시작할 때 `/tmp`를 비운다(systemd `tmpfiles`의 `/tmp` 규칙). 그래서 `/tmp`에 둔 bitstream은 Windows에서 열 때 이미 없을 수 있다.
 2. 배선: USB-UART 변환기의 TX → FPGA RX(W15), RX → FPGA TX(V15), GND → Pmod GND. 3.3 V 변환기만 쓴다. 커넥터 핀 번호는 Zybo Z7 참조 설명서로 확인한다.
 3. 보드에 SD·QSPI 부팅 이미지가 있으면 PS가 PL을 다시 구성할 수 있으므로, 부팅 모드 점퍼(JP5)를 JTAG로 두기를 권장한다(참조 설명서로 확인).
-4. Vivado → Open Hardware Manager → Open Target → Auto Connect → Program Device에서 위 `.bit`를 고른다.
+4. 보드의 PROG/UART micro-USB(J12)를 PC에 연결하고 전원을 켠 뒤, Windows PowerShell에서 아래를 실행한다. [`scripts/program_zybo.ps1`](../../../scripts/program_zybo.ps1)이 Windows Vivado를 batch로 실행한다([`scripts/program_zybo.tcl`](../../../scripts/program_zybo.tcl)). JTAG에서 xc7z020 장치 하나를 찾아(ARM DAP는 건너뜀) bitstream을 쓰고 DONE을 확인한다. 성공하면 `SOC8_ZYBO_PROGRAM_PASS`와 `RESULT status=0`이 나온다. 다른 bitstream·Vivado 경로는 `-Bit`·`-VivadoBin`으로 준다. GUI로 할 때는 Vivado → Open Hardware Manager → Open Target → Auto Connect → Program Device에서 같은 `.bit`를 고른다.
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File \\wsl.localhost\Ubuntu-22.04\home\sean\Basic_SoC_implementation\6_SoC\8bit_SoC\scripts\program_zybo.ps1
+   ```
+
 5. 확인: LD0·LD1 켜짐, LD2·LD3 꺼짐. PC 터미널을 115200 bps, 8 데이터 bit, even parity, stop 1로 열고 `10,20` Enter → `ADD` Enter를 보내면 `ADD:30`이 와야 한다. BTN0을 누르면 reset된다.
 
-작업 PC의 Windows Vivado 2024.2는 합성이 실패한 기록이 있어(합성·구현은 WSL에서 한다), Hardware Manager에서도 문제가 생기면 그때 원인을 조사한다.
+작업 PC의 Windows Vivado 2024.2는 합성이 실패한 기록이 있어 합성·구현은 WSL에서 한다. Hardware Manager batch 실행은 2026-11-05에 보드를 연결하지 않은 상태로 확인했다: UNC 경로의 Tcl·bitstream 읽기, hw_server 기동, JTAG 대상 0개 오류와 `RESULT status=1`. 장치를 찾은 뒤의 쓰기·DONE 확인은 보드를 연결해 처음 실행할 때 확인한다.
 
 ## 기존 Zybo UART 보드 래퍼 참조
 
