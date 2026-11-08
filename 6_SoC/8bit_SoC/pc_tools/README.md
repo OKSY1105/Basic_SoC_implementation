@@ -8,7 +8,7 @@ PC에서 보드의 계산기 펌웨어에 요청 줄을 보내고 응답 줄을 
 
 ### 준비
 
-- Python 3과 pyserial(`python -m pip install pyserial`). 작업 PC의 Windows Python 3.9에는 pyserial 3.5가 있다.
+- 모든 단계를 Ubuntu(WSL2)에서 한다(2026-11-09 사용자 결정). Python 3과 pyserial(`python3 -m pip install pyserial`). 작업 PC의 WSL Python 3.10.12에는 pyserial 3.5가 있다.
 - 3.3 V USB-UART 변환기를 Pmod JC에 연결한다(Zybo Z7 참조 설명서 표 16.1, [보드 XDC](../fpga/constraints/soc8_zybo_z7_20.xdc)). 5 V 변환기는 쓰지 않는다.
 
   | 변환기 | Pmod JC 핀 | FPGA 핀 |
@@ -17,20 +17,23 @@ PC에서 보드의 계산기 펌웨어에 요청 줄을 보내고 응답 줄을 
   | RX | 1번 | V15 (`o_uart_txd`) |
   | GND | 5번 | GND |
 
-- 보드에 bitstream을 올린다([보드 README](../fpga/boards/zybo/README.md) "보드에 올리기"). 보드의 J12 USB-UART(COM 포트로 보임)는 PS에 연결된 포트이므로 이 시험에 쓰지 않는다.
+- 보드에 bitstream을 올린다([보드 README](../fpga/boards/zybo/README.md) "보드에 올리기"). 보드 J12의 USB-UART(FT2232H 채널 B)는 PS에 연결된 포트이므로 이 시험에 쓰지 않는다.
+- 변환기를 WSL에 붙인다. WSL2는 USB를 직접 보지 못하므로 [`scripts/wsl_usb.sh`](../scripts/wsl_usb.sh)가 host의 usbipd-win을 Ubuntu에서 불러 붙인다. 변환기는 처음 꽂을 때 한 번 usbipd-win에 등록해야 한다(관리자 권한, `usbipd bind --busid <BUSID>`). 붙이면 `/dev/ttyUSB0`(CP210x·FTDI·CH340·PL2303) 또는 `/dev/ttyACM0`으로 보인다. 사용자 `sean`은 `dialout` 그룹이라 그대로 열 수 있다.
 
 ### 실행
 
-WSL에는 USB 연결이 없으므로 변환기가 꽂힌 Windows에서 Windows Python으로 실행한다(8bit_SoC 폴더 기준 경로, `COM9`는 예).
+8bit_SoC 폴더 기준이다(`/dev/ttyUSB0`은 예).
 
 ```sh
-python pc_tools/calc_board_test.py --list-ports                          # 변환기의 COM 포트 확인
-python pc_tools/calc_board_test.py --port COM9                           # 고정 사례(중간에 BTN0 reset 안내)
-python pc_tools/calc_board_test.py --port COM9 --random 300 --seed 1 --log <저장소 밖 경로>/calc_board_result.txt
-python pc_tools/calc_board_test.py --selftest                            # 하드웨어 없이 판정기 자체 시험
+bash scripts/wsl_usb.sh list                                              # 변환기의 VID:PID·BUSID 확인
+bash scripts/wsl_usb.sh attach <VID:PID 또는 BUSID>                       # 변환기를 WSL에 붙임
+python3 pc_tools/calc_board_test.py --list-ports                          # 변환기의 장치 경로 확인
+python3 pc_tools/calc_board_test.py --port /dev/ttyUSB0                   # 고정 사례(중간에 BTN0 reset 안내)
+python3 pc_tools/calc_board_test.py --port /dev/ttyUSB0 --random 300 --seed 1 --log /home/sean/zybo_build/calc_board_result.txt
+python3 pc_tools/calc_board_test.py --selftest                            # 하드웨어 없이 판정기 자체 시험
 ```
 
-작업 PC에서는 저장소가 WSL에 있으므로 전체 경로로 실행한다: `python \\wsl.localhost\Ubuntu-22.04\home\sean\Basic_SoC_implementation\6_SoC\8bit_SoC\pc_tools\calc_board_test.py --port COM9`.
+Zybo와 변환기가 모두 FTDI 칩이면 `/dev/ttyUSB*`가 여러 개 생긴다. `--list-ports`의 설명 열로 변환기를 고른다.
 
 | 단계 | 내용 |
 |---|---|

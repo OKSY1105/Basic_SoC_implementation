@@ -10,11 +10,11 @@ Wiring (Pmod JC, reference manual table 16.1 and fpga/constraints XDC):
   adapter TX -> JC pin 2 (W15, FPGA RX)   adapter RX -> JC pin 1 (V15, FPGA TX)
   adapter GND -> JC pin 5 (GND)           use a 3.3 V adapter only
 
-Usage:
-  python calc_board_test.py --list-ports
-  python calc_board_test.py --port COM9                 fixed cases (asks for BTN0 resets)
-  python calc_board_test.py --port COM9 --random 300 --seed 1 --log result.txt
-  python calc_board_test.py --selftest                  no hardware: fake devices
+Usage (Ubuntu on WSL2; attach the adapter first with scripts/wsl_usb.sh):
+  python3 calc_board_test.py --list-ports
+  python3 calc_board_test.py --port /dev/ttyUSB0         fixed cases (asks for BTN0 resets)
+  python3 calc_board_test.py --port /dev/ttyUSB0 --random 300 --seed 1 --log result.txt
+  python3 calc_board_test.py --selftest                  no hardware: fake devices
 Options: --no-prompt (skip the BTN0 steps and the reset-dependent cases),
          --no-parity-case, --timeout SEC (reply timeout, default 1.0).
 Pace (calculator.md section 2): after an operation line the tool waits for
@@ -395,7 +395,7 @@ def selftest():
 
 def main():
     ap = argparse.ArgumentParser(description="8bit SoC calculator board test over UART (115200 8E1)")
-    ap.add_argument("--port", help="serial port of the USB-UART adapter, e.g. COM9 or /dev/ttyUSB0")
+    ap.add_argument("--port", help="serial port of the USB-UART adapter, e.g. /dev/ttyUSB0")
     ap.add_argument("--list-ports", action="store_true", help="list serial ports and exit")
     ap.add_argument("--selftest", action="store_true", help="check the checker with fake devices (no hardware)")
     ap.add_argument("--random", type=int, default=0, metavar="N", help="also send N random lines")

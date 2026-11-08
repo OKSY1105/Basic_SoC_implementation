@@ -1,6 +1,6 @@
 # Program the Zybo Z7-20 PL with the 8bit SoC bitstream over JTAG
-# (Vivado Hardware Manager, batch). WSL has no USB access, so this runs with
-# the Windows Vivado through scripts/program_zybo.ps1.
+# (Vivado Hardware Manager, batch), run by scripts/program_zybo.sh in Ubuntu
+# (WSL2) after the board's USB is attached to WSL (scripts/wsl_usb.sh).
 # Usage: vivado -mode batch -nojournal -nolog -source program_zybo.tcl -tclargs <bitstream.bit>
 # Board: PROG/UART micro-USB (J12) connected, power on; boot-mode jumper JP5
 # on JTAG is recommended (an SD/QSPI boot image can reconfigure the PL).
@@ -23,7 +23,7 @@ open_hw_manager
 connect_hw_server
 set targets [get_hw_targets -quiet]
 if {[llength $targets] == 0} {
-    error "No JTAG target: connect the Zybo PROG/UART micro-USB (J12), power the board on, and check the Digilent cable driver"
+    error "No JTAG target: connect the Zybo PROG/UART micro-USB (J12), power the board on, attach it to WSL (scripts/wsl_usb.sh attach 0403:6010) and check the Xilinx cable udev rules"
 }
 set hits {}
 foreach t $targets {
