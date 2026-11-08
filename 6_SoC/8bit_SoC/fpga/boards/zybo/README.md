@@ -85,7 +85,7 @@ critical_warnings=0
 
 처음 한 번만 하는 준비:
 
-1. Xilinx 케이블 udev 규칙을 WSL에 설치한다(sudo 암호 필요).
+1. JTAG 케이블의 USB 장치 파일(`/dev/bus/usb/…`)에 일반 사용자가 쓸 수 있어야 한다(Vivado `hw_server`가 사용자 권한으로 실행되기 때문). `program_zybo.sh`가 보드를 붙인 뒤 확인하고, 쓸 수 없을 때만 아래 설치 명령을 안내하고 멈춘다. 작업 PC는 기존 PlatformIO udev 규칙(`/etc/udev/rules.d/99-platformio-udev.rules`의 FTDI `0403:60[01][104]` → 0666)이 Zybo(`0403:6010`)에 적용되어 이미 쓸 수 있으므로 설치하지 않는다. 권한이 없는 PC에서는 Xilinx 케이블 규칙을 한 번 설치한다(sudo 암호 필요). 이 명령은 규칙 파일 3개(Digilent·Xilinx FTDI·Platform Cable USB 장치를 모드 666으로)를 `/etc/udev/rules.d`에 복사만 하며, 되돌릴 때는 `sudo rm /etc/udev/rules.d/52-xilinx-*.rules`를 실행한다.
 
    ```sh
    cd /home/sean/Vivado/2024.2/data/xicom/cable_drivers/lin64/install_script/install_drivers && sudo ./install_drivers
@@ -98,7 +98,7 @@ critical_warnings=0
 1. bitstream을 저장소 밖의 영구 폴더에 빌드한다: `bash 6_SoC/8bit_SoC/scripts/build_zybo.sh /home/sean/zybo_build`. WSL 배포판은 실행 중인 프로세스가 없으면 곧 멈추고, 다시 시작할 때 `/tmp`를 비운다(systemd `tmpfiles`의 `/tmp` 규칙). 그래서 bitstream은 `/tmp`에 두지 않는다.
 2. 배선: USB-UART 변환기의 TX → FPGA RX(Pmod JC 2번, W15), RX → FPGA TX(JC 1번, V15), GND → JC 5번. 3.3 V 변환기만 쓴다.
 3. 보드에 SD·QSPI 부팅 이미지가 있으면 PS가 PL을 다시 구성할 수 있으므로, 부팅 모드 점퍼(JP5)를 JTAG로 두기를 권장한다.
-4. 보드의 PROG/UART micro-USB(J12)를 PC에 연결하고 전원을 켠 뒤 아래를 실행한다. [`scripts/program_zybo.sh`](../../../scripts/program_zybo.sh)가 udev 규칙을 확인하고, Zybo를 WSL에 붙인다(이미 붙어 있으면 건너뜀). 이어서 Linux Vivado를 batch로 실행한다([`scripts/program_zybo.tcl`](../../../scripts/program_zybo.tcl)). JTAG에서 xc7z020 장치 하나를 찾아(ARM DAP는 건너뜀) bitstream을 쓰고 DONE을 확인한다. 성공하면 `SOC8_ZYBO_PROGRAM_PASS`와 `RESULT status=0`이 나온다. 다른 bitstream은 인자로 준다. `--detach`를 붙이면 끝난 뒤 보드를 host로 돌려준다. 붙어 있는 동안 보드는 host에서 보이지 않으며, WSL 가상 머신이 멈추면 떨어지므로 그때는 다시 실행한다.
+4. 보드의 PROG/UART micro-USB(J12)를 PC에 연결하고 전원을 켠 뒤 아래를 실행한다. [`scripts/program_zybo.sh`](../../../scripts/program_zybo.sh)가 Zybo를 WSL에 붙이고(이미 붙어 있으면 건너뜀) JTAG 장치 파일에 쓸 수 있는지 확인한다. 이어서 Linux Vivado를 batch로 실행한다([`scripts/program_zybo.tcl`](../../../scripts/program_zybo.tcl)). JTAG에서 xc7z020 장치 하나를 찾아(ARM DAP는 건너뜀) bitstream을 쓰고 DONE을 확인한다. 성공하면 `SOC8_ZYBO_PROGRAM_PASS`와 `RESULT status=0`이 나온다. 다른 bitstream은 인자로 준다. `--detach`를 붙이면 끝난 뒤 보드를 host로 돌려준다. 붙어 있는 동안 보드는 host에서 보이지 않으며, WSL 가상 머신이 멈추면 떨어지므로 그때는 다시 실행한다.
 
    ```sh
    bash 6_SoC/8bit_SoC/scripts/program_zybo.sh
@@ -110,7 +110,7 @@ critical_warnings=0
 기록:
 
 - 2026-11-05 첫 프로그래밍은 host의 Windows Vivado Hardware Manager batch로 했다(당시 스크립트 `program_zybo.ps1`, 2026-11-09 Ubuntu 전용으로 바꾸며 삭제). JTAG 대상 1개, xc7z020 장치 1개(`xc7z020_1`, JTAG index 1), "End of startup status: HIGH", `SOC8_ZYBO_PROGRAM_PASS … done=1`, 약 35초. LED는 LD0·LD1 켜짐, LD2·LD3 꺼짐(사용자 관찰).
-- Ubuntu 경로(`program_zybo.sh`)의 보드 실행 결과는 udev 규칙 설치 뒤 기록한다.
+- 2026-11-09 Ubuntu 경로(`program_zybo.sh`, WSL Vivado 2024.2, sudo·규칙 설치 없이): Zybo attach(BUSID `1-4`) → JTAG 장치 파일 `/dev/bus/usb/001/004` 쓰기 가능 → JTAG 대상 1개(`xilinx_tcf/Digilent/210351BE7CD8A`), `xc7z020_1`, "End of startup status: HIGH", `SOC8_ZYBO_PROGRAM_PASS … done=1`, `RESULT status=0`, 28초. `--detach`를 주지 않았으므로 끝난 뒤 보드는 WSL에 붙은 상태(Attached)로 남는다.
 
 ## 기존 Zybo UART 보드 래퍼 참조
 
