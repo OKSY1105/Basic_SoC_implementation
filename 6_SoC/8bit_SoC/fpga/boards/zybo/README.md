@@ -79,25 +79,38 @@ critical_warnings=0
 - DRC 경고 `REQP-1839`(RAMB36 async control check): 한 건은 (BRAM 제어 핀, 그 핀에 닿는 비동기 reset 레지스터) 한 쌍이다. DRC 보고서는 규칙마다 20건까지만 적으므로(`CHECK-3` Report rule limit reached) 20건만 나오며, 모두 ROM BRAM `u_soc/u_rom/r_a_data_reg_0`의 `ADDRARDADDR[14]` 한 핀에 대한 것이다(구동 레지스터: 캐시 상태·주소·valid, ROM 오류, UART IRQ). 배선된 checkpoint에서 BRAM 제어 핀(주소·enable·write enable·reset)의 입력 쪽을 따라가면, 실제 비동기 reset을 쓰는 레지스터가 조합 논리를 거쳐 닿는 핀은 ROM BRAM 2개(`r_a_data_reg_0`·`_1`)의 `ADDRARDADDR`·`ENARDEN`·`ENBWREN` 핀 각 14개다. 구동 레지스터는 캐시·버스·APB 브리지·UART·ROM·`reset_sync`에 있다. 명령 인출 주소와 ROM 선택이 이 레지스터들에서 같은 클록 안에 조합으로 정해지기 때문이다. M4 BRAM에는 해당 핀이 없다(Vivado power 최적화가 넣은 플립플롭은 CLR이 GND다). 경고 내용은 reset이 assert될 때 메모리 내용이나 읽은 값이 깨질 수 있다는 것이다. ROM BRAM의 write enable은 상수 0이므로 내용이 바뀌지 않고, reset 동안 읽은 값은 CPU도 reset 중이라 쓰이지 않는다. 그래서 이 설계에서는 영향이 없다고 판단해 두었다. `PDRC-138/142/144/146` 5건은 같은 slice의 LUT 쌍 배치 경고다.
 - 합성 단계 추정(`rtl/soc/README.md`, `soc8_top` OOC)은 LUT 994·WNS +0.459 ns였다. 보드 top은 MMCM·M4가 더해지고 배치·배선 뒤 값이다.
 
-## 보드에 올리기
+## 보드에 올리기 (Ubuntu)
 
-WSL에는 USB(JTAG) 연결이 없으므로 이 단계는 Windows Vivado Hardware Manager에서 한다.
+빌드부터 프로그래밍·계산기 시험까지 모두 Ubuntu(WSL2) 터미널에서 한다(2026-11-09 사용자 결정). WSL2는 USB를 직접 보지 못하므로 host에 설치된 usbipd-win이 USB 장치를 WSL로 넘긴다. 이 호출은 [`scripts/wsl_usb.sh`](../../../scripts/wsl_usb.sh)가 Ubuntu에서 `usbipd.exe`를 불러 처리한다. 명령은 저장소 루트 기준이다.
 
-1. bitstream을 저장소 밖의 영구 폴더에 빌드한다: `bash 6_SoC/8bit_SoC/scripts/build_zybo.sh /home/sean/zybo_build`. Windows에서는 `\\wsl.localhost\Ubuntu-22.04\home\sean\zybo_build\soc8_zybo_top.bit`로 연다. WSL 배포판은 실행 중인 프로세스가 없으면 곧 멈추고, 다시 시작할 때 `/tmp`를 비운다(systemd `tmpfiles`의 `/tmp` 규칙). 그래서 `/tmp`에 둔 bitstream은 Windows에서 열 때 이미 없을 수 있다.
-2. 배선: USB-UART 변환기의 TX → FPGA RX(W15), RX → FPGA TX(V15), GND → Pmod GND. 3.3 V 변환기만 쓴다. 커넥터 핀 번호는 Zybo Z7 참조 설명서로 확인한다.
-3. 보드에 SD·QSPI 부팅 이미지가 있으면 PS가 PL을 다시 구성할 수 있으므로, 부팅 모드 점퍼(JP5)를 JTAG로 두기를 권장한다(참조 설명서로 확인).
-4. 보드의 PROG/UART micro-USB(J12)를 PC에 연결하고 전원을 켠 뒤, Windows PowerShell에서 아래를 실행한다. [`scripts/program_zybo.ps1`](../../../scripts/program_zybo.ps1)이 Windows Vivado를 batch로 실행한다([`scripts/program_zybo.tcl`](../../../scripts/program_zybo.tcl)). JTAG에서 xc7z020 장치 하나를 찾아(ARM DAP는 건너뜀) bitstream을 쓰고 DONE을 확인한다. 성공하면 `SOC8_ZYBO_PROGRAM_PASS`와 `RESULT status=0`이 나온다. 다른 bitstream·Vivado 경로는 `-Bit`·`-VivadoBin`으로 준다. GUI로 할 때는 Vivado → Open Hardware Manager → Open Target → Auto Connect → Program Device에서 같은 `.bit`를 고른다.
+처음 한 번만 하는 준비:
 
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File \\wsl.localhost\Ubuntu-22.04\home\sean\Basic_SoC_implementation\6_SoC\8bit_SoC\scripts\program_zybo.ps1
+1. Xilinx 케이블 udev 규칙을 WSL에 설치한다(sudo 암호 필요).
+
+   ```sh
+   cd /home/sean/Vivado/2024.2/data/xicom/cable_drivers/lin64/install_script/install_drivers && sudo ./install_drivers
    ```
 
-5. 확인: LD0·LD1 켜짐, LD2·LD3 꺼짐. PC 터미널을 115200 bps, 8 데이터 bit, even parity, stop 1로 열고 `10,20` Enter → `ADD` Enter를 보내면 `ADD:30`이 와야 한다. BTN0을 누르면 reset된다.
+2. 새 USB 장치는 usbipd-win에 한 번 등록(share)해야 처음 붙일 수 있다. 등록에는 host 관리자 권한이 필요하다(관리자 PowerShell: `usbipd bind --busid <BUSID>`, BUSID는 `bash 6_SoC/8bit_SoC/scripts/wsl_usb.sh list`로 확인). 작업 PC의 Zybo(`0403:6010`)는 이미 등록되어 있다. USB-UART 변환기는 처음 꽂을 때 한 번 등록한다. 등록 뒤의 붙이기·떼기는 관리자 권한 없이 Ubuntu에서 한다.
 
-작업 PC의 Windows Vivado 2024.2는 합성이 실패한 기록이 있어 합성·구현은 WSL에서 한다. Hardware Manager batch 실행은 2026-11-05에 확인했다.
+매번 하는 순서:
 
-- 보드 미연결: UNC 경로의 Tcl·bitstream 읽기, hw_server 기동, JTAG 대상 0개 오류와 `RESULT status=1`.
-- 보드 연결(J12, FTDI FT2232H — JTAG 채널 A, 채널 B는 PS UART용 COM 포트): JTAG 대상 1개(`xilinx_tcf/Digilent/…`), xc7z020 장치 1개(`xc7z020_1`, JTAG index 1), "End of startup status: HIGH", `SOC8_ZYBO_PROGRAM_PASS … done=1`, `RESULT status=0`. 약 35초 걸린다.
+1. bitstream을 저장소 밖의 영구 폴더에 빌드한다: `bash 6_SoC/8bit_SoC/scripts/build_zybo.sh /home/sean/zybo_build`. WSL 배포판은 실행 중인 프로세스가 없으면 곧 멈추고, 다시 시작할 때 `/tmp`를 비운다(systemd `tmpfiles`의 `/tmp` 규칙). 그래서 bitstream은 `/tmp`에 두지 않는다.
+2. 배선: USB-UART 변환기의 TX → FPGA RX(Pmod JC 2번, W15), RX → FPGA TX(JC 1번, V15), GND → JC 5번. 3.3 V 변환기만 쓴다.
+3. 보드에 SD·QSPI 부팅 이미지가 있으면 PS가 PL을 다시 구성할 수 있으므로, 부팅 모드 점퍼(JP5)를 JTAG로 두기를 권장한다.
+4. 보드의 PROG/UART micro-USB(J12)를 PC에 연결하고 전원을 켠 뒤 아래를 실행한다. [`scripts/program_zybo.sh`](../../../scripts/program_zybo.sh)가 udev 규칙을 확인하고, Zybo를 WSL에 붙인다(이미 붙어 있으면 건너뜀). 이어서 Linux Vivado를 batch로 실행한다([`scripts/program_zybo.tcl`](../../../scripts/program_zybo.tcl)). JTAG에서 xc7z020 장치 하나를 찾아(ARM DAP는 건너뜀) bitstream을 쓰고 DONE을 확인한다. 성공하면 `SOC8_ZYBO_PROGRAM_PASS`와 `RESULT status=0`이 나온다. 다른 bitstream은 인자로 준다. `--detach`를 붙이면 끝난 뒤 보드를 host로 돌려준다. 붙어 있는 동안 보드는 host에서 보이지 않으며, WSL 가상 머신이 멈추면 떨어지므로 그때는 다시 실행한다.
+
+   ```sh
+   bash 6_SoC/8bit_SoC/scripts/program_zybo.sh
+   ```
+
+   GUI로 할 때는 Zybo를 붙인 뒤(`bash 6_SoC/8bit_SoC/scripts/wsl_usb.sh attach 0403:6010`) `/home/sean/Vivado/2024.2/bin/vivado &`(WSLg 창) → Open Hardware Manager → Open Target → Auto Connect → `xc7z020_1` → Program Device에서 `/home/sean/zybo_build/soc8_zybo_top.bit`를 고른다.
+5. 확인: LD12(DONE)·LD0·LD1 켜짐, LD2·LD3 꺼짐. 계산기는 변환기를 WSL에 붙인 뒤 [PC 시험 도구](../../../pc_tools/README.md)(`calc_board_test.py`, 115200 bps 8E1)로 판정한다. BTN0을 누르면 reset된다.
+
+기록:
+
+- 2026-11-05 첫 프로그래밍은 host의 Windows Vivado Hardware Manager batch로 했다(당시 스크립트 `program_zybo.ps1`, 2026-11-09 Ubuntu 전용으로 바꾸며 삭제). JTAG 대상 1개, xc7z020 장치 1개(`xc7z020_1`, JTAG index 1), "End of startup status: HIGH", `SOC8_ZYBO_PROGRAM_PASS … done=1`, 약 35초. LED는 LD0·LD1 켜짐, LD2·LD3 꺼짐(사용자 관찰).
+- Ubuntu 경로(`program_zybo.sh`)의 보드 실행 결과는 udev 규칙 설치 뒤 기록한다.
 
 ## 기존 Zybo UART 보드 래퍼 참조
 

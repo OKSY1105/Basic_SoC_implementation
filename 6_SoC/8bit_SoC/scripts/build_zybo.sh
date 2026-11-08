@@ -5,8 +5,8 @@
 #   VIVADO_BIN Vivado bin folder (default /home/sean/Vivado/2024.2/bin)
 # Steps: assemble firmware/calc.asm to BUILD_DIR/calc.mem, then run
 # scripts/build_zybo.tcl (synthesis, placement, routing, reports, bitstream
-# BUILD_DIR/soc8_zybo_top.bit). Program the board with Vivado Hardware
-# Manager (JTAG); WSL has no USB access, so that step runs on Windows.
+# BUILD_DIR/soc8_zybo_top.bit). Program the board from WSL with
+# scripts/program_zybo.sh (keep the bitstream outside /tmp, e.g. /home/sean/zybo_build).
 # Exit status 0 only if the log has SOC8_ZYBO_BUILD_PASS.
 set -u
 here=$(cd "$(dirname "$0")" && pwd)
