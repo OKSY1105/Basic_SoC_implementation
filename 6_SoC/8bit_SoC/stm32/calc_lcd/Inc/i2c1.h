@@ -17,6 +17,15 @@
 
 void i2c1_init(void);
 
+/*
+ * Free a stuck bus and restart I2C1: up to 9 SCL pulses by GPIO until the
+ * device releases SDA, a STOP condition, then i2c1_init() (which also resets
+ * the I2C1 block, clearing a stuck BUSY flag). Used after a failed write,
+ * e.g. when a wire was plugged in with the power on. Returns the SDA level
+ * seen before the pulses (0 = a device was holding SDA low).
+ */
+uint32_t i2c1_recover(void);
+
 int  i2c1_write(uint8_t addr7, const uint8_t *data, uint32_t len);
 int  i2c1_probe(uint8_t addr7);   /* address only: I2C1_OK when acknowledged */
 

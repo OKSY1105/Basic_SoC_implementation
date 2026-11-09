@@ -16,11 +16,11 @@ FPGA 계산기가 보내는 응답 줄을 STM32가 받아 16×2 문자 LCD에 �
 | 파일 | 역할 |
 |---|---|
 | `src/uart_fpga.c` | USART6 수신(PG9, AF8), 115200 **8E1**(`CR1.M = 1`, `PCE = 1`, `PS = 0`), 수신 인터럽트 + 256칸 링 버퍼, 오류 flag 수 집계 |
-| `src/i2c1.c` | I2C1 master 100 kHz(PB8 SCL, PB9 SDA, AF4, open-drain, **내부 pull-up 켬** — 쉴드에 pull-up이 없다), NACK·시간 초과 처리 |
+| `src/i2c1.c` | I2C1 master 100 kHz(PB8 SCL, PB9 SDA, AF4, open-drain, **내부 pull-up 켬** — 쉴드에 pull-up이 없다), NACK·시간 초과 처리, 멈춘 bus 복구(`i2c1_recover`: GPIO로 SCL 최대 9번 → STOP → I2C1 재설정) |
 | `src/lcd_i2c.c` | 확장 칩 주소 찾기(0x27·0x3F 먼저, 그다음 0x20~0x27·0x38~0x3F), HD44780 4-bit 초기화, 16칸 한 줄 쓰기 |
 | `src/uart_dbg.c` | USART3 디버그 출력과 `printf` 연결(`10_USART`에서 옮김) |
 | `src/delay.c` | SysTick 바쁜 대기 |
-| `src/main.c` | 줄 조립(CR 또는 LF로 끝, 빈 줄 무시), 오류 표시, LCD 2행 갱신 |
+| `src/main.c` | 줄 조립(CR 또는 LF로 끝, 빈 줄 무시), 오류 표시, LCD 2행 갱신. LCD 쓰기가 실패하면 bus 복구 → LCD 재초기화 → 한 번 더 쓰기, 결과를 `LCD_RECOVERED` 또는 `LCD_WRITE_FAIL`로 출력 |
 
 ## 연결
 
@@ -54,7 +54,7 @@ bash ../../scripts/wsl_usb.sh attach <BUSID>   # ST-LINK를 WSL에 붙임
 python3 -m serial.tools.miniterm /dev/ttyACM0 115200   # 디버그 출력 보기(ST-LINK 가상 COM, 장치 이름은 다를 수 있음)
 ```
 
-빌드 결과(2026-11-09): 경고 0(`-Wall -Wextra`), RAM 696 B, Flash 7,000 B.
+빌드 결과(2026-11-09, I2C bus 복구 추가 판): 경고 0(`-Wall -Wextra`), RAM 696 B, Flash 7,316 B.
 
 ## 시험 순서
 
@@ -78,4 +78,10 @@ USART6 RX PG9 (D0) 115200 8E1 ready
 - 내부 pull-up 없이 시작한 첫 판은 SDA·SCL이 떠 있어 주소 응답이 없었다(`I2C1 scan: none`). 쉴드에 pull-up이 없다는 것을 내부 pull-up·pull-down으로 선 상태를 읽어 확인했고, 내부 pull-up을 켠 판에서 0x27이 응답했다.
 - 중간에 판매 페이지 예제(다른 제품 WAT-LCD_BUTTON, 4-bit 병렬 RS = D8·EN = D9·D4~D7)를 따라 병렬 구동도 시험했으나, 이 쉴드의 D4~D9는 LCD에 연결되어 있지 않았다(LCD는 초기화되지 않은 상태의 1행 네모로 남음).
 
-2·3번(수신 단독, FPGA 결합)은 아직 하지 않았다.
+**3. FPGA 결합 — 자동 시험 PASS, BTN0 단계 미실행 (2026-11-09)**: 쉴드를 빼고 점퍼선 4가닥(바깥 줄)으로 LCD를 연결하고, Zybo Pmod JC 1번(FPGA TX) → D0, PC 변환기 TX → JC 2번, GND 공통으로 배선했다(변환기 RX는 비움). PC 시험 화면 [`calc_ui.py --reply-from stm32`](../pc_tools/README.md)로 STM32 디버그 출력의 받은 줄을 판정했다: `10,40` → `ADD` → `ADD:50`, 자동 시험(parity 사례 포함, 무작위 100줄) `CALC_UI_PASS lines=125 replies=87 failures=0`, `LCD_WRITE_FAIL` 0건.
+
+- 결합 전 첫 시도에서 STM32가 `ERR NOARG`를 받았지만 LCD 쓰기가 `err=-1`(bus busy)로 실패했다. 전원이 켜진 상태에서 점퍼선을 옮겨 I2C bus가 멈춘 것으로 추정한다. 그래서 LCD 쓰기 실패 때 bus를 복구하고 LCD를 다시 초기화해 한 번 더 쓰게 했다. 복구 경로는 시험 빌드(`PLATFORMIO_BUILD_FLAGS=-DI2C_RECOVER_SELFTEST`, 시작 화면을 복구 경로로 쓰게 함)로 보드에서 확인했다: `LCD_RECOVERED first_err=-3 sda_before=1`, 이어서 시작 화면 표시. 실제로 멈춘 bus에서의 복구는 아직 재현하지 못했다.
+- 선을 바꾼 뒤 LCD가 비어 있으면 Nucleo RESET(검은 버튼)을 누른다. 전원을 켤 때 LCD 초기화를 하기 때문이다.
+- 빌드(2026-11-09 복구 추가 판): 경고 0, RAM 696 B, Flash 7,316 B.
+
+2번(수신 단독)은 결합 시험으로 대신했다.
