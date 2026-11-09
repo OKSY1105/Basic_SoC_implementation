@@ -6,8 +6,8 @@
  * "ADD:30", "DIV Q:-10 R:-10", "ERR DIV0". The same FPGA TX wire goes to the
  * PC's USB-UART adapter and to this board's USART6 RX (PG9, Arduino D0).
  *
- * This program shows the replies on the 16x2 I2C LCD:
- *   row 0: latest reply, row 1: the reply before it.
+ * This program shows the latest reply on the 16x2 I2C LCD:
+ *   row 0: latest reply, row 1: blank (only the current result is shown).
  * A line with a UART receive error shows as "RX ERR"; a line longer than
  * 16 characters shows as "RX LONG". The STM32 never sends to the FPGA and
  * does not interpret or recompute the replies.
@@ -86,7 +86,6 @@ int main(void)
 {
     char line[LINE_MAX + 1U];
     char latest[LINE_MAX + 1U] = "";
-    char previous[LINE_MAX + 1U] = "";
     uint32_t len = 0U;
     int line_err = 0;
     int line_long = 0;
@@ -137,7 +136,6 @@ int main(void)
             line[len] = '\0';
             count++;
 
-            strcpy(previous, latest);
             if (line_err) {
                 uart_fpga_errors_t e;
                 uart_fpga_get_errors(&e);
@@ -154,7 +152,7 @@ int main(void)
                 strcpy(latest, line);
                 printf("#%lu FPGA> %s\r\n", (unsigned long)count, line);
             }
-            show(latest, previous);
+            show(latest, "");
 
             len = 0U;
             line_err = 0;
