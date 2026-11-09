@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "board.h"
+#include "delay.h"
 #include "i2c1.h"
 
 #define I2C_SPEED_HZ   100000U
@@ -35,6 +36,42 @@ void i2c1_init(void)
     I2C1->CCR   = BOARD_APB1_HZ / (2U * I2C_SPEED_HZ);      /* Sm: Thigh = Tlow = CCR * Tpclk */
     I2C1->TRISE = (BOARD_APB1_HZ / 1000000U) + 1U;          /* 1000 ns maximum rise time */
     I2C1->CR1   = I2C_CR1_PE;
+}
+
+#define SCL_BIT  8U
+#define SDA_BIT  9U
+
+static void bus_pin(uint32_t bit, uint32_t level)
+{
+    GPIOB->BSRR = level ? (1U << bit) : (1U << (bit + 16U));
+    delay_us(5U);                               /* half of a 100 kHz clock */
+}
+
+uint32_t i2c1_recover(void)
+{
+    uint32_t sda_before;
+
+    /* I2C1 off; PB8/PB9 as open-drain GPIO outputs, released (high). */
+    I2C1->CR1 = 0U;
+    GPIOB->BSRR  = (1U << SCL_BIT) | (1U << SDA_BIT);
+    GPIOB->MODER = (GPIOB->MODER & ~((3U << (SCL_BIT * 2U)) | (3U << (SDA_BIT * 2U))))
+                 | (1U << (SCL_BIT * 2U)) | (1U << (SDA_BIT * 2U));
+    delay_us(5U);
+    sda_before = (GPIOB->IDR >> SDA_BIT) & 1U;
+
+    /* A device stopped in the middle of a byte holds SDA low; clock it out. */
+    for (uint32_t i = 0U; i < 9U && !((GPIOB->IDR >> SDA_BIT) & 1U); i++) {
+        bus_pin(SCL_BIT, 0U);
+        bus_pin(SCL_BIT, 1U);
+    }
+    /* STOP: SDA low -> high while SCL is high. */
+    bus_pin(SCL_BIT, 0U);
+    bus_pin(SDA_BIT, 0U);
+    bus_pin(SCL_BIT, 1U);
+    bus_pin(SDA_BIT, 1U);
+
+    i2c1_init();                                /* back to AF4, I2C1 block reset */
+    return sda_before;
 }
 
 /* End a transfer after an error: STOP, then clear the acknowledge failure. */

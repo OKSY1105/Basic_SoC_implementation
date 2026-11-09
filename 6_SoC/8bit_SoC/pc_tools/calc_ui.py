@@ -14,6 +14,9 @@ calc_board_test.py (fixed cases, BTN0 reset steps, parity case, random lines).
 Usage (8bit_SoC folder, Ubuntu; attach the USB devices first with scripts/wsl_usb.sh):
   python3 pc_tools/calc_ui.py --list-ports
   python3 pc_tools/calc_ui.py --port /dev/ttyUSB0 [--stm32-port /dev/ttyACM0] [--http-port 8765]
+  python3 pc_tools/calc_ui.py --port /dev/ttyUSB0 --stm32-port /dev/ttyACM0 --reply-from stm32
+      wiring without the adapter RX (FPGA TX goes only to the STM32 D0): the
+      replies are taken from the STM32 debug output
   python3 pc_tools/calc_ui.py --fake          no hardware: fake calculator and fake STM32
 Then open http://localhost:8765 in the browser. Stop with Ctrl+C.
 Only one program may use a serial port: close miniterm and calc_board_test.py first.
@@ -75,7 +78,7 @@ class LockedFake:
 
 
 class App:
-    def __init__(self, pc_port, stm_port, fake, timeout, even, odd, pc_name, stm_name):
+    def __init__(self, pc_port, stm_port, fake, timeout, even, odd, pc_name, stm_name, reply_from="pc"):
         self.pc = pc_port
         self.stm = stm_port
         self.fake = fake
@@ -85,6 +88,8 @@ class App:
         self.pc_name = pc_name
         self.stm_name = stm_name
         self.has_lcd = stm_port is not None or fake
+        self.reply_stm = reply_from == "stm32"   # adapter RX not wired: replies come from the STM32 output
+        self.lcd_fail = 0                        # LCD_WRITE_FAIL lines from the STM32
         self.write_lock = threading.Lock()
         self.state_lock = threading.Lock()
         self.model = cbt.CalcModel()
@@ -135,7 +140,9 @@ class App:
 
     def on_pc_line(self, text):
         self.last_pc = text
-        if self.test["running"]:
+        if self.reply_stm:
+            self.add_log("rx", text)          # not used for judging in this mode
+        elif self.test["running"]:
             self.add_log("rx", text)
             self.pc_q.put(text)
         else:
@@ -151,11 +158,21 @@ class App:
     def on_stm_line(self, text):
         m = STM_LINE_RE.match(text)
         if not m:
-            self.add_log("stm_info", text)
+            if text.startswith("LCD_WRITE_FAIL"):
+                self.lcd_fail += 1
+                self.add_log("err", "STM32: " + text)
+            else:
+                self.add_log("stm_info", text)
             return
         shown = m.group(1) if m.group(1) is not None else m.group(2)
         self.last_stm = shown
-        self.add_log("stm", shown)
+        extra = {}
+        if self.reply_stm and not self.test["running"]:
+            with self.state_lock:
+                exp = self.pending_exp.pop(0) if self.pending_exp else None
+            if exp is not None:
+                extra = {"expected": exp, "match": shown == exp}
+        self.add_log("stm", shown, extra)
         if self.test["running"]:
             self.stm_q.put(shown)
 
@@ -204,7 +221,7 @@ class App:
             return "이미 실행 중입니다"
         random_count = max(0, min(int(random_count), 2000))
         self.test = {"running": True, "waiting_btn": "", "rows": [], "failures": 0,
-                     "result": "", "lines": 0, "replies": 0}
+                     "result": "", "lines": 0, "replies": 0, "lcd_fail_seen": self.lcd_fail}
         self.stop_flag.clear()
         self.btn_event.clear()
         threading.Thread(target=self.run_test, args=(use_btn0, parity, random_count, int(seed)),
@@ -240,7 +257,17 @@ class App:
         self.add_log("tx", row["line"], {"expected": exp} if exp is not None else {})
         self.write_line(line, parity_error)
         self.test["lines"] += 1
-        if exp is not None:
+        if exp is not None and self.reply_stm:
+            self.test["replies"] += 1
+            try:
+                row["lcd"] = self.stm_q.get(timeout=self.timeout)
+            except queue.Empty:
+                row["ok"] = False
+                row["why"] = "STM32가 받은 줄 없음"
+            if row["lcd"] is not None and row["lcd"] != exp:
+                row["ok"] = False
+                row["why"] = "STM32가 받은 줄이 기대값과 다름"
+        elif exp is not None:
             self.test["replies"] += 1
             try:
                 row["pc"] = self.pc_q.get(timeout=self.timeout)
@@ -266,11 +293,18 @@ class App:
     def check_quiet(self, where):
         time.sleep(0.3)
         extra = []
-        while True:
-            try:
-                extra.append(self.pc_q.get_nowait())
-            except queue.Empty:
-                break
+        for q in ((self.pc_q, self.stm_q) if self.has_lcd else (self.pc_q,)):
+            while True:
+                try:
+                    extra.append(q.get_nowait())
+                except queue.Empty:
+                    break
+        if self.lcd_fail != self.test.get("lcd_fail_seen", 0):
+            n = self.lcd_fail - self.test.get("lcd_fail_seen", 0)
+            self.test["lcd_fail_seen"] = self.lcd_fail
+            self.test["failures"] += 1
+            self.test["rows"].append({"line": "(%s)" % where, "expected": None, "pc": None, "lcd": None,
+                                      "ok": False, "why": "STM32 LCD 쓰기 실패 %d회" % n})
         if extra:
             self.test["failures"] += 1
             self.test["rows"].append({"line": "(%s)" % where, "expected": None, "pc": " | ".join(extra),
@@ -322,8 +356,9 @@ class App:
             t["result"] = "PASS"
         else:
             t["result"] = "FAIL"
-        summary = "CALC_UI_%s lines=%d replies=%d failures=%d lcd=%s" % (
-            t["result"], t["lines"], t["replies"], t["failures"], "on" if self.has_lcd else "off")
+        summary = "CALC_UI_%s lines=%d replies=%d failures=%d lcd=%s reply_from=%s" % (
+            t["result"], t["lines"], t["replies"], t["failures"], "on" if self.has_lcd else "off",
+            "stm32" if self.reply_stm else "pc")
         t["summary"] = summary
         self.add_log("info", summary)
         t["running"] = False
@@ -334,6 +369,7 @@ class App:
         t = dict(self.test)
         rows = t.pop("rows")
         return {"pc_port": self.pc_name, "stm_port": self.stm_name, "fake": self.fake,
+                "reply_stm": self.reply_stm,
                 "last_pc": self.last_pc, "last_stm": self.last_stm, "log": log,
                 "a": self.model.a, "b": self.model.b,
                 "test": t, "rows": rows}
@@ -379,7 +415,7 @@ th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--car
   <div class="muted">숫자 줄은 응답이 없고 A·B로 저장됩니다. 연산 버튼을 누르면 FPGA가 결과를 보냅니다.</div>
  </div>
  <div class="card"><h2>2. 결과</h2>
-  <div class="lbl">FPGA → PC (변환기)</div><div class="big" id="lastpc"></div>
+  <div class="lbl" id="pclbl">FPGA → PC (변환기)</div><div class="big" id="lastpc"></div>
   <div class="lbl" style="margin-top:8px" id="lcdlbl">STM32가 받아 LCD에 표시한 줄</div><div class="big" id="laststm"></div>
  </div>
  <div class="card"><h2>3. BTN0</h2>
@@ -397,12 +433,12 @@ th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--car
  </div>
 </section>
 <section>
- <div class="card"><h2>자동 시험 결과</h2><div class="scroll"><table><thead><tr><th>#</th><th>보낸 줄</th><th>기대</th><th>PC 응답</th><th id="lcdth">LCD 줄</th><th>판정</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+ <div class="card"><h2>자동 시험 결과</h2><div class="scroll"><table><thead><tr><th>#</th><th>보낸 줄</th><th>기대</th><th id="pcth">PC 응답</th><th id="lcdth">LCD 줄</th><th>판정</th></tr></thead><tbody id="rows"></tbody></table></div></div>
  <div class="card"><h2>기록</h2><div class="row"><button id="clear">화면 기록 지우기</button></div><div class="scroll" id="log"></div></div>
 </section>
 </main>
 <script>
-let since=0, rowsShown=0, hasStm=false;
+let since=0, rowsShown=0, hasStm=false, replyStm=false;
 const $=id=>document.getElementById(id);
 async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});const j=await r.json();if(j.error)alert(j.error);return j;}
 function send(line){return post('/api/send',{line});}
@@ -419,13 +455,15 @@ const KIND={tx:'PC → FPGA ',rx:'FPGA → PC ',stm:'LCD       ',stm_info:'STM32
 function logLine(e){let s=e.t+'  '+(KIND[e.kind]||e.kind)+' '+e.text;
  if(e.kind==='tx'&&e.expected)s+='   (기대 '+e.expected+')';
  if(e.kind==='tx'&&e.note)s+='   ('+e.note+')';
- if(e.kind==='rx'&&e.expected!==undefined)s+=e.match?'   ✓ 기대와 같음':'   ✗ 기대 '+e.expected;
+ if((e.kind==='rx'||e.kind==='stm')&&e.expected!==undefined)s+=e.match?'   ✓ 기대와 같음':'   ✗ 기대 '+e.expected;
  const d=document.createElement('div');d.className='k-'+e.kind;d.textContent=s;return d;}
 async function poll(){
  try{const r=await fetch('/api/state?since='+since);const s=await r.json();
-  $('pcport').textContent='FPGA 변환기: '+s.pc_port+(s.fake?' (가짜 장치)':'');
+  $('pcport').textContent='FPGA 변환기: '+s.pc_port+(s.fake?' (가짜 장치)':'')+(s.reply_stm?' — 응답은 STM32에서 받음':'');
   hasStm=!!s.stm_port;$('stmport').textContent='STM32: '+(s.stm_port||'연결 안 함');
   $('lcdlbl').style.display=$('laststm').style.display=$('lcdth').style.display=hasStm?'':'none';
+  replyStm=!!s.reply_stm;$('pclbl').style.display=$('lastpc').style.display=$('pcth').style.display=replyStm?'none':'';
+  if(replyStm)$('lcdlbl').textContent='FPGA 응답 (STM32가 받아 LCD에 표시한 줄)';
   $('lastpc').textContent=s.last_pc;$('laststm').textContent=s.last_stm;
   $('ab').textContent='화면이 아는 A·B: '+(s.a===null?'없음':s.a+', '+s.b);
   const log=$('log'),atEnd=log.scrollTop+log.clientHeight>=log.scrollHeight-20;
@@ -436,7 +474,7 @@ async function poll(){
   document.querySelectorAll('#sendnum,.op,#sendfree,#tstart').forEach(b=>b.disabled=run);$('tstop').disabled=!run;
   const bn=$('btnbanner');if(t.waiting_btn){bn.style.display='block';bn.textContent='자동 시험 대기: 보드의 BTN0을 눌렀다 뗀 뒤 아래 버튼을 누르세요 ('+t.waiting_btn+')';}else bn.style.display='none';
   const tb=$('rows');for(let i=rowsShown;i<s.rows.length;i++){const w=s.rows[i];const tr=document.createElement('tr');
-   tr.innerHTML='<td>'+(i+1)+'</td><td>'+esc(w.line)+'</td><td>'+esc(w.expected??'(응답 없음)')+'</td><td>'+esc(w.pc??'')+'</td>'+(hasStm?'<td>'+esc(w.lcd??'')+'</td>':'')+'<td class="'+(w.ok?'ok':'bad')+'">'+(w.ok?'ok':'FAIL '+esc(w.why))+'</td>';tb.appendChild(tr);}
+   tr.innerHTML='<td>'+(i+1)+'</td><td>'+esc(w.line)+'</td><td>'+esc(w.expected??'(응답 없음)')+'</td>'+(replyStm?'':'<td>'+esc(w.pc??'')+'</td>')+(hasStm?'<td>'+esc(w.lcd??'')+'</td>':'')+'<td class="'+(w.ok?'ok':'bad')+'">'+(w.ok?'ok':'FAIL '+esc(w.why))+'</td>';tb.appendChild(tr);}
   if(s.rows.length>rowsShown){rowsShown=s.rows.length;tb.parentNode.parentNode.scrollTop=1e9;}
   const res=$('tres');if(run){res.className='res';res.textContent='실행 중 '+t.lines+'/'+(t.total||'?')+' 줄, 실패 '+t.failures;}
   else if(t.result){res.className='res '+(t.result==='PASS'?'ok':'bad');res.textContent=t.result+' — '+t.summary;}
@@ -498,6 +536,9 @@ def main():
     ap.add_argument("--port", help="USB-UART adapter on Pmod JC, e.g. /dev/ttyUSB0 (115200 8E1)")
     ap.add_argument("--stm32-port", help="optional: STM32 ST-LINK virtual COM, e.g. /dev/ttyACM0 (115200 8N1)")
     ap.add_argument("--fake", action="store_true", help="no hardware: fake calculator and fake STM32")
+    ap.add_argument("--reply-from", choices=["pc", "stm32"], default="pc",
+                    help="where the FPGA replies are read: pc = adapter RX (default), "
+                         "stm32 = STM32 debug output (adapter RX not wired; needs --stm32-port)")
     ap.add_argument("--fake-fault", choices=["rem_sign_of_b", "silent", "lf_only", "echo", "parity_ignored",
                                              "comma_space_ok", "range_overwrites"],
                     help="with --fake: give the fake calculator this fault (checks that the UI test catches it)")
@@ -516,6 +557,8 @@ def main():
         print("MODEL_TABLE_MISMATCH %r" % (bad,))
         return 2
 
+    if args.reply_from == "stm32" and not (args.stm32_port or args.fake):
+        ap.error("--reply-from stm32 needs --stm32-port (or --fake)")
     stm = None
     if args.fake:
         pc = LockedFake(args.fake_fault)
@@ -537,12 +580,13 @@ def main():
             return 2
         pc_name, stm_name = args.port, args.stm32_port
 
-    app = App(pc, stm, args.fake, args.timeout, even, odd, pc_name, stm_name)
+    app = App(pc, stm, args.fake, args.timeout, even, odd, pc_name, stm_name, args.reply_from)
     threading.Thread(target=app.reader, args=(pc, app.on_pc_line), daemon=True).start()
     if stm is not None:
         stm.reset_input_buffer()
         threading.Thread(target=app.reader, args=(stm, app.on_stm_line), daemon=True).start()
-    app.add_log("info", "시작: FPGA 변환기 %s, STM32 %s" % (pc_name, stm_name or "연결 안 함"))
+    app.add_log("info", "시작: FPGA 변환기 %s, STM32 %s, 응답 읽는 곳 %s" % (
+        pc_name, stm_name or "연결 안 함", "STM32 출력" if args.reply_from == "stm32" else "PC 변환기 RX"))
 
     server = ThreadingHTTPServer(("127.0.0.1", args.http_port), make_handler(app))
     print("CALC_UI_READY open http://localhost:%d in the browser (Ctrl+C to stop)" % args.http_port)

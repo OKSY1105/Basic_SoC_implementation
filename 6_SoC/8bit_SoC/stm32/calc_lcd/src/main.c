@@ -28,17 +28,39 @@
 static uint8_t lcd_addr;
 static int     lcd_ready;
 
-static void show(const char *row0, const char *row1)
+static int write_rows(const char *row0, const char *row1)
 {
-    if (!lcd_ready) {
-        return;
-    }
     int err = lcd_write_line(0U, row0);
     if (err == I2C1_OK) {
         err = lcd_write_line(1U, row1);
     }
-    if (err != I2C1_OK) {
-        printf("LCD_WRITE_FAIL err=%d\r\n", err);
+    return err;
+}
+
+/* Show two rows. If the write fails (e.g. a wire was moved with the power on
+   and the I2C bus is stuck), free the bus, initialise the LCD again (it may
+   also have lost power) and write once more. */
+static void show(const char *row0, const char *row1)
+{
+    if (lcd_addr == 0U) {
+        return;
+    }
+    int err = lcd_ready ? write_rows(row0, row1) : I2C1_ERR_TIME;
+    if (err == I2C1_OK) {
+        return;
+    }
+    int first = err;
+    uint32_t sda = i2c1_recover();
+    err = lcd_init(lcd_addr);
+    if (err == I2C1_OK) {
+        err = write_rows(row0, row1);
+    }
+    lcd_ready = (err == I2C1_OK);
+    if (lcd_ready) {
+        printf("LCD_RECOVERED first_err=%d sda_before=%lu\r\n", first, (unsigned long)sda);
+    } else {
+        printf("LCD_WRITE_FAIL first_err=%d retry_err=%d sda_before=%lu\r\n",
+               first, err, (unsigned long)sda);
     }
 }
 
@@ -87,6 +109,9 @@ int main(void)
         printf("LCD addr=0x%02X init=%s (err=%d)\r\n",
                lcd_addr, lcd_ready ? "OK" : "FAIL", err);
     }
+#ifdef I2C_RECOVER_SELFTEST
+    lcd_ready = 0;          /* test build: force the recovery path once (README) */
+#endif
     show("8bit SoC calc", "waiting UART...");
 
     uart_fpga_init();

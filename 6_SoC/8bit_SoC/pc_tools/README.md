@@ -14,12 +14,20 @@ PC에서 보드의 계산기 펌웨어에 요청 줄을 보내고 응답 줄을 
 | 4. 자동 시험 | `calc_board_test.py`와 같은 고정 사례·BTN0 단계·parity 오류 사례·무작위 줄. 줄마다 기대값, PC 응답, LCD 줄, 판정을 표로 보여 주고 끝에 `CALC_UI_PASS`나 `CALC_UI_FAIL`을 표시한다 |
 | 기록 | 보낸 줄, 받은 줄, STM32 출력, 안내를 시간 순서로 표시한다 |
 
-STM32 쪽 비교는 STM32 디버그 출력(ST-LINK 가상 COM, 115200 8N1)의 `#n FPGA> 응답` 줄을 읽어서 한다([STM32 README](../stm32/README.md)). `--stm32-port`를 주면 자동 시험에서 PC 응답과 LCD 줄이 모두 기대값과 같아야 통과다.
+STM32 쪽 비교는 STM32 디버그 출력(ST-LINK 가상 COM, 115200 8N1)의 `#n FPGA> 응답` 줄을 읽어서 한다([STM32 README](../stm32/README.md)). `--stm32-port`를 주면 자동 시험에서 PC 응답과 LCD 줄이 모두 기대값과 같아야 통과다. STM32가 `LCD_WRITE_FAIL`(LCD 쓰기와 재시도 모두 실패)을 출력하면 그것도 실패로 센다.
+
+응답을 읽는 곳(`--reply-from`)은 배선에 따라 고른다. Pmod 구멍 하나에는 선을 하나만 꽂을 수 있으므로, 브레드보드 없이 결합하면 FPGA TX(JC 1번)는 STM32 D0에만 가고 변환기 RX는 비게 된다.
+
+| 배선 | 옵션 | 판정 |
+|---|---|---|
+| FPGA TX → 변환기 RX와 STM32 D0 모두(브레드보드로 나눔) | `--reply-from pc`(기본) | PC 응답과 LCD 줄 모두 기대값 |
+| FPGA TX → STM32 D0만, 변환기는 TX → JC 2번만 | `--reply-from stm32` | STM32가 받은 줄(= LCD 줄)이 기대값. 화면에서 PC 응답 칸을 숨긴다 |
 
 ```sh
 bash scripts/wsl_usb.sh attach 0403:6001                      # USB-UART 변환기(FT232R)
 bash scripts/wsl_usb.sh attach 0483:374b                      # STM32 ST-LINK (LCD 비교를 할 때)
 python3 pc_tools/calc_ui.py --list-ports                       # 장치 경로 확인
+python3 pc_tools/calc_ui.py --port /dev/ttyUSB0 --stm32-port /dev/ttyACM0 --reply-from stm32   # 변환기 RX 미연결
 python3 pc_tools/calc_ui.py --port /dev/ttyUSB0 --stm32-port /dev/ttyACM0
 python3 pc_tools/calc_ui.py --port /dev/ttyUSB0                # STM32 없이 FPGA만
 python3 pc_tools/calc_ui.py --fake                             # 하드웨어 없이 화면 확인
@@ -29,7 +37,9 @@ python3 pc_tools/calc_ui.py --fake                             # 하드웨어 �
 - 시리얼 포트 하나는 프로그램 하나만 연다. miniterm이나 `calc_board_test.py`가 같은 포트를 쓰고 있으면 `CALC_UI_FAIL cannot open port`로 끝난다.
 - `--http-port N`: 화면 포트 변경(기본 8765). `--timeout SEC`: 응답 대기 시간(기본 1.0초). `--fake-fault <결함>`: `--fake`의 가짜 계산기에 아래 자체 시험 표의 결함을 넣는다.
 
-자체 시험(2026-11-09, 하드웨어 없음): `--fake`로 서버를 띄우고 화면이 쓰는 API로 자동 시험(BTN0 단계·parity 사례·무작위 300줄 seed 1)을 실행했다. 정상 장치는 `CALC_UI_PASS lines=329 replies=239 failures=0 lcd=on`이었고, 결함 장치 `rem_sign_of_b`·`silent`·`parity_ignored`·`range_overwrites`는 모두 FAIL(실패 14·239·1·28줄)이었다. Windows 브라우저에서 화면을 열어 `10,20` → `ADD` → `ADD:30` 표시도 확인했다. 실제 보드에서는 아직 실행하지 않았다.
+자체 시험(2026-11-09, 하드웨어 없음): `--fake`로 서버를 띄우고 화면이 쓰는 API로 자동 시험(BTN0 단계·parity 사례·무작위 300줄 seed 1)을 실행했다. 정상 장치는 `CALC_UI_PASS lines=329 replies=239 failures=0 lcd=on`이었고, 결함 장치 `rem_sign_of_b`·`silent`·`parity_ignored`·`range_overwrites`는 모두 FAIL(실패 14·239·1·28줄)이었다. Windows 브라우저에서 화면을 열어 `10,20` → `ADD` → `ADD:30` 표시도 확인했다. `--reply-from stm32`를 더한 같은 시험도 정상 PASS, 결함 4종 FAIL(실패 줄 수 같음)이었다.
+
+보드 결합 시험(2026-11-09, `--reply-from stm32`, 배선: 변환기 TX → JC 2번, JC 1번 → Nucleo D0, GND 공통, LCD는 점퍼선 4가닥): 화면 API로 `10,40` → `ADD`를 보내 STM32가 받은 줄 `ADD:50`(기대와 같음)을 확인했고, 자동 시험(BTN0 단계 제외, parity 사례 포함, 무작위 100줄 seed 3)은 `CALC_UI_PASS lines=125 replies=87 failures=0 lcd=on reply_from=stm32`, `LCD_WRITE_FAIL` 0건이었다. BTN0 단계를 넣은 자동 시험은 사용자가 보드 버튼을 눌러야 하므로 아직 하지 않았다.
 
 ## 보드 시험 — `calc_board_test.py` (2026-11-06)
 
