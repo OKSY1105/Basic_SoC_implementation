@@ -4,7 +4,13 @@ PC에서 보드의 계산기 펌웨어에 요청 줄을 보내고 응답 줄을 
 
 ## 시험 화면 — `calc_ui.py` (2026-11-09)
 
-브라우저에서 계산기 보드를 시험하는 화면이다. Ubuntu에서 작은 웹 서버를 실행하고, Windows 브라우저에서 `http://localhost:8765`를 연다. 사례·기준 모델·가짜 장치는 아래 `calc_board_test.py`의 것을 그대로 쓴다.
+계산기 보드를 시험하는 화면이다. Ubuntu에서 명령 하나를 실행하면 Windows 화면에 시험 창이 열린다. 사례·기준 모델·가짜 장치는 아래 `calc_board_test.py`의 것을 그대로 쓴다.
+
+```sh
+bash scripts/calc_ui.sh          # 8bit_SoC 폴더에서. 끝낼 때는 이 터미널에서 Ctrl+C
+```
+
+[`scripts/calc_ui.sh`](../scripts/calc_ui.sh)는 USB-UART 변환기(0403:6001)와 Nucleo ST-LINK(0483:374b)를 WSL에 붙이고, `calc_ui.py`를 실행한다. `calc_ui.py`는 두 장치를 USB ID로 찾아 열고(`--port`·`--stm32-port` 기본 `auto`), WSL interop으로 Chrome(없으면 Edge, 둘 다 없으면 기본 브라우저)의 앱 창에 `http://localhost:8765`를 띄운다. ST-LINK가 있으면 응답을 STM32 출력에서 읽고(`--reply-from stm32`, 지금 배선), 없으면 변환기 RX에서 읽는다. 이미 실행 중이면 창만 다시 연다. miniterm이나 `calc_board_test.py`가 실행 중이면 시작하지 않는다.
 
 | 화면 영역 | 내용 |
 |---|---|
@@ -23,6 +29,8 @@ STM32 쪽 비교는 STM32 디버그 출력(ST-LINK 가상 COM, 115200 8N1)의 `#
 | FPGA TX → 변환기 RX와 STM32 D0 모두(브레드보드로 나눔) | `--reply-from pc`(기본) | PC 응답과 LCD 줄 모두 기대값 |
 | FPGA TX → STM32 D0만, 변환기는 TX → JC 2번만 | `--reply-from stm32` | STM32가 받은 줄(= LCD 줄)이 기대값. 화면에서 PC 응답 칸을 숨긴다 |
 
+직접 실행할 때(`calc_ui.sh`를 쓰지 않을 때):
+
 ```sh
 bash scripts/wsl_usb.sh attach 0403:6001                      # USB-UART 변환기(FT232R)
 bash scripts/wsl_usb.sh attach 0483:374b                      # STM32 ST-LINK (LCD 비교를 할 때)
@@ -33,13 +41,16 @@ python3 pc_tools/calc_ui.py --port /dev/ttyUSB0                # STM32 없이 FP
 python3 pc_tools/calc_ui.py --fake                             # 하드웨어 없이 화면 확인
 ```
 
-- 서버가 `CALC_UI_READY`를 출력하면 브라우저에서 `http://localhost:8765`를 연다. 끝낼 때는 Ubuntu 터미널에서 Ctrl+C를 누른다.
+- 서버가 `CALC_UI_READY`를 출력하고 시험 창을 연다. `--no-open`이면 창을 열지 않으므로 브라우저에서 `http://localhost:8765`를 직접 연다. 끝낼 때는 Ubuntu 터미널에서 Ctrl+C를 누른다(창에는 "서버 연결 끊김"이 표시되며, 창은 직접 닫는다).
+- `--port`·`--stm32-port`를 생략하면 USB ID로 찾는다. `--stm32-port none`: STM32를 쓰지 않는다.
 - 시리얼 포트 하나는 프로그램 하나만 연다. miniterm이나 `calc_board_test.py`가 같은 포트를 쓰고 있으면 `CALC_UI_FAIL cannot open port`로 끝난다.
 - `--http-port N`: 화면 포트 변경(기본 8765). `--timeout SEC`: 응답 대기 시간(기본 1.0초). `--fake-fault <결함>`: `--fake`의 가짜 계산기에 아래 자체 시험 표의 결함을 넣는다.
 
 자체 시험(2026-11-09, 하드웨어 없음): `--fake`로 서버를 띄우고 화면이 쓰는 API로 자동 시험(BTN0 단계·parity 사례·무작위 300줄 seed 1)을 실행했다. 정상 장치는 `CALC_UI_PASS lines=329 replies=239 failures=0 lcd=on`이었고, 결함 장치 `rem_sign_of_b`·`silent`·`parity_ignored`·`range_overwrites`는 모두 FAIL(실패 14·239·1·28줄)이었다. Windows 브라우저에서 화면을 열어 `10,20` → `ADD` → `ADD:30` 표시도 확인했다. `--reply-from stm32`를 더한 같은 시험도 정상 PASS, 결함 4종 FAIL(실패 줄 수 같음)이었다.
 
 보드 결합 시험(2026-11-09, `--reply-from stm32`, 배선: 변환기 TX → JC 2번, JC 1번 → Nucleo D0, GND 공통, LCD는 점퍼선 4가닥): 화면 API로 `10,40` → `ADD`를 보내 STM32가 받은 줄 `ADD:50`(기대와 같음)을 확인했고, 자동 시험(BTN0 단계 제외, parity 사례 포함, 무작위 100줄 seed 3)은 `CALC_UI_PASS lines=125 replies=87 failures=0 lcd=on reply_from=stm32`, `LCD_WRITE_FAIL` 0건이었다. BTN0 단계를 넣은 자동 시험은 사용자가 보드 버튼을 눌러야 하므로 아직 하지 않았다.
+
+`calc_ui.sh` 확인(2026-11-09, 같은 배선): 장치를 `/dev/ttyUSB0`·`/dev/ttyACM0`로 찾아 `reply_from=stm32`로 시작하고 Chrome 앱 창을 열었다(`page opened on the Windows screen (chrome.exe)`). `7,-2` → `DIV` → STM32 `DIV Q:-3 R:1`(기대와 같음). 실행 중에 한 번 더 실행하면 창만 다시 열고 끝났다. 가짜 장치 자체 시험(`--no-open`)은 두 모드 모두 그대로 통과했다.
 
 ## 보드 시험 — `calc_board_test.py` (2026-11-06)
 

@@ -18,13 +18,20 @@ Usage (8bit_SoC folder, Ubuntu; attach the USB devices first with scripts/wsl_us
       wiring without the adapter RX (FPGA TX goes only to the STM32 D0): the
       replies are taken from the STM32 debug output
   python3 pc_tools/calc_ui.py --fake          no hardware: fake calculator and fake STM32
-Then open http://localhost:8765 in the browser. Stop with Ctrl+C.
+The page opens by itself in a Windows browser window (Chrome or Edge app
+window, through WSL interop); --no-open leaves it to you
+(http://localhost:8765). Stop with Ctrl+C. One-command start with the USB
+attach: bash scripts/calc_ui.sh. --port and --stm32-port default to auto:
+the FT232R adapter (0403:6001) and the ST-LINK (0483:xxxx) are found by
+their USB IDs.
 Only one program may use a serial port: close miniterm and calc_board_test.py first.
 """
 import argparse
 import json
 import os
 import queue
+import shutil
+import subprocess
 import random
 import re
 import sys
@@ -34,6 +41,42 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import calc_board_test as cbt   # noqa: E402  (same folder: cases, reference model, fake device)
+
+WIN_BROWSERS = ("/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
+                "/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+                "/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+                "/mnt/c/Program Files/Microsoft/Edge/Application/msedge.exe")
+ADAPTER_IDS = ((0x0403, 0x6001),)          # FT232R USB-UART adapter on Pmod JC
+STLINK_VID = 0x0483                         # ST-LINK virtual COM of the Nucleo
+
+
+def find_ports():
+    """(adapter, stlink) device paths found by USB ID, None when absent."""
+    from serial.tools import list_ports
+    adapter = stlink = None
+    for p in list_ports.comports():
+        if (p.vid, p.pid) in ADAPTER_IDS and adapter is None:
+            adapter = p.device
+        elif p.vid == STLINK_VID and stlink is None:
+            stlink = p.device
+    return adapter, stlink
+
+
+def open_window(url):
+    """Open the page on the Windows screen: an app window of Chrome or Edge,
+    else the default browser. Returns a short description."""
+    for exe in WIN_BROWSERS:
+        if os.path.exists(exe):
+            subprocess.Popen([exe, "--new-window", "--app=" + url], stdin=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            return os.path.basename(exe)
+    cmd = shutil.which("cmd.exe") or "/mnt/c/Windows/System32/cmd.exe"
+    if os.path.exists(cmd):
+        subprocess.Popen([cmd, "/c", "start", "", url], cwd="/mnt/c", stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        return "default browser"
+    return ""
+
 
 STM_LINE_RE = re.compile(r"^#\d+ (?:FPGA> (.*)|(RX ERR|RX LONG)\b.*)$")
 LOG_KEEP = 3000
@@ -533,8 +576,12 @@ def make_handler(app):
 
 def main():
     ap = argparse.ArgumentParser(description="Web UI for the 8bit SoC calculator board test")
-    ap.add_argument("--port", help="USB-UART adapter on Pmod JC, e.g. /dev/ttyUSB0 (115200 8E1)")
-    ap.add_argument("--stm32-port", help="optional: STM32 ST-LINK virtual COM, e.g. /dev/ttyACM0 (115200 8N1)")
+    ap.add_argument("--port", default="auto",
+                    help="USB-UART adapter on Pmod JC, e.g. /dev/ttyUSB0 (115200 8E1); auto = FT232R by USB ID")
+    ap.add_argument("--stm32-port", default="auto",
+                    help="STM32 ST-LINK virtual COM, e.g. /dev/ttyACM0 (115200 8N1); auto = ST-LINK by USB ID, "
+                         "none = do not use the STM32")
+    ap.add_argument("--no-open", action="store_true", help="do not open the page on the Windows screen")
     ap.add_argument("--fake", action="store_true", help="no hardware: fake calculator and fake STM32")
     ap.add_argument("--reply-from", choices=["pc", "stm32"], default="pc",
                     help="where the FPGA replies are read: pc = adapter RX (default), "
@@ -557,8 +604,22 @@ def main():
         print("MODEL_TABLE_MISMATCH %r" % (bad,))
         return 2
 
+    if not args.fake and (args.port == "auto" or args.stm32_port == "auto"):
+        adapter, stlink = find_ports()
+        if args.port == "auto":
+            if adapter is None:
+                print("CALC_UI_FAIL USB-UART adapter (FT232R 0403:6001) not found. Attach it: "
+                      "bash scripts/wsl_usb.sh attach 0403:6001, or give --port")
+                return 2
+            args.port = adapter
+        if args.stm32_port == "auto":
+            args.stm32_port = stlink
+            if stlink is None:
+                print("STM32 ST-LINK not found: running without the STM32/LCD comparison")
+    if args.stm32_port == "none":
+        args.stm32_port = None
     if args.reply_from == "stm32" and not (args.stm32_port or args.fake):
-        ap.error("--reply-from stm32 needs --stm32-port (or --fake)")
+        ap.error("--reply-from stm32 needs the STM32 port (--stm32-port), or --fake")
     stm = None
     if args.fake:
         pc = LockedFake(args.fake_fault)
@@ -589,7 +650,13 @@ def main():
         pc_name, stm_name or "연결 안 함", "STM32 출력" if args.reply_from == "stm32" else "PC 변환기 RX"))
 
     server = ThreadingHTTPServer(("127.0.0.1", args.http_port), make_handler(app))
-    print("CALC_UI_READY open http://localhost:%d in the browser (Ctrl+C to stop)" % args.http_port)
+    url = "http://localhost:%d" % args.http_port
+    print("CALC_UI_READY adapter=%s stm32=%s reply_from=%s page=%s (Ctrl+C to stop)"
+          % (pc_name, stm_name or "none", args.reply_from, url))
+    if not args.no_open:
+        how = open_window(url)
+        print("page opened on the Windows screen (%s)" % how if how else
+              "could not open a Windows browser; open %s yourself" % url)
     sys.stdout.flush()
     try:
         server.serve_forever()
