@@ -2,6 +2,35 @@
 
 PC에서 보드의 계산기 펌웨어에 요청 줄을 보내고 응답 줄을 자동으로 판정하는 도구다. PC는 [계산기 통신 규약](../02_design/calculator.md)의 숫자 줄·연산 줄만 보낸다. CPU opcode를 입력하는 방식은 쓰지 않는다.
 
+## 시험 화면 — `calc_ui.py` (2026-11-09)
+
+브라우저에서 계산기 보드를 시험하는 화면이다. Ubuntu에서 작은 웹 서버를 실행하고, Windows 브라우저에서 `http://localhost:8765`를 연다. 사례·기준 모델·가짜 장치는 아래 `calc_board_test.py`의 것을 그대로 쓴다.
+
+| 화면 영역 | 내용 |
+|---|---|
+| 1. 계산 보내기 | A·B 입력 → `숫자 보내기`, ADD·SUB·MUL·DIV 버튼, 직접 입력 줄. 숫자 줄은 응답이 없고, 연산 줄은 기대값을 함께 표시한다 |
+| 2. 결과 | FPGA가 PC 변환기로 보낸 마지막 응답과, STM32가 받아 LCD에 표시한 마지막 줄(`--stm32-port`를 줄 때) |
+| 3. BTN0 | 보드 BTN0을 누른 뒤 `BTN0 눌렀음`을 누르면 화면의 기대값 계산도 A·B가 없는 상태로 돌아간다. 자동 시험의 BTN0 단계도 이 버튼으로 진행한다 |
+| 4. 자동 시험 | `calc_board_test.py`와 같은 고정 사례·BTN0 단계·parity 오류 사례·무작위 줄. 줄마다 기대값, PC 응답, LCD 줄, 판정을 표로 보여 주고 끝에 `CALC_UI_PASS`나 `CALC_UI_FAIL`을 표시한다 |
+| 기록 | 보낸 줄, 받은 줄, STM32 출력, 안내를 시간 순서로 표시한다 |
+
+STM32 쪽 비교는 STM32 디버그 출력(ST-LINK 가상 COM, 115200 8N1)의 `#n FPGA> 응답` 줄을 읽어서 한다([STM32 README](../stm32/README.md)). `--stm32-port`를 주면 자동 시험에서 PC 응답과 LCD 줄이 모두 기대값과 같아야 통과다.
+
+```sh
+bash scripts/wsl_usb.sh attach 0403:6001                      # USB-UART 변환기(FT232R)
+bash scripts/wsl_usb.sh attach 0483:374b                      # STM32 ST-LINK (LCD 비교를 할 때)
+python3 pc_tools/calc_ui.py --list-ports                       # 장치 경로 확인
+python3 pc_tools/calc_ui.py --port /dev/ttyUSB0 --stm32-port /dev/ttyACM0
+python3 pc_tools/calc_ui.py --port /dev/ttyUSB0                # STM32 없이 FPGA만
+python3 pc_tools/calc_ui.py --fake                             # 하드웨어 없이 화면 확인
+```
+
+- 서버가 `CALC_UI_READY`를 출력하면 브라우저에서 `http://localhost:8765`를 연다. 끝낼 때는 Ubuntu 터미널에서 Ctrl+C를 누른다.
+- 시리얼 포트 하나는 프로그램 하나만 연다. miniterm이나 `calc_board_test.py`가 같은 포트를 쓰고 있으면 `CALC_UI_FAIL cannot open port`로 끝난다.
+- `--http-port N`: 화면 포트 변경(기본 8765). `--timeout SEC`: 응답 대기 시간(기본 1.0초). `--fake-fault <결함>`: `--fake`의 가짜 계산기에 아래 자체 시험 표의 결함을 넣는다.
+
+자체 시험(2026-11-09, 하드웨어 없음): `--fake`로 서버를 띄우고 화면이 쓰는 API로 자동 시험(BTN0 단계·parity 사례·무작위 300줄 seed 1)을 실행했다. 정상 장치는 `CALC_UI_PASS lines=329 replies=239 failures=0 lcd=on`이었고, 결함 장치 `rem_sign_of_b`·`silent`·`parity_ignored`·`range_overwrites`는 모두 FAIL(실패 14·239·1·28줄)이었다. Windows 브라우저에서 화면을 열어 `10,20` → `ADD` → `ADD:30` 표시도 확인했다. 실제 보드에서는 아직 실행하지 않았다.
+
 ## 보드 시험 — `calc_board_test.py` (2026-11-06)
 
 [보드 TB](../tb/board/tb_soc8_zybo_top.sv)와 같은 사례를 실물 보드에 115200 bps 8E1로 보낸다. 응답은 이 파일 안의 기준 모델로 판정한다. 기준 모델은 규약 2~4절(숫자 범위, 0 방향 몫과 피제수 부호의 나머지, 오류 4종, 15자 제한)을 구현한 것이다. 고정 사례의 기대 문자열은 규약 5절과 보드 TB에서 옮겼고, 실행할 때마다 기준 모델이 이 문자열을 모두 그대로 만드는지 먼저 확인한다.
