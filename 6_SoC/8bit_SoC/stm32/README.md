@@ -10,7 +10,7 @@ FPGA 계산기가 보내는 응답 줄을 STM32가 받아 16×2 문자 LCD에 �
 | 개발 방식 | bare-metal CMSIS 레지스터 접근, PlatformIO `framework = cmsis`. 사용자의 기존 `Embedded_System/Bare_Metal/platformIO/10_USART` 프로젝트와 같은 환경이다 |
 | 클록 | 시작 코드가 둔 내부 HSI 16 MHz 그대로(PLL 없음). 시작할 때 `SystemCoreClock`을 디버그 출력에 찍는다 |
 | LCD | YwRobot "LCM1602 IIC Shield V1": 16×2 문자 LCD(HD44780 호환) + PCF8574 계열 I2C 확장 칩. 4-bit, 쓰기 전용. 확장 칩 주소 0x27, bit 배치 P0 = RS, P1 = R/W, P2 = EN, P3 = 백라이트, P4~P7 = D4~D7(Arduino LiquidCrystal_I2C와 같은 배치, `src/lcd_i2c.c`) — 보드에서 표시 확인. 쉴드에는 SDA·SCL pull-up 저항이 없다 |
-| 표시 | 1행 = 마지막 응답, 2행 = 그 전 응답. 수신 오류(parity·frame·noise·overrun)가 난 줄은 `RX ERR`, 16자를 넘는 줄은 `RX LONG`. 시작 화면은 `8bit SoC calc` / `waiting UART...` |
+| 표시 | 1행 = 마지막 응답, 2행 = 비움(현재 결과만 표시, 2026-11-09 사용자 요청 — 이전 판은 2행에 그 전 응답을 표시했다). 수신 오류(parity·frame·noise·overrun)가 난 줄은 `RX ERR`, 16자를 넘는 줄은 `RX LONG`. 시작 화면은 `8bit SoC calc` / `waiting UART...` |
 | 디버그 출력 | USART3 TX(PD8) → ST-LINK 가상 COM, 115200 8N1. 시작 정보(클록, I2C 주소 검색 결과, LCD 초기화 결과)와 받은 줄마다 `#번호 FPGA> 응답`을 출력한다 |
 
 | 파일 | 역할 |
@@ -54,7 +54,7 @@ bash ../../scripts/wsl_usb.sh attach <BUSID>   # ST-LINK를 WSL에 붙임
 python3 -m serial.tools.miniterm /dev/ttyACM0 115200   # 디버그 출력 보기(ST-LINK 가상 COM, 장치 이름은 다를 수 있음)
 ```
 
-빌드 결과(2026-11-09, I2C bus 복구 추가 판): 경고 0(`-Wall -Wextra`), RAM 696 B, Flash 7,316 B.
+빌드 결과(2026-11-09, 현재 결과만 표시하는 판): 경고 0(`-Wall -Wextra`), RAM 696 B, Flash 7,300 B.
 
 ## 시험 순서
 
