@@ -112,6 +112,50 @@ critical_warnings=0
 - 2026-11-05 첫 프로그래밍은 host의 Windows Vivado Hardware Manager batch로 했다(당시 스크립트 `program_zybo.ps1`, 2026-11-09 Ubuntu 전용으로 바꾸며 삭제). JTAG 대상 1개, xc7z020 장치 1개(`xc7z020_1`, JTAG index 1), "End of startup status: HIGH", `SOC8_ZYBO_PROGRAM_PASS … done=1`, 약 35초. LED는 LD0·LD1 켜짐, LD2·LD3 꺼짐(사용자 관찰).
 - 2026-11-09 Ubuntu 경로(`program_zybo.sh`, WSL Vivado 2024.2, sudo·규칙 설치 없이): Zybo attach(BUSID `1-4`) → JTAG 장치 파일 `/dev/bus/usb/001/004` 쓰기 가능 → JTAG 대상 1개(`xilinx_tcf/Digilent/210351BE7CD8A`), `xc7z020_1`, "End of startup status: HIGH", `SOC8_ZYBO_PROGRAM_PASS … done=1`, `RESULT status=0`, 28초. `--detach`를 주지 않았으므로 끝난 뒤 보드는 WSL에 붙은 상태(Attached)로 남는다.
 
+## 전원을 켤 때 자동으로 올라오게 하기 (QSPI 부팅, Ubuntu)
+
+PL 구성은 SRAM에 들어가므로 전원이 끊기면 지워진다. JP6이 USB이면 USB 케이블을 빼는 것도 전원 차단이다. Zynq는 PL만 flash에서 직접 구성하지 못한다. 전원을 켜면 PS의 BootROM이 JP5로 정한 장치에서 FSBL(first stage boot loader)을 읽고, FSBL이 boot image 안의 bitstream으로 PL을 구성한다(Zybo Z7 참조 설명서 2절). SoC bitstream에는 PS7 블록이 없으므로 FSBL을 `NON_PS_INSTANTIATED_BITSTREAM`으로 컴파일해 PL→PS 레벨 시프터를 켜지 않게 한다(Xilinx CR 671028). 켜면 구동되지 않는 PL→PS 인터럽트 선에서 IRQ가 나고, FSBL이 대체 부팅을 위해 시스템을 리셋하며 PL 구성도 지워진다. FSBL은 PL을 구성한 뒤 boot image의 첫 PS 프로그램으로 실행을 넘긴다. 그래서 `BOOT.bin`(FSBL + SoC bitstream + PS 대기 프로그램)을 보드의 16 MiB QSPI flash(3.3 V)에 기록한다. 설명서는 Spansion S25FL128S로 적지만 이 보드에서는 u-boot가 Winbond W25Q128JV로 감지했다. 기록기가 칩을 자동으로 인식하므로 flash 항목은 S25FL128S 3.3 V 항목을 그대로 쓴다. SoC의 RTL과 bitstream은 바꾸지 않는다. FSBL을 만들 때만 PS 설정이 필요하다.
+
+처음 한 번 하는 준비:
+
+1. Digilent 보드 파일(Zybo Z7-20의 PS 프리셋: DDR3L `MT41K256M16 RE-125`, MIO, QSPI)을 저장소 밖에 둔다. 출처는 [Digilent/vivado-boards](https://github.com/Digilent/vivado-boards/tree/master/new/board_files/zybo-z7-20/A.0)(MIT)이며, `board.xml` 40,818바이트·`part0_pins.xml` 6,788바이트·`preset.xml` 44,338바이트다.
+
+   ```sh
+   d=/home/sean/xilinx_boards/board_files/zybo-z7-20/A.0; mkdir -p $d && for f in board.xml part0_pins.xml preset.xml; do curl -fsSL -o $d/$f https://raw.githubusercontent.com/Digilent/vivado-boards/master/new/board_files/zybo-z7-20/A.0/$f; done
+   ```
+
+2. 도구: Vivado 2024.2(`/home/sean/Vivado/2024.2`, XSA·`bootgen`·flash 기록)와 Vitis 2024.2(`/home/sean/Vitis/2024.2`, FSBL 빌드).
+
+순서(저장소 루트 기준):
+
+1. boot image를 만든다. [`scripts/build_zybo_boot.sh`](../../../scripts/build_zybo_boot.sh)가 세 단계를 실행한다. 결과는 `/home/sean/zybo_build/boot/BOOT.bin`이고 약 70초 걸린다.
+   1. PS만 있는 플랫폼 XSA([`scripts/zybo_ps_platform.tcl`](../../../scripts/zybo_ps_platform.tcl): `processing_system7` + 보드 프리셋, PL 쪽 포트 없음)
+   2. FSBL(`NON_PS_INSTANTIATED_BITSTREAM`)과 PS 대기 프로그램([`scripts/zybo_fsbl.tcl`](../../../scripts/zybo_fsbl.tcl), `xsct -nodisp`). PS 프로그램은 Vitis `hello_world` 예제로, PS UART(J12의 두 번째 채널, 115200 8N1)에 "Hello World"를 출력한 뒤 DDR에서 대기한다. PL의 SoC는 PS를 쓰지 않는다.
+   3. `bootgen -arch zynq`
+
+   ```sh
+   bash 6_SoC/8bit_SoC/scripts/build_zybo_boot.sh
+   ```
+
+   - XSA 단계의 critical warning 4건(`PSU-1`~`PSU-4`)은 보드 프리셋의 DQS-클록 지연 값이 음수라는 경고다. Digilent 프리셋 값 그대로이다.
+2. flash에 기록한다. 먼저 SW4로 전원을 끄고 JP5를 JTAG에 둔 뒤 J12를 연결하고 전원을 켠다. Vivado는 JTAG 부팅 모드에서만 flash 기록을 지원한다(QSPI 모드에서는 경고가 나오고 기록이 도중에 멈출 수 있다). [`scripts/flash_zybo_qspi.sh`](../../../scripts/flash_zybo_qspi.sh)가 보드를 WSL에 붙이고, [`scripts/flash_zybo_qspi.tcl`](../../../scripts/flash_zybo_qspi.tcl)로 erase·program·verify를 한다(flash 항목 `s25fl128s-3.3v-qspi-x4-single`, FSBL로 PS 초기화). 성공하면 `SOC8_ZYBO_QSPI_PASS`와 `RESULT status=0`이 나오며, 약 3.5분 걸린다. `FLASH_TIMEOUT`(기본 600초) 안에 끝나지 않으면 스크립트가 Vivado를 멈추고 실패로 끝낸다. 로그는 `/home/sean/zybo_build/boot/flash_<날짜>_<시각>.log`로 남는다.
+
+   ```sh
+   bash 6_SoC/8bit_SoC/scripts/flash_zybo_qspi.sh
+   ```
+
+3. SW4로 전원을 끄고 JP5를 QSPI(가운데 두 핀)로 옮긴 뒤 전원을 켠다. JP5는 전원을 켤 때만 읽힌다. 몇 초 안에 LD12(DONE)가 켜지고 LD0·LD1이 켜지면 성공이다.
+4. 그 뒤로는 전원을 껐다 켜거나 USB를 다시 꽂아도 PL이 자동으로 구성된다. RTL을 바꾸면 bitstream을 다시 빌드하고 1·2를 다시 한다. 개발 중에는 JTAG 프로그래밍(`program_zybo.sh`, 약 30초)이 빠르다. JP5를 JTAG로 되돌리면 전원을 켤 때 flash를 쓰지 않는다.
+
+기록:
+
+- 2026-11-09: 보드 파일을 받았고(크기 일치), `build_zybo_boot.sh`가 PASS했다(XSA `digilentinc.com:zybo-z7-20:part0:1.2`, FSBL text 82,832·data 10,484·bss 76,080바이트, `BOOT.bin` 4,149,824바이트, 70초). 첫 flash 기록은 erase·program·verify가 PASS했다(212초).
+  - 이때 스크립트가 후보 목록의 첫 x4-single 항목인 `s25fl128s-1.8v-qspi-x4-single`을 골랐다. verify는 모든 바이트가 같아 기록 내용에는 문제가 없었다.
+  - 보드 flash가 3.3 V이므로 `s25fl128s-3.3v-qspi-x4-single`로 고정했다.
+  - 고정한 항목으로 다시 기록하려던 두 번째 실행은 FSBL을 내려받기 전에 멈췄다. 보드가 QSPI 부팅 모드였고(JP5가 처음부터 QSPI), Vivado가 "The current boot mode is QSPI" 경고를 냈다. 약 9분 뒤 프로세스를 종료했고, erase 전이었으므로 첫 실행의 기록 내용은 그대로 남았다. 이 일로 JP5 = JTAG 조건, 시간 제한, 날짜별 로그를 스크립트에 넣었다.
+  - JP5 = QSPI로 전원을 켜자 LD3만 켜지고 LD12(DONE)는 꺼져 있었다. JTAG로 읽은 상태: 부팅 모드 QSPI, PL 미구성, `REBOOT_STATUS` 0xF048200C(SLC_RST 표시, BootROM 오류 0x200C). linear 모드 읽기(x1·quad)로 읽은 flash 앞부분과 FSBL 영역은 `BOOT.bin`과 같았다. 디버그 출력을 켠 FSBL을 JTAG로 실행하자 PS UART에 "FPGA Done !" → "Handoff Address: 0x00000000" → "IRQ_HANDLER"가 찍혔다. PL 구성은 성공했으나 IRQ 예외 → 대체 부팅 리셋 → PL 구성 삭제 순서로 실패했다. 처음에는 PS 프로그램이 없어 주소 0으로 넘어간 탓으로 보고 PS 대기 프로그램을 넣었지만, 같은 IRQ가 다시 났다. FSBL을 IRQ 처리 함수에서 멈춰 보니 IRQ는 hand-off 직전 `FsblHandoff`가 `ps7_post_config`로 PL→PS 레벨 시프터를 켤 때 났다. FSBL을 `NON_PS_INSTANTIATED_BITSTREAM`으로 다시 빌드해 같은 flash 이미지로 JTAG에서 실행하자 "SUCCESSFUL_HANDOFF", "Hello World"가 찍혔고, PL은 구성된 상태로 남았다. PS 대기 프로그램은 hand-off 대상으로 그대로 둔다.
+  - 고친 `BOOT.bin`(4,168,904바이트)을 JP5 = JTAG에서 기록했다(erase·program·verify PASS, 68초). JP5 = QSPI로 전원을 켜자 LD12·LD0·LD1이 켜졌다(사용자 관찰). JTAG로 읽은 상태: `FPGA is configured`, `REBOOT_STATUS` 0x00400000(전원 투입 표시만, 오류 코드 없음), `LVL_SHFTR_EN` 0x0000000A(PL→PS 꺼짐).
+
 ## 기존 Zybo UART 보드 래퍼 참조
 
 원본은 [1_RTL 공용 라이브러리](../../../../../1_RTL/2_TINY_PROJECT/UART/zybo_uart_top.v)에 있다. 이 SoC는 원본을 직접 읽으며 같은 모듈의 사본이나 심볼릭 링크를 이곳에 두지 않는다.

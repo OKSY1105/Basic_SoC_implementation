@@ -5,6 +5,8 @@
 # Usage: bash scripts/wsl_usb.sh list
 #        bash scripts/wsl_usb.sh attach VID:PID|BUSID   (Zybo JTAG/UART = 0403:6010)
 #        bash scripts/wsl_usb.sh detach VID:PID|BUSID
+#        bash scripts/wsl_usb.sh node VID:PID           (attached device's /dev/bus/usb node
+#                                                        must be writable by this user)
 #   USBIPD  usbipd.exe path (default /mnt/c/Program Files/usbipd-win/usbipd.exe)
 # A new device must be shared once in usbipd-win before its first attach; that
 # step needs Windows administrator rights (usbipd bind --busid BUSID). attach
@@ -83,8 +85,32 @@ case "$cmd" in
         in_wsl "$vidpid" && die "device $busid ($vidpid) is still visible in WSL after detach"
         echo "WSL_USB_DETACHED busid=$busid vidpid=$vidpid"
         ;;
+    node)
+        # Programs such as the Vivado hw_server run as this user, so the
+        # attached device's USB node must be writable (a udev rule does this).
+        [ $# -eq 2 ] || die "usage: bash scripts/wsl_usb.sh node VID:PID"
+        [[ $2 =~ ^[0-9a-fA-F]{4}:[0-9a-fA-F]{4}$ ]] || die "expected VID:PID, got '$2'"
+        vidpid=$(echo "$2" | tr 'A-F' 'a-f')
+        node=""
+        for d in /sys/bus/usb/devices/*; do
+            [ -f "$d/idVendor" ] || continue
+            [ "$(cat "$d/idVendor"):$(cat "$d/idProduct")" = "$vidpid" ] || continue
+            node=$(printf '/dev/bus/usb/%03d/%03d' "$(cat "$d/busnum")" "$(cat "$d/devnum")")
+        done
+        [ -n "$node" ] || die "$vidpid is not attached to WSL (bash scripts/wsl_usb.sh attach $vidpid)"
+        for _ in $(seq 1 20); do [ -w "$node" ] && break; sleep 0.25; done
+        if [ ! -w "$node" ]; then
+            vb=${VIVADO_BIN:-/home/sean/Vivado/2024.2/bin}
+            echo "ERROR: $node ($vidpid) is not writable by $(id -un): $(ls -l "$node")" >&2
+            echo "Add a udev rule for the device once. For Xilinx/Digilent JTAG cables (copies three rule files to /etc/udev/rules.d):" >&2
+            echo "  cd $vb/../data/xicom/cable_drivers/lin64/install_script/install_drivers && sudo ./install_drivers" >&2
+            echo "then attach again: bash scripts/wsl_usb.sh detach $vidpid && bash scripts/wsl_usb.sh attach $vidpid" >&2
+            exit 1
+        fi
+        echo "WSL_USB_NODE $node vidpid=$vidpid writable_by=$(id -un)"
+        ;;
     *)
-        sed -n '2,13p' "$0"
+        sed -n '2,15p' "$0"
         exit 1
         ;;
 esac
