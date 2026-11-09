@@ -136,6 +136,7 @@ class App:
         self.write_lock = threading.Lock()
         self.state_lock = threading.Lock()
         self.model = cbt.CalcModel()
+        self.model_known = False       # board A/B unknown at start (kept from earlier use)
         self.log = []
         self.next_id = 1
         self.pending_exp = []           # manual mode: expected replies of sent operation lines
@@ -239,18 +240,38 @@ class App:
         if len(line) > 40 or any(ord(c) < 0x20 or ord(c) > 0x7E for c in line):
             return "ASCII 40자 이하의 한 줄만 보낼 수 있습니다"
         exp = self.model.line(line)
-        if exp is not None:
-            with self.state_lock:
+        note = "응답 없음(숫자 저장)" if exp is None and cbt.NUM_RE.match(line) else ""
+        if self.model.a is not None:
+            self.model_known = True
+        if not self.model_known and line.upper() in cbt.OPS:
+            exp = None
+            note = "보드의 A·B를 몰라 판정하지 않음"
+        with self.state_lock:
+            # a reply always comes for a non-number line; keep the queue aligned
+            if exp is not None or (not cbt.NUM_RE.match(line) and line != ""):
                 self.pending_exp.append(exp)
-        self.add_log("tx", line, {"expected": exp} if exp is not None else {"note": "응답 없음(숫자 저장)" if cbt.NUM_RE.match(line) else ""})
+        extra = {"expected": exp} if exp is not None else ({"note": note} if note else {})
+        self.add_log("tx", line, extra)
         self.write_line(line)
         return ""
+
+    def calc(self, a, b, op):
+        """Numbers line and operation line together (one button press)."""
+        if self.test["running"]:
+            return "자동 시험 중에는 보낼 수 없습니다"
+        a, b, op = str(a).strip(), str(b).strip(), str(op).upper()
+        if not re.fullmatch(r"-?\d{1,3}", a) or not re.fullmatch(r"-?\d{1,3}", b):
+            return "A·B는 -128~127 정수로 넣어 주세요"
+        if op not in cbt.OPS:
+            return "알 수 없는 연산"
+        return self.manual_send("%s,%s" % (a, b)) or self.manual_send(op)
 
     def btn0_pressed(self):
         """User pressed BTN0 on the board: A/B cleared."""
         if self.fake:
             self.pc.reset_board()
         self.model.reset()
+        self.model_known = True
         with self.state_lock:
             self.pending_exp = []
         if self.test["running"] and self.test["waiting_btn"]:
@@ -403,6 +424,7 @@ class App:
             t["result"], t["lines"], t["replies"], t["failures"], "on" if self.has_lcd else "off",
             "stm32" if self.reply_stm else "pc")
         t["summary"] = summary
+        self.model_known = True        # the model followed every line the test sent
         self.add_log("info", summary)
         t["running"] = False
 
@@ -414,7 +436,7 @@ class App:
         return {"pc_port": self.pc_name, "stm_port": self.stm_name, "fake": self.fake,
                 "reply_stm": self.reply_stm,
                 "last_pc": self.last_pc, "last_stm": self.last_stm, "log": log,
-                "a": self.model.a, "b": self.model.b,
+                "a": self.model.a, "b": self.model.b, "known": self.model_known,
                 "test": t, "rows": rows}
 
 
@@ -449,13 +471,12 @@ th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--car
 <section>
  <div class="card"><h2>1. 계산 보내기</h2>
   <div class="row"><span class="lbl">A</span><input type="number" id="a" value="10" min="-128" max="127">
-   <span class="lbl">B</span><input type="number" id="b" value="20" min="-128" max="127">
-   <button class="pri" id="sendnum">숫자 보내기</button></div>
-  <div class="row"><button class="op" data-op="ADD">ADD</button><button class="op" data-op="SUB">SUB</button>
-   <button class="op" data-op="MUL">MUL</button><button class="op" data-op="DIV">DIV</button></div>
+   <span class="lbl">B</span><input type="number" id="b" value="20" min="-128" max="127"></div>
+  <div class="row"><button class="op pri" data-op="ADD">ADD</button><button class="op pri" data-op="SUB">SUB</button>
+   <button class="op pri" data-op="MUL">MUL</button><button class="op pri" data-op="DIV">DIV</button></div>
   <div class="row"><input type="text" id="free" placeholder="직접 입력 (예: 7,-2)"><button id="sendfree">보내기</button></div>
   <div class="muted" id="ab"></div>
-  <div class="muted">숫자 줄은 응답이 없고 A·B로 저장됩니다. 연산 버튼을 누르면 FPGA가 결과를 보냅니다.</div>
+  <div class="muted">A·B를 넣고 연산 버튼을 누르면 숫자 줄과 연산 줄을 함께 보내고, FPGA가 결과를 보냅니다. 직접 입력은 한 줄만 그대로 보냅니다(숫자 줄만 보내면 응답이 없습니다).</div>
  </div>
  <div class="card"><h2>2. 결과</h2>
   <div class="lbl" id="pclbl">FPGA → PC (변환기)</div><div class="big" id="lastpc"></div>
@@ -485,8 +506,7 @@ let since=0, rowsShown=0, hasStm=false, replyStm=false;
 const $=id=>document.getElementById(id);
 async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});const j=await r.json();if(j.error)alert(j.error);return j;}
 function send(line){return post('/api/send',{line});}
-$('sendnum').onclick=()=>send($('a').value+','+$('b').value);
-document.querySelectorAll('.op').forEach(b=>b.onclick=()=>send(b.dataset.op));
+document.querySelectorAll('.op').forEach(b=>b.onclick=()=>post('/api/calc',{a:$('a').value,b:$('b').value,op:b.dataset.op}));
 $('sendfree').onclick=()=>{const v=$('free').value;if(v!=='')send(v);};
 $('free').onkeydown=e=>{if(e.key==='Enter')$('sendfree').click();};
 $('btn0').onclick=()=>post('/api/btn0');
@@ -508,13 +528,13 @@ async function poll(){
   replyStm=!!s.reply_stm;$('pclbl').style.display=$('lastpc').style.display=$('pcth').style.display=replyStm?'none':'';
   if(replyStm)$('lcdlbl').textContent='FPGA 응답 (STM32가 받아 LCD에 표시한 줄)';
   $('lastpc').textContent=s.last_pc;$('laststm').textContent=s.last_stm;
-  $('ab').textContent='화면이 아는 A·B: '+(s.a===null?'없음':s.a+', '+s.b);
+  $('ab').textContent='보드의 A·B(화면 추정): '+(!s.known?'모름 — 계산을 보내거나 BTN0을 누르면 맞춰집니다':(s.a===null?'없음':s.a+', '+s.b));
   const log=$('log'),atEnd=log.scrollTop+log.clientHeight>=log.scrollHeight-20;
   for(const e of s.log){log.appendChild(logLine(e));since=e.id;}
   while(log.childNodes.length>3000)log.removeChild(log.firstChild);
   if(atEnd)log.scrollTop=log.scrollHeight;
   const t=s.test,run=t.running;
-  document.querySelectorAll('#sendnum,.op,#sendfree,#tstart').forEach(b=>b.disabled=run);$('tstop').disabled=!run;
+  document.querySelectorAll('.op,#sendfree,#tstart').forEach(b=>b.disabled=run);$('tstop').disabled=!run;
   const bn=$('btnbanner');if(t.waiting_btn){bn.style.display='block';bn.textContent='자동 시험 대기: 보드의 BTN0을 눌렀다 뗀 뒤 아래 버튼을 누르세요 ('+t.waiting_btn+')';}else bn.style.display='none';
   const tb=$('rows');for(let i=rowsShown;i<s.rows.length;i++){const w=s.rows[i];const tr=document.createElement('tr');
    tr.innerHTML='<td>'+(i+1)+'</td><td>'+esc(w.line)+'</td><td>'+esc(w.expected??'(응답 없음)')+'</td>'+(replyStm?'':'<td>'+esc(w.pc??'')+'</td>')+(hasStm?'<td>'+esc(w.lcd??'')+'</td>':'')+'<td class="'+(w.ok?'ok':'bad')+'">'+(w.ok?'ok':'FAIL '+esc(w.why))+'</td>';tb.appendChild(tr);}
@@ -560,6 +580,8 @@ def make_handler(app):
             err = ""
             if self.path == "/api/send":
                 err = app.manual_send(str(body.get("line", "")))
+            elif self.path == "/api/calc":
+                err = app.calc(body.get("a", ""), body.get("b", ""), body.get("op", ""))
             elif self.path == "/api/btn0":
                 app.btn0_pressed()
             elif self.path == "/api/test/start":
