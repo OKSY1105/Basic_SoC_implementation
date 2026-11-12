@@ -8,11 +8,17 @@
  *
  * This program shows the latest reply on the 16x2 I2C LCD:
  *   row 0: latest reply, row 1: blank (only the current result is shown).
- * A line with a UART receive error shows as "RX ERR"; a line longer than
- * 16 characters shows as "RX LONG". The STM32 never sends to the FPGA and
- * does not interpret or recompute the replies.
+ * A line ends only with CR followed by LF; the line is shown when that LF
+ * comes. A line with a UART receive error, a line that ends with LF alone or
+ * with CR not followed by LF, or a line in which bytes were lost (receive
+ * buffer full) shows as "RX ERR"; a line longer than 16 characters shows as
+ * "RX LONG". Empty lines (CR LF or LF alone) are ignored. The STM32 never
+ * sends to the FPGA and does not interpret or recompute the replies.
  * Every line, plus start-up information, also goes to the ST-LINK virtual
- * COM port (USART3, 115200 8N1).
+ * COM port (USART3, 115200 8N1), after the LCD write:
+ *   "#n FPGA> <reply>", "#n RX ERR (...)", "#n RX LONG (...)"
+ * and with "LCD_FAIL " after "#n " when the LCD did not show it (no LCD
+ * found at start-up, or the write and its retry failed).
  */
 #include <stdio.h>
 #include <string.h>
@@ -37,17 +43,18 @@ static int write_rows(const char *row0, const char *row1)
     return err;
 }
 
-/* Show two rows. If the write fails (e.g. a wire was moved with the power on
-   and the I2C bus is stuck), free the bus, initialise the LCD again (it may
-   also have lost power) and write once more. */
-static void show(const char *row0, const char *row1)
+/* Show two rows; returns 1 when the LCD shows them. If the write fails (e.g.
+   a wire was moved with the power on and the I2C bus is stuck), free the bus,
+   initialise the LCD again (it may also have lost power) and write once more.
+   Without an LCD found at start-up nothing is written and 0 is returned. */
+static int show(const char *row0, const char *row1)
 {
     if (lcd_addr == 0U) {
-        return;
+        return 0;
     }
     int err = lcd_ready ? write_rows(row0, row1) : I2C1_ERR_TIME;
     if (err == I2C1_OK) {
-        return;
+        return 1;
     }
     int first = err;
     uint32_t sda = i2c1_recover();
@@ -62,6 +69,7 @@ static void show(const char *row0, const char *row1)
         printf("LCD_WRITE_FAIL first_err=%d retry_err=%d sda_before=%lu\r\n",
                first, err, (unsigned long)sda);
     }
+    return lcd_ready;
 }
 
 static void i2c_scan(void)
@@ -82,14 +90,57 @@ static void i2c_scan(void)
     printf(found ? "\r\n" : " none\r\n");
 }
 
+/* the line being received */
+static char     line[LINE_MAX + 1U];
+static char     latest[LINE_MAX + 1U];
+static uint32_t len;
+static int      line_err;       /* UART error, wrong line end or lost bytes */
+static int      line_long;      /* more than LINE_MAX characters */
+static int      line_eol;       /* ended with LF alone, or CR not followed by LF */
+static int      line_lost;      /* bytes of the line were lost (buffer full) */
+static uint32_t count;
+
+/* Show and print the line received so far, then start a new one. An empty
+   line without an error is ignored. The debug line is printed after the LCD
+   write, so it can say whether the LCD shows it. */
+static void end_line(void)
+{
+    if (len == 0U && !line_err && !line_long) {
+        return;
+    }
+    line[len] = '\0';
+    count++;
+    if (line_err) {
+        uart_fpga_errors_t e;
+        uart_fpga_get_errors(&e);
+        strcpy(latest, "RX ERR");
+        int shown = show(latest, "");
+        printf("#%lu %sRX ERR (got \"%s\")%s%s pe=%lu fe=%lu nf=%lu ore=%lu drop=%lu\r\n",
+               (unsigned long)count, shown ? "" : "LCD_FAIL ", line,
+               line_eol ? " eol" : "", line_lost ? " lost" : "",
+               (unsigned long)e.parity, (unsigned long)e.framing,
+               (unsigned long)e.noise, (unsigned long)e.overrun,
+               (unsigned long)e.dropped);
+    } else if (line_long) {
+        strcpy(latest, "RX LONG");
+        int shown = show(latest, "");
+        printf("#%lu %sRX LONG (first 16: \"%s\")\r\n", (unsigned long)count,
+               shown ? "" : "LCD_FAIL ", line);
+    } else {
+        strcpy(latest, line);
+        int shown = show(latest, "");
+        printf("#%lu %sFPGA> %s\r\n", (unsigned long)count, shown ? "" : "LCD_FAIL ", line);
+    }
+    len = 0U;
+    line_err = 0;
+    line_long = 0;
+    line_eol = 0;
+    line_lost = 0;
+}
+
 int main(void)
 {
-    char line[LINE_MAX + 1U];
-    char latest[LINE_MAX + 1U] = "";
-    uint32_t len = 0U;
-    int line_err = 0;
-    int line_long = 0;
-    uint32_t count = 0U;
+    int cr_seen = 0;            /* the line got its CR and waits for the LF */
 
     SystemCoreClockUpdate();
     uart_dbg_init();
@@ -122,41 +173,46 @@ int main(void)
         if (!uart_fpga_get(&entry)) {
             continue;
         }
+        int lost = (entry & UART_FPGA_LOST) != 0U;
         char c = (char)(entry & 0xFFU);
+
+        /* Line end rule (02_design/calculator.md 3): CR then LF. */
+        if (cr_seen) {
+            cr_seen = 0;
+            if (!lost && c == '\n') {
+                if (entry & UART_FPGA_ERR) {
+                    line_err = 1;
+                }
+                end_line();
+                continue;
+            }
+            /* CR not followed by LF: the line breaks the rule. This entry
+               then starts the next line. */
+            line_err = 1;
+            line_eol = 1;
+            if (lost) {
+                line_lost = 1;
+            }
+            end_line();
+        }
+        if (lost) {
+            /* bytes went missing here: the line being received is damaged */
+            line_err = 1;
+            line_lost = 1;
+            continue;
+        }
         if (entry & UART_FPGA_ERR) {
             line_err = 1;
         }
-
-        if (c == '\r' || c == '\n') {
-            /* CR ends the line; the LF of CR LF then gives an empty line,
-               which is skipped unless it carried an error. */
-            if (len == 0U && !line_err && !line_long) {
-                continue;
+        if (c == '\r') {
+            cr_seen = 1;
+        } else if (c == '\n') {
+            /* LF without CR: an error, unless the line is empty */
+            if (len > 0U || line_err || line_long) {
+                line_err = 1;
+                line_eol = 1;
             }
-            line[len] = '\0';
-            count++;
-
-            if (line_err) {
-                uart_fpga_errors_t e;
-                uart_fpga_get_errors(&e);
-                strcpy(latest, "RX ERR");
-                printf("#%lu RX ERR (got \"%s\") pe=%lu fe=%lu nf=%lu ore=%lu drop=%lu\r\n",
-                       (unsigned long)count, line,
-                       (unsigned long)e.parity, (unsigned long)e.framing,
-                       (unsigned long)e.noise, (unsigned long)e.overrun,
-                       (unsigned long)e.dropped);
-            } else if (line_long) {
-                strcpy(latest, "RX LONG");
-                printf("#%lu RX LONG (first 16: \"%s\")\r\n", (unsigned long)count, line);
-            } else {
-                strcpy(latest, line);
-                printf("#%lu FPGA> %s\r\n", (unsigned long)count, line);
-            }
-            show(latest, "");
-
-            len = 0U;
-            line_err = 0;
-            line_long = 0;
+            end_line();
         } else if (len < LINE_MAX) {
             line[len++] = c;
         } else {

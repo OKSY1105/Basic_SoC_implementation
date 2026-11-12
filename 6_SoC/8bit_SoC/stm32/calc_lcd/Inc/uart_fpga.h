@@ -10,9 +10,12 @@
  *
  * Bytes are taken in the USART6 interrupt and kept in a ring buffer.
  * Each entry is the data byte, plus UART_FPGA_ERR when the byte came with a
- * parity, framing, noise or overrun error.
+ * parity, framing, noise or overrun error. An entry with UART_FPGA_LOST (no
+ * data byte) marks the place where received bytes were dropped because the
+ * buffer was full; the reader must treat that line as damaged.
  */
-#define UART_FPGA_ERR  0x100U
+#define UART_FPGA_ERR   0x100U
+#define UART_FPGA_LOST  0x200U
 
 typedef struct {
     uint32_t parity;    /* PE */

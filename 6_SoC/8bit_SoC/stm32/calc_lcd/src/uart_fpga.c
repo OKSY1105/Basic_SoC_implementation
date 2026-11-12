@@ -56,8 +56,16 @@ void USART6_IRQHandler(void)
             if (sr & USART_SR_ORE) { errs.overrun++; }
         }
 
+        /* The last free place is kept for a LOST mark: when only one place
+           is left, this byte is replaced by the mark, so the reader sees
+           exactly where bytes went missing. While the buffer stays full the
+           bytes are only counted. */
         uint32_t next = (rx_head + 1U) & RXBUF_MASK;
         if (next == rx_tail) {
+            errs.dropped++;
+        } else if (((next + 1U) & RXBUF_MASK) == rx_tail) {
+            rxbuf[rx_head] = UART_FPGA_LOST;
+            rx_head = next;
             errs.dropped++;
         } else {
             rxbuf[rx_head] = entry;
