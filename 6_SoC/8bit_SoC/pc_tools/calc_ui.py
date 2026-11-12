@@ -11,6 +11,17 @@ STM32 prints every line it received from the FPGA and showed on the LCD
 The automatic test uses the same cases and reference model as
 calc_board_test.py (fixed cases, BTN0 reset steps, parity case, random lines).
 
+Judging rules:
+- One button press (numbers line + operation line) is one transaction: no
+  other send can come between the two lines. A and B must be -128..127.
+- A PC reply must end with CR LF; a line ending with LF alone fails.
+- The automatic test stops at the first reply timeout (a late reply could
+  otherwise be paired with the next line), and a line that came in before a
+  line is sent fails. In manual mode an expected reply that does not come
+  within --timeout is dropped and logged, so it is not paired with a later reply.
+- An STM32 line marked "LCD_FAIL" (the LCD did not show it) fails the LCD
+  check, and after "LCD_NOT_FOUND" every LCD check fails.
+
 Usage (8bit_SoC folder, Ubuntu; attach the USB devices first with scripts/wsl_usb.sh):
   python3 pc_tools/calc_ui.py --list-ports
   python3 pc_tools/calc_ui.py --port /dev/ttyUSB0 [--stm32-port /dev/ttyACM0] [--http-port 8765]
@@ -78,15 +89,36 @@ def open_window(url):
     return ""
 
 
-STM_LINE_RE = re.compile(r"^#\d+ (?:FPGA> (.*)|(RX ERR|RX LONG)\b.*)$")
+STM_LINE_RE = re.compile(r"^#\d+ (LCD_FAIL )?(?:FPGA> (.*)|(RX ERR|RX LONG)\b.*)$")
 LOG_KEEP = 3000
+BAD_EOL = "줄 끝이 CRLF가 아님(LF만)"
+
+
+def as_int(v):
+    """int from a JSON number or a decimal string, None for anything else."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        return v
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    if isinstance(v, str) and re.fullmatch(r"\s*-?\d{1,10}\s*", v):
+        return int(v)
+    return None
+
+
+def add_why(row, why):
+    row["ok"] = False
+    row["why"] = (row["why"] + ", " if row["why"] else "") + why
 
 
 class LockedFake:
-    """calc_board_test.FakePort shared by the reader thread and the senders."""
+    """calc_board_test.FakePort shared by the reader thread and the senders.
+    The fault lcd_missing is a fake STM32 fault (no LCD), so the calculator
+    itself is correct then."""
 
     def __init__(self, fault=None):
-        self.dev = cbt.FakePort(fault)
+        self.dev = cbt.FakePort(None if fault == "lcd_missing" else fault)
         self.lock = threading.Lock()
 
     def write(self, data):
@@ -121,10 +153,12 @@ class LockedFake:
 
 
 class App:
-    def __init__(self, pc_port, stm_port, fake, timeout, even, odd, pc_name, stm_name, reply_from="pc"):
+    def __init__(self, pc_port, stm_port, fake, timeout, even, odd, pc_name, stm_name, reply_from="pc",
+                 fake_fault=None):
         self.pc = pc_port
         self.stm = stm_port
         self.fake = fake
+        self.fake_fault = fake_fault
         self.timeout = timeout
         self.even = even
         self.odd = odd
@@ -133,15 +167,17 @@ class App:
         self.has_lcd = stm_port is not None or fake
         self.reply_stm = reply_from == "stm32"   # adapter RX not wired: replies come from the STM32 output
         self.lcd_fail = 0                        # LCD_WRITE_FAIL lines from the STM32
+        self.lcd_missing = False                 # STM32 printed LCD_NOT_FOUND at start-up
+        self.tx_lock = threading.RLock()         # one send request (a calc = 2 lines) at a time
         self.write_lock = threading.Lock()
         self.state_lock = threading.Lock()
         self.model = cbt.CalcModel()
         self.model_known = False       # board A/B unknown at start (kept from earlier use)
         self.log = []
         self.next_id = 1
-        self.pending_exp = []           # manual mode: expected replies of sent operation lines
-        self.pc_q = queue.Queue()        # PC replies (automatic test)
-        self.stm_q = queue.Queue()       # STM32 lines (automatic test)
+        self.pending_exp = []           # manual mode: {"exp", "line", "t"} of lines that get a reply
+        self.pc_q = queue.Queue()        # PC replies (automatic test): (text, problem)
+        self.stm_q = queue.Queue()       # STM32 lines (automatic test): (text, lcd_ok)
         self.last_pc = ""
         self.last_stm = ""
         self.test = {"running": False, "waiting_btn": "", "rows": [], "failures": 0,
@@ -178,47 +214,86 @@ class App:
                 i = buf.index(b"\n")
                 raw = bytes(buf[:i])
                 del buf[:i + 1]
-                if raw.endswith(b"\r"):
+                eol_ok = raw.endswith(b"\r")      # CR LF; LF alone breaks the reply format
+                if eol_ok:
                     raw = raw[:-1]
-                on_line(raw.decode("ascii", "replace"))
+                on_line(raw.decode("ascii", "replace"), eol_ok)
 
-    def on_pc_line(self, text):
+    def take_pending(self, text):
+        """Manual mode: the expectation of the oldest line still waiting for a
+        reply, as log fields for this reply."""
+        with self.state_lock:
+            e = self.pending_exp.pop(0) if self.pending_exp else None
+        if e is None:
+            return {"note": "보낸 줄과 짝이 없는 응답(늦게 온 응답이거나 응답이 없어야 하는 줄의 응답)"}
+        if e["exp"] is None:
+            return {}
+        return {"expected": e["exp"], "match": text == e["exp"]}
+
+    def expire_loop(self):
+        """Manual mode: drop expectations whose reply did not come in time, so a
+        late reply is not paired with them."""
+        while self.alive:
+            time.sleep(0.1)
+            now = time.monotonic()
+            gone = []
+            with self.state_lock:
+                while self.pending_exp and now - self.pending_exp[0]["t"] > self.timeout:
+                    gone.append(self.pending_exp.pop(0))
+            for e in gone:
+                self.add_log("err", "응답 없음: '%s'의 응답이 %.1f초 안에 오지 않았습니다" % (e["line"], self.timeout))
+
+    def on_pc_line(self, text, eol_ok=True):
+        bad = "" if eol_ok else BAD_EOL
         self.last_pc = text
         if self.reply_stm:
-            self.add_log("rx", text)          # not used for judging in this mode
+            self.add_log("rx", text, {"note": bad} if bad else None)   # not used for judging in this mode
         elif self.test["running"]:
-            self.add_log("rx", text)
-            self.pc_q.put(text)
+            self.add_log("rx", text, {"note": bad} if bad else None)
+            self.pc_q.put((text, bad))
         else:
-            extra = {}
-            with self.state_lock:
-                exp = self.pending_exp.pop(0) if self.pending_exp else None
-            if exp is not None:
-                extra = {"expected": exp, "match": text == exp}
+            extra = self.take_pending(text)
+            if bad:
+                extra["note"] = bad
+                if "match" in extra:
+                    extra["match"] = False
             self.add_log("rx", text, extra)
         if self.fake:                        # fake STM32: the same line reaches the "LCD"
-            self.on_stm_line("#0 FPGA> " + text)
+            self.fake_stm_line(text, eol_ok)
 
-    def on_stm_line(self, text):
+    def fake_stm_line(self, text, eol_ok):
+        """What the STM32 prints for this FPGA line (stm32/calc_lcd/src/main.c)."""
+        pre = "LCD_FAIL " if self.fake_fault == "lcd_missing" else ""
+        if not eol_ok:
+            self.on_stm_line('#0 %sRX ERR (got "%s") eol pe=0 fe=0 nf=0 ore=0 drop=0' % (pre, text[:16]))
+        elif len(text) > 16:
+            self.on_stm_line('#0 %sRX LONG (first 16: "%s")' % (pre, text[:16]))
+        else:
+            self.on_stm_line("#0 %sFPGA> %s" % (pre, text))
+
+    def on_stm_line(self, text, eol_ok=True):
         m = STM_LINE_RE.match(text)
         if not m:
             if text.startswith("LCD_WRITE_FAIL"):
                 self.lcd_fail += 1
                 self.add_log("err", "STM32: " + text)
+            elif text.startswith("LCD_NOT_FOUND"):
+                self.lcd_missing = True
+                self.add_log("err", "STM32: " + text + " — LCD가 없어 LCD 판정은 모두 실패로 봅니다")
             else:
+                if text.startswith("8bit SoC STM32 LCD receiver"):
+                    self.lcd_missing = False     # STM32 restarted; it looks for the LCD again
                 self.add_log("stm_info", text)
             return
-        shown = m.group(1) if m.group(1) is not None else m.group(2)
-        self.last_stm = shown
-        extra = {}
+        lcd_ok = m.group(1) is None and not self.lcd_missing
+        shown = m.group(2) if m.group(2) is not None else m.group(3)
+        self.last_stm = shown + ("" if lcd_ok else "  (LCD 표시 실패)")
+        extra = {} if lcd_ok else {"note": "LCD에 표시 못 함"}
         if self.reply_stm and not self.test["running"]:
-            with self.state_lock:
-                exp = self.pending_exp.pop(0) if self.pending_exp else None
-            if exp is not None:
-                extra = {"expected": exp, "match": shown == exp}
+            extra.update(self.take_pending(shown))
         self.add_log("stm", shown, extra)
         if self.test["running"]:
-            self.stm_q.put(shown)
+            self.stm_q.put((shown, lcd_ok))
 
     # ---- sending ---------------------------------------------------------
     def write_line(self, line, parity_error=False):
@@ -235,61 +310,74 @@ class App:
                 self.pc.write(data + b"\r\n")
 
     def manual_send(self, line):
-        if self.test["running"]:
-            return "자동 시험 중에는 보낼 수 없습니다"
-        if len(line) > 40 or any(ord(c) < 0x20 or ord(c) > 0x7E for c in line):
-            return "ASCII 40자 이하의 한 줄만 보낼 수 있습니다"
-        exp = self.model.line(line)
-        note = "응답 없음(숫자 저장)" if exp is None and cbt.NUM_RE.match(line) else ""
-        if self.model.a is not None:
-            self.model_known = True
-        if not self.model_known and line.upper() in cbt.OPS:
-            exp = None
-            note = "보드의 A·B를 몰라 판정하지 않음"
-        with self.state_lock:
-            # a reply always comes for a non-number line; keep the queue aligned
-            if exp is not None or (not cbt.NUM_RE.match(line) and line != ""):
-                self.pending_exp.append(exp)
-        extra = {"expected": exp} if exp is not None else ({"note": note} if note else {})
-        self.add_log("tx", line, extra)
-        self.write_line(line)
-        return ""
+        with self.tx_lock:           # the model, the expectation and the line go out together
+            if self.test["running"]:
+                return "자동 시험 중에는 보낼 수 없습니다"
+            if len(line) > 40 or any(ord(c) < 0x20 or ord(c) > 0x7E for c in line):
+                return "ASCII 40자 이하의 한 줄만 보낼 수 있습니다"
+            exp = self.model.line(line)
+            note = "응답 없음(숫자 저장)" if exp is None and cbt.NUM_RE.match(line) else ""
+            if self.model.a is not None:
+                self.model_known = True
+            if not self.model_known and line.upper() in cbt.OPS:
+                exp = None
+                note = "보드의 A·B를 몰라 판정하지 않음"
+            with self.state_lock:
+                # a reply always comes for a non-number line; keep the queue aligned
+                if exp is not None or (not cbt.NUM_RE.match(line) and line != ""):
+                    self.pending_exp.append({"exp": exp, "line": line, "t": time.monotonic()})
+            extra = {"expected": exp} if exp is not None else ({"note": note} if note else {})
+            self.add_log("tx", line, extra)
+            self.write_line(line)
+            return ""
 
     def calc(self, a, b, op):
-        """Numbers line and operation line together (one button press)."""
-        if self.test["running"]:
-            return "자동 시험 중에는 보낼 수 없습니다"
-        a, b, op = str(a).strip(), str(b).strip(), str(op).upper()
-        if not re.fullmatch(r"-?\d{1,3}", a) or not re.fullmatch(r"-?\d{1,3}", b):
+        """Numbers line and operation line together (one button press), as one
+        transaction: another request waits until both lines are sent."""
+        a, b, op = str(a).strip(), str(b).strip(), str(op).strip().upper()
+        if not (re.fullmatch(r"-?\d{1,3}", a) and re.fullmatch(r"-?\d{1,3}", b)
+                and -128 <= int(a) <= 127 and -128 <= int(b) <= 127):
             return "A·B는 -128~127 정수로 넣어 주세요"
         if op not in cbt.OPS:
             return "알 수 없는 연산"
-        return self.manual_send("%s,%s" % (a, b)) or self.manual_send(op)
+        with self.tx_lock:
+            if self.test["running"]:
+                return "자동 시험 중에는 보낼 수 없습니다"
+            return self.manual_send("%s,%s" % (a, b)) or self.manual_send(op)
 
     def btn0_pressed(self):
         """User pressed BTN0 on the board: A/B cleared."""
-        if self.fake:
-            self.pc.reset_board()
-        self.model.reset()
-        self.model_known = True
-        with self.state_lock:
-            self.pending_exp = []
-        if self.test["running"] and self.test["waiting_btn"]:
-            self.btn_event.set()
-        else:
-            self.add_log("info", "BTN0 눌림: A·B를 지운 상태로 기대값을 계산합니다")
+        with self.tx_lock:
+            if self.fake:
+                self.pc.reset_board()
+            self.model.reset()
+            self.model_known = True
+            with self.state_lock:
+                self.pending_exp = []
+            if self.test["running"] and self.test["waiting_btn"]:
+                self.btn_event.set()
+            else:
+                self.add_log("info", "BTN0 눌림: A·B를 지운 상태로 기대값을 계산합니다")
 
     # ---- automatic test -------------------------------------------------
     def start_test(self, use_btn0, parity, random_count, seed):
-        if self.test["running"]:
-            return "이미 실행 중입니다"
-        random_count = max(0, min(int(random_count), 2000))
-        self.test = {"running": True, "waiting_btn": "", "rows": [], "failures": 0,
-                     "result": "", "lines": 0, "replies": 0, "lcd_fail_seen": self.lcd_fail}
-        self.stop_flag.clear()
-        self.btn_event.clear()
-        threading.Thread(target=self.run_test, args=(use_btn0, parity, random_count, int(seed)),
-                         daemon=True).start()
+        # check every input before the state changes
+        random_count, seed = as_int(random_count), as_int(seed)
+        if random_count is None or seed is None:
+            return "무작위 줄 수와 seed는 정수로 넣어 주세요"
+        random_count = max(0, min(random_count, 2000))
+        with self.tx_lock:
+            if self.test["running"]:
+                return "이미 실행 중입니다"
+            with self.state_lock:
+                self.pending_exp = []
+            self.test = {"running": True, "waiting_btn": "", "rows": [], "failures": 0,
+                         "result": "", "lines": 0, "replies": 0, "lcd_fail_seen": self.lcd_fail,
+                         "aborted": ""}
+            self.stop_flag.clear()
+            self.btn_event.clear()
+            threading.Thread(target=self.run_test, args=(bool(use_btn0), bool(parity), random_count, seed),
+                             daemon=True).start()
         return ""
 
     def drain(self):
@@ -314,7 +402,29 @@ class App:
         self.drain()
         return True
 
+    def queued(self):
+        """Lines received while no reply was waited for (texts)."""
+        out = []
+        for q in (self.pc_q, self.stm_q):
+            while True:
+                try:
+                    out.append(q.get_nowait()[0])
+                except queue.Empty:
+                    break
+        return out
+
+    def abort(self, why):
+        """Stop the test: after a timeout a late reply could be paired with the
+        next line, so no later row can be judged."""
+        self.test["aborted"] = "reply_timeout"
+        self.add_log("err", "자동 시험 중단: %s. 늦게 온 응답을 다음 줄의 응답으로 짝짓지 않도록 여기서 멈춥니다" % why)
+
     def test_case(self, line, parity_error=False):
+        early = self.queued()
+        if early:
+            self.test["failures"] += 1
+            self.test["rows"].append({"line": "(%s 보내기 전)" % line, "expected": None, "pc": " | ".join(early),
+                                      "lcd": None, "ok": False, "why": "기대하지 않은 응답이 먼저 와 있음"})
         exp = self.model.line(line, rx_error=parity_error)
         row = {"line": line + (" (odd parity)" if parity_error else ""), "expected": exp,
                "pc": None, "lcd": None, "ok": True, "why": ""}
@@ -324,45 +434,42 @@ class App:
         if exp is not None and self.reply_stm:
             self.test["replies"] += 1
             try:
-                row["lcd"] = self.stm_q.get(timeout=self.timeout)
+                row["lcd"], lcd_ok = self.stm_q.get(timeout=self.timeout)
+                if row["lcd"] != exp:
+                    add_why(row, "STM32가 받은 줄이 기대값과 다름")
+                if not lcd_ok:
+                    add_why(row, "LCD에 표시 못 함")
             except queue.Empty:
-                row["ok"] = False
-                row["why"] = "STM32가 받은 줄 없음"
-            if row["lcd"] is not None and row["lcd"] != exp:
-                row["ok"] = False
-                row["why"] = "STM32가 받은 줄이 기대값과 다름"
+                add_why(row, "STM32가 받은 줄 없음(시간 초과)")
+                self.abort("'%s'의 응답이 %.1f초 안에 오지 않음" % (line, self.timeout))
         elif exp is not None:
             self.test["replies"] += 1
             try:
-                row["pc"] = self.pc_q.get(timeout=self.timeout)
+                row["pc"], problem = self.pc_q.get(timeout=self.timeout)
+                if row["pc"] != exp:
+                    add_why(row, "PC 응답이 기대값과 다름")
+                if problem:
+                    add_why(row, "PC 응답 " + problem)
             except queue.Empty:
-                row["ok"] = False
-                row["why"] = "PC 응답 없음"
-            if row["pc"] is not None and row["pc"] != exp:
-                row["ok"] = False
-                row["why"] = "PC 응답이 기대값과 다름"
-            if self.has_lcd:
+                add_why(row, "PC 응답 없음(시간 초과)")
+                self.abort("'%s'의 PC 응답이 %.1f초 안에 오지 않음" % (line, self.timeout))
+            if self.has_lcd and not self.test["aborted"]:
                 try:
-                    row["lcd"] = self.stm_q.get(timeout=0.5)
+                    row["lcd"], lcd_ok = self.stm_q.get(timeout=0.5)
+                    if row["lcd"] != exp:
+                        add_why(row, "LCD 줄이 기대값과 다름")
+                    if not lcd_ok:
+                        add_why(row, "LCD에 표시 못 함")
                 except queue.Empty:
-                    row["lcd"] = None
-                if row["lcd"] != exp:
-                    row["ok"] = False
-                    row["why"] = (row["why"] + ", " if row["why"] else "") + (
-                        "LCD 줄 없음" if row["lcd"] is None else "LCD 줄이 기대값과 다름")
+                    add_why(row, "LCD 줄 없음(시간 초과)")
+                    self.abort("'%s'의 LCD 줄이 0.5초 안에 오지 않음" % line)
         if not row["ok"]:
             self.test["failures"] += 1
         self.test["rows"].append(row)
 
     def check_quiet(self, where):
         time.sleep(0.3)
-        extra = []
-        for q in ((self.pc_q, self.stm_q) if self.has_lcd else (self.pc_q,)):
-            while True:
-                try:
-                    extra.append(q.get_nowait())
-                except queue.Empty:
-                    break
+        extra = self.queued()
         if self.lcd_fail != self.test.get("lcd_fail_seen", 0):
             n = self.lcd_fail - self.test.get("lcd_fail_seen", 0)
             self.test["lcd_fail_seen"] = self.lcd_fail
@@ -396,7 +503,7 @@ class App:
         self.drain()
         try:
             for kind, arg in steps:
-                if self.stop_flag.is_set():
+                if self.stop_flag.is_set() or self.test["aborted"]:
                     break
                 if kind == "btn":
                     if not self.wait_btn(arg):
@@ -420,9 +527,9 @@ class App:
             t["result"] = "PASS"
         else:
             t["result"] = "FAIL"
-        summary = "CALC_UI_%s lines=%d replies=%d failures=%d lcd=%s reply_from=%s" % (
+        summary = "CALC_UI_%s lines=%d replies=%d failures=%d lcd=%s reply_from=%s%s" % (
             t["result"], t["lines"], t["replies"], t["failures"], "on" if self.has_lcd else "off",
-            "stm32" if self.reply_stm else "pc")
+            "stm32" if self.reply_stm else "pc", " aborted=" + t["aborted"] if t["aborted"] else "")
         t["summary"] = summary
         self.model_known = True        # the model followed every line the test sent
         self.add_log("info", summary)
@@ -434,7 +541,7 @@ class App:
         t = dict(self.test)
         rows = t.pop("rows")
         return {"pc_port": self.pc_name, "stm_port": self.stm_name, "fake": self.fake,
-                "reply_stm": self.reply_stm,
+                "reply_stm": self.reply_stm, "lcd_missing": self.lcd_missing,
                 "last_pc": self.last_pc, "last_stm": self.last_stm, "log": log,
                 "a": self.model.a, "b": self.model.b, "known": self.model_known,
                 "test": t, "rows": rows}
@@ -517,13 +624,13 @@ const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[
 const KIND={tx:'PC → FPGA ',rx:'FPGA → PC ',stm:'LCD       ',stm_info:'STM32     ',info:'안내      ',err:'오류      '};
 function logLine(e){let s=e.t+'  '+(KIND[e.kind]||e.kind)+' '+e.text;
  if(e.kind==='tx'&&e.expected)s+='   (기대 '+e.expected+')';
- if(e.kind==='tx'&&e.note)s+='   ('+e.note+')';
+ if(e.note)s+='   ('+e.note+')';
  if((e.kind==='rx'||e.kind==='stm')&&e.expected!==undefined)s+=e.match?'   ✓ 기대와 같음':'   ✗ 기대 '+e.expected;
  const d=document.createElement('div');d.className='k-'+e.kind;d.textContent=s;return d;}
 async function poll(){
  try{const r=await fetch('/api/state?since='+since);const s=await r.json();
   $('pcport').textContent='FPGA 변환기: '+s.pc_port+(s.fake?' (가짜 장치)':'')+(s.reply_stm?' — 응답은 STM32에서 받음':'');
-  hasStm=!!s.stm_port;$('stmport').textContent='STM32: '+(s.stm_port||'연결 안 함');
+  hasStm=!!s.stm_port;$('stmport').textContent='STM32: '+(s.stm_port||'연결 안 함')+(s.lcd_missing?' — LCD 없음(LCD_NOT_FOUND)':'');
   $('lcdlbl').style.display=$('laststm').style.display=$('lcdth').style.display=hasStm?'':'none';
   replyStm=!!s.reply_stm;$('pclbl').style.display=$('lastpc').style.display=$('pcth').style.display=replyStm?'none':'';
   if(replyStm)$('lcdlbl').textContent='FPGA 응답 (STM32가 받아 LCD에 표시한 줄)';
@@ -572,27 +679,40 @@ def make_handler(app):
                 self.reply(404, json.dumps({"error": "not found"}))
 
         def do_POST(self):
-            n = int(self.headers.get("Content-Length") or 0)
             try:
-                body = json.loads(self.rfile.read(n) or b"{}")
-            except ValueError:
-                body = {}
-            err = ""
-            if self.path == "/api/send":
-                err = app.manual_send(str(body.get("line", "")))
-            elif self.path == "/api/calc":
-                err = app.calc(body.get("a", ""), body.get("b", ""), body.get("op", ""))
-            elif self.path == "/api/btn0":
-                app.btn0_pressed()
-            elif self.path == "/api/test/start":
-                err = app.start_test(bool(body.get("btn0", True)), bool(body.get("parity", True)),
-                                     body.get("random", 0) or 0, body.get("seed", 1) or 1)
-            elif self.path == "/api/test/stop":
-                app.stop_flag.set()
-            else:
-                self.reply(404, json.dumps({"error": "not found"}))
+                n = int(self.headers.get("Content-Length") or 0)
+                try:
+                    body = json.loads(self.rfile.read(n) or b"{}")
+                except ValueError:
+                    body = {}
+                if not isinstance(body, dict):
+                    body = {}
+                err = self.post(body)
+            except Exception as e:          # a bad request must not drop the connection or leave a half state
+                app.add_log("err", "요청 처리 오류 %s: %s" % (self.path, e))
+                self.reply(500, json.dumps({"error": "요청 처리 오류: %s" % e}))
                 return
-            self.reply(200, json.dumps({"error": err}))
+            if err is None:
+                self.reply(404, json.dumps({"error": "not found"}))
+            else:
+                self.reply(200, json.dumps({"error": err}))
+
+        def post(self, body):
+            """Error text ("" = done), None = unknown path."""
+            if self.path == "/api/send":
+                return app.manual_send(str(body.get("line", "")))
+            if self.path == "/api/calc":
+                return app.calc(body.get("a", ""), body.get("b", ""), body.get("op", ""))
+            if self.path == "/api/btn0":
+                app.btn0_pressed()
+                return ""
+            if self.path == "/api/test/start":
+                return app.start_test(body.get("btn0", True), body.get("parity", True),
+                                      body.get("random", 0), body.get("seed", 1))
+            if self.path == "/api/test/stop":
+                app.stop_flag.set()
+                return ""
+            return None
     return Handler
 
 
@@ -609,8 +729,9 @@ def main():
                     help="where the FPGA replies are read: pc = adapter RX (default), "
                          "stm32 = STM32 debug output (adapter RX not wired; needs --stm32-port)")
     ap.add_argument("--fake-fault", choices=["rem_sign_of_b", "silent", "lf_only", "echo", "parity_ignored",
-                                             "comma_space_ok", "range_overwrites"],
-                    help="with --fake: give the fake calculator this fault (checks that the UI test catches it)")
+                                             "comma_space_ok", "range_overwrites", "lcd_missing"],
+                    help="with --fake: give the fake calculator this fault, or lcd_missing = the fake STM32 "
+                         "has no LCD (checks that the UI test catches it)")
     ap.add_argument("--http-port", type=int, default=8765, help="web page port (default 8765)")
     ap.add_argument("--timeout", type=float, default=1.0, help="reply timeout in seconds (default 1.0)")
     ap.add_argument("--list-ports", action="store_true", help="list serial ports and exit")
@@ -663,11 +784,15 @@ def main():
             return 2
         pc_name, stm_name = args.port, args.stm32_port
 
-    app = App(pc, stm, args.fake, args.timeout, even, odd, pc_name, stm_name, args.reply_from)
+    app = App(pc, stm, args.fake, args.timeout, even, odd, pc_name, stm_name, args.reply_from,
+              args.fake_fault if args.fake else None)
+    if args.fake and args.fake_fault == "lcd_missing":
+        app.on_stm_line("LCD_NOT_FOUND: no PCF8574 address answered (fake STM32)")
     threading.Thread(target=app.reader, args=(pc, app.on_pc_line), daemon=True).start()
     if stm is not None:
         stm.reset_input_buffer()
         threading.Thread(target=app.reader, args=(stm, app.on_stm_line), daemon=True).start()
+    threading.Thread(target=app.expire_loop, daemon=True).start()
     app.add_log("info", "시작: FPGA 변환기 %s, STM32 %s, 응답 읽는 곳 %s" % (
         pc_name, stm_name or "연결 안 함", "STM32 출력" if args.reply_from == "stm32" else "PC 변환기 RX"))
 

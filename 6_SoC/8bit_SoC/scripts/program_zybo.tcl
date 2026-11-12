@@ -6,7 +6,8 @@
 # on JTAG is recommended (an SD/QSPI boot image can reconfigure the PL).
 # Steps: start the local hw_server, scan every JTAG target, require exactly
 # one xc7z020 device (the Zynq ARM DAP is skipped), program the bitstream,
-# read the DONE status. Prints SOC8_ZYBO_PROGRAM_PASS or stops with an error.
+# read the DONE status, which must read 1 (a read failure or another value
+# stops with an error). Prints SOC8_ZYBO_PROGRAM_PASS or stops with an error.
 if {[llength $argv] != 1} { error "Usage: -tclargs <bitstream.bit>" }
 set bit [file normalize [lindex $argv 0]]
 if {![file exists $bit]} { error "Missing bitstream: $bit" }
@@ -44,9 +45,11 @@ set_property FULL_PROBES.FILE {} $d
 set_property PROGRAM.FILE $bit $d
 program_hw_devices $d
 refresh_hw_device -update_hw_probes false $d
-set done unknown
-catch { set done [get_property REGISTER.CONFIG_STATUS.BIT14_DONE_PIN $d] }
-if {$done eq "0"} { error "DONE is low after programming $d" }
+# Success needs a positive DONE = 1: a failed read or any other value is a failure.
+if {[catch { set done [get_property REGISTER.CONFIG_STATUS.BIT14_DONE_PIN $d] } msg]} {
+    error "Cannot read DONE after programming $d: $msg"
+}
+if {$done ne "1"} { error "DONE is not 1 after programming $d (read '$done')" }
 puts "SOC8_ZYBO_PROGRAM_PASS target=$t device=$d done=$done bit=$bit"
 close_hw_target $t
 disconnect_hw_server

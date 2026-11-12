@@ -22,6 +22,33 @@ bash scripts/calc_ui.sh          # 8bit_SoC 폴더에서. 끝낼 때는 이 터�
 
 STM32 쪽 비교는 STM32 디버그 출력(ST-LINK 가상 COM, 115200 8N1)의 `#n FPGA> 응답` 줄을 읽어서 한다([STM32 README](../stm32/README.md)). `--stm32-port`를 주면 자동 시험에서 PC 응답과 LCD 줄이 모두 기대값과 같아야 통과다. STM32가 `LCD_WRITE_FAIL`(LCD 쓰기와 재시도 모두 실패)을 출력하면 그것도 실패로 센다.
 
+판정 규칙(2026-11-12, Codex 검증 VR-014의 결함 I1~I5·I8 수정):
+
+| 항목 | 규칙 |
+|---|---|
+| 계산 한 건 | 숫자 줄과 연산 줄, 기대값 계산을 한 묶음으로 보낸다. 다른 요청(다른 계산·직접 입력·BTN0·자동 시험 시작)은 앞 묶음이 끝날 때까지 기다린다(I1) |
+| A·B 범위 | 계산 버튼 경로는 A·B가 -128~127 정수일 때만 보낸다. 범위 밖이면 오류를 돌려주고 아무것도 보내지 않는다. 범위 밖 숫자로 `ERR RANGE`를 시험할 때는 직접 입력을 쓴다(I2) |
+| 줄 끝 | PC 변환기로 받은 응답은 CR LF로 끝나야 한다. LF만으로 끝난 줄은 기대값과 글자가 같아도 실패다(I3). STM32 출력으로 판정할 때(`--reply-from stm32`)는 STM32가 줄 끝을 검사해 `RX ERR`로 보낸다 |
+| 시간 초과 | 자동 시험은 응답(또는 LCD 줄)이 `--timeout` 안에 오지 않으면 그 줄을 실패로 하고 멈춘다(`aborted=reply_timeout`). 늦게 온 응답을 다음 줄의 응답으로 짝짓지 않기 위해서다. 줄을 보내기 전에 이미 와 있는 줄이 있으면 그것도 실패다. 직접 보내기에서는 시간 안에 오지 않은 기대값을 버리고 "응답 없음"을 기록하며, 그 뒤에 온 응답은 "짝이 없는 응답"으로 표시한다(I4) |
+| LCD 표시 | STM32가 `#n LCD_FAIL ...`(그 줄을 LCD에 표시하지 못함)을 출력하면 그 줄의 LCD 판정은 실패다. 시작할 때 `LCD_NOT_FOUND`가 나오면 STM32가 다시 시작할 때까지 LCD 판정은 모두 실패다(I5) |
+| 입력 검사 | 자동 시험의 무작위 줄 수와 seed는 정수여야 한다. 상태를 바꾸기 전에 검사하고, 처리 중 예외가 나도 연결을 끊지 않고 오류를 돌려준다(I8) |
+
+자체 시험 `calc_ui_selftest.py`(하드웨어 없음, 약 40초, `--quick`은 HTTP 표를 빼고 약 5초):
+
+```sh
+python3 pc_tools/calc_ui_selftest.py
+```
+
+| 시험 | 확인하는 것 | 2026-11-12 결과 |
+|---|---|---|
+| `concurrent_calc` | 계산 A의 숫자 줄 쓰기를 붙잡아 둔 사이 계산 B를 요청: B가 기다리고 선로 순서가 `1,2` → `ADD` → `10,20` → `MUL`, 두 응답이 각자 기대값과 짝지어짐 | ok |
+| `late_reply_auto` | 첫 응답을 0.5초 늦게(시간 초과 0.2초): 자동 시험이 그 줄에서 멈추고(`aborted=reply_timeout`), 늦은 응답은 짝이 없는 응답으로 기록 | ok |
+| `late_reply_manual` | 직접 보내기에서 늦은 응답: "응답 없음" 1건, 늦은 응답은 짝 없음, 다음 계산은 자기 기대값과 짝지어짐 | ok |
+| `lf_only_manual` | LF만으로 끝난 응답은 직접 보내기에서도 불일치 + 줄 끝 표시 | ok |
+| `lcd_fail_lines` | `LCD_FAIL` 줄, `LCD_NOT_FOUND` 뒤의 줄은 LCD 표시 실패, STM32 재시작 줄에서 해제 | ok |
+| `http_*` 4건 | 잘못된 seed·줄 수, 범위 밖 A·B(200·-129·128·1.5), 읽을 수 없는 요청(`Content-Length: abc`)에 오류 응답과 idle 상태 유지, 그 뒤 정상 계산 | ok |
+| `matrix` 14건 | 두 응답 모드 × 정상 장치와 결함 6종의 자동 시험(BTN0 단계·parity 사례·무작위 300줄 seed 1) | 정상 PASS(329줄·239응답). FAIL 실패 수: `rem_sign_of_b` 14, `silent` 1(첫 응답에서 멈춤), `parity_ignored` 1, `range_overwrites` 28, `lf_only` 239, `lcd_missing` 239. 두 모드 같음 |
+
 응답을 읽는 곳(`--reply-from`)은 배선에 따라 고른다. Pmod 구멍 하나에는 선을 하나만 꽂을 수 있으므로, 브레드보드 없이 결합하면 FPGA TX(JC 1번)는 STM32 D0에만 가고 변환기 RX는 비게 된다.
 
 | 배선 | 옵션 | 판정 |
@@ -44,7 +71,7 @@ python3 pc_tools/calc_ui.py --fake                             # 하드웨어 �
 - 서버가 `CALC_UI_READY`를 출력하고 시험 창을 연다. `--no-open`이면 창을 열지 않으므로 브라우저에서 `http://localhost:8765`를 직접 연다. 끝낼 때는 Ubuntu 터미널에서 Ctrl+C를 누른다(창에는 "서버 연결 끊김"이 표시되며, 창은 직접 닫는다).
 - `--port`·`--stm32-port`를 생략하면 USB ID로 찾는다. `--stm32-port none`: STM32를 쓰지 않는다.
 - 시리얼 포트 하나는 프로그램 하나만 연다. miniterm이나 `calc_board_test.py`가 같은 포트를 쓰고 있으면 `CALC_UI_FAIL cannot open port`로 끝난다.
-- `--http-port N`: 화면 포트 변경(기본 8765). `--timeout SEC`: 응답 대기 시간(기본 1.0초). `--fake-fault <결함>`: `--fake`의 가짜 계산기에 아래 자체 시험 표의 결함을 넣는다.
+- `--http-port N`: 화면 포트 변경(기본 8765). `--timeout SEC`: 응답 대기 시간(기본 1.0초). `--fake-fault <결함>`: `--fake`의 가짜 계산기에 아래 자체 시험 표의 결함을 넣는다. `lcd_missing`은 계산기가 아니라 가짜 STM32에 LCD가 없는 경우다.
 
 자체 시험(2026-11-09, 하드웨어 없음): `--fake`로 서버를 띄우고 화면이 쓰는 API로 자동 시험(BTN0 단계·parity 사례·무작위 300줄 seed 1)을 실행했다. 정상 장치는 `CALC_UI_PASS lines=329 replies=239 failures=0 lcd=on`이었고, 결함 장치 `rem_sign_of_b`·`silent`·`parity_ignored`·`range_overwrites`는 모두 FAIL(실패 14·239·1·28줄)이었다. Windows 브라우저에서 화면을 열어 `10,20` → `ADD` → `ADD:30` 표시도 확인했다. `--reply-from stm32`를 더한 같은 시험도 정상 PASS, 결함 4종 FAIL(실패 줄 수 같음)이었다.
 

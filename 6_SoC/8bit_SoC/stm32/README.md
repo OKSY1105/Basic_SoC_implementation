@@ -10,17 +10,31 @@ FPGA 계산기가 보내는 응답 줄을 STM32가 받아 16×2 문자 LCD에 �
 | 개발 방식 | bare-metal CMSIS 레지스터 접근, PlatformIO `framework = cmsis`. 사용자의 기존 `Embedded_System/Bare_Metal/platformIO/10_USART` 프로젝트와 같은 환경이다 |
 | 클록 | 시작 코드가 둔 내부 HSI 16 MHz 그대로(PLL 없음). 시작할 때 `SystemCoreClock`을 디버그 출력에 찍는다 |
 | LCD | YwRobot "LCM1602 IIC Shield V1": 16×2 문자 LCD(HD44780 호환) + PCF8574 계열 I2C 확장 칩. 4-bit, 쓰기 전용. 확장 칩 주소 0x27, bit 배치 P0 = RS, P1 = R/W, P2 = EN, P3 = 백라이트, P4~P7 = D4~D7(Arduino LiquidCrystal_I2C와 같은 배치, `src/lcd_i2c.c`) — 보드에서 표시 확인. 쉴드에는 SDA·SCL pull-up 저항이 없다 |
-| 표시 | 1행 = 마지막 응답, 2행 = 비움(현재 결과만 표시, 2026-11-09 사용자 요청 — 이전 판은 2행에 그 전 응답을 표시했다). 수신 오류(parity·frame·noise·overrun)가 난 줄은 `RX ERR`, 16자를 넘는 줄은 `RX LONG`. 시작 화면은 `8bit SoC calc` / `waiting UART...` |
-| 디버그 출력 | USART3 TX(PD8) → ST-LINK 가상 COM, 115200 8N1. 시작 정보(클록, I2C 주소 검색 결과, LCD 초기화 결과)와 받은 줄마다 `#번호 FPGA> 응답`을 출력한다 |
+| 표시 | 1행 = 마지막 응답, 2행 = 비움(현재 결과만 표시, 2026-11-09 사용자 요청 — 이전 판은 2행에 그 전 응답을 표시했다). 아래 "줄 판정"에서 오류인 줄은 `RX ERR`, 16자를 넘는 줄은 `RX LONG`. 시작 화면은 `8bit SoC calc` / `waiting UART...` |
+| 디버그 출력 | USART3 TX(PD8) → ST-LINK 가상 COM, 115200 8N1. 시작 정보(클록, I2C 주소 검색 결과, LCD 초기화 결과)와 받은 줄마다 한 줄을 LCD에 쓴 **뒤에** 출력한다: `#번호 FPGA> 응답`, `#번호 RX ERR (got "받은 글자") [eol] [lost] pe= fe= nf= ore= drop=`, `#번호 RX LONG (first 16: "...")`. 그 줄을 LCD에 표시하지 못했으면(시작할 때 LCD를 찾지 못함, 또는 쓰기와 재시도가 모두 실패) `#번호 ` 뒤에 `LCD_FAIL `이 붙는다(2026-11-12) |
+
+줄 판정(2026-11-12, Codex 검증 VR-014의 결함 I5·I6 수정과 줄 끝 검사):
+
+| 받은 것 | 처리 |
+|---|---|
+| 글자 … CR LF | 정상 줄. LF가 올 때 표시한다. 빈 줄(CR LF만)은 무시 |
+| LF만으로 끝남 | `RX ERR … eol`. 빈 줄(LF만)은 무시 |
+| CR 뒤에 LF가 아닌 것이 옴 | 그 줄은 `RX ERR … eol`, 뒤의 글자는 다음 줄의 시작 |
+| parity·frame·noise·overrun 오류가 난 글자가 든 줄(줄 끝 CR·LF 포함) | `RX ERR`(오류 글자도 `got`에 그대로 보인다) |
+| 링 버퍼가 차서 글자가 버려진 줄 | `RX ERR … lost`. 수신 인터럽트는 마지막 빈칸 하나를 `LOST` 표시용으로 남겨, 버려진 자리를 줄 안에 정확히 남긴다(데이터 254칸 + 표시 1칸). 버퍼가 가득 찬 동안 온 글자는 `drop`에만 센다. 표시가 CR과 LF 사이에 오면 그 줄(LF 없음 → `eol lost`)과 다음 줄(`lost`)이 모두 오류다 |
+| 16자를 넘는 줄 | `RX LONG` |
+
+- CR 뒤의 LF를 기다렸다가 표시하므로, CR만 보내고 멈추는 장치의 줄은 다음 글자가 올 때까지 표시되지 않는다.
 
 | 파일 | 역할 |
 |---|---|
-| `src/uart_fpga.c` | USART6 수신(PG9, AF8), 115200 **8E1**(`CR1.M = 1`, `PCE = 1`, `PS = 0`), 수신 인터럽트 + 256칸 링 버퍼, 오류 flag 수 집계 |
+| `src/uart_fpga.c` | USART6 수신(PG9, AF8), 115200 **8E1**(`CR1.M = 1`, `PCE = 1`, `PS = 0`), 수신 인터럽트 + 256칸 링 버퍼(데이터 254칸 + `LOST` 표시 1칸), 오류 flag 수 집계 |
 | `src/i2c1.c` | I2C1 master 100 kHz(PB8 SCL, PB9 SDA, AF4, open-drain, **내부 pull-up 켬** — 쉴드에 pull-up이 없다), NACK·시간 초과 처리, 멈춘 bus 복구(`i2c1_recover`: GPIO로 SCL 최대 9번 → STOP → I2C1 재설정) |
 | `src/lcd_i2c.c` | 확장 칩 주소 찾기(0x27·0x3F 먼저, 그다음 0x20~0x27·0x38~0x3F), HD44780 4-bit 초기화, 16칸 한 줄 쓰기 |
 | `src/uart_dbg.c` | USART3 디버그 출력과 `printf` 연결(`10_USART`에서 옮김) |
 | `src/delay.c` | SysTick 바쁜 대기 |
-| `src/main.c` | 줄 조립(CR 또는 LF로 끝, 빈 줄 무시), 오류 표시, LCD 2행 갱신. LCD 쓰기가 실패하면 bus 복구 → LCD 재초기화 → 한 번 더 쓰기, 결과를 `LCD_RECOVERED` 또는 `LCD_WRITE_FAIL`로 출력 |
+| `src/main.c` | 줄 조립(위 "줄 판정"), 오류 표시, LCD 2행 갱신. LCD 쓰기가 실패하면 bus 복구 → LCD 재초기화 → 한 번 더 쓰기, 결과를 `LCD_RECOVERED` 또는 `LCD_WRITE_FAIL`로 출력 |
+| `host_test/` | PC에서 돌리는 시험(아래 "host 시험"). 보드 빌드에는 들어가지 않는다 |
 
 ## 연결
 
@@ -55,6 +69,30 @@ python3 -m serial.tools.miniterm /dev/ttyACM0 115200   # 디버그 출력 보기
 ```
 
 빌드 결과(2026-11-09, 현재 결과만 표시하는 판): 경고 0(`-Wall -Wextra`), RAM 696 B, Flash 7,300 B.
+빌드 결과(2026-11-12, 줄 판정·`LCD_FAIL` 판): 경고 0, RAM 760 B, Flash 7,640 B(`firmware.bin` 8,080 B). 복구 시험 빌드(`-DI2C_RECOVER_SELFTEST`)도 같은 크기이고 내용(해시)은 다르다. 보드에는 아직 2026-11-09 판이 올라가 있다.
+
+## host 시험 (보드 없음, 2026-11-12)
+
+```sh
+bash host_test/run_host_test.sh      # calc_lcd 폴더에서. 끝에 STM32_HOST_PASS
+```
+
+실제 `src/main.c`·`src/uart_fpga.c`를 PC의 gcc(AddressSanitizer·UndefinedBehaviorSanitizer, `-Werror`)로 빌드한다. 레지스터·LCD·I2C만 가짜(`host_test/mock/stm32f4xx.h`, `host_test/host_mocks.c`)로 바꾸고, 글자는 실제 USART6 수신 인터럽트 함수로 넣는다. 사례마다 `main()`을 따로 실행해 `#`·`LCD_`로 시작하는 출력 줄과 끝의 LCD 내용을 기대값과 글자 단위로 비교한다.
+
+| 사례 | 넣는 것 | 기대 |
+|---|---|---|
+| `valid` | `ADD:30`, `DIV Q:-10 R:-10` | 두 줄 `FPGA>`, LCD 1행 마지막 줄 |
+| `empty_lines` | CR LF, LF, `ADD:3` | 빈 줄 무시, `#1 FPGA> ADD:3` |
+| `len16_17` | 16자, 17자 | `FPGA>` 16자, `RX LONG` |
+| `lf_only` / `cr_only` | LF만, CR 뒤 다른 글자 | `RX ERR … eol`, 다음 줄은 정상 |
+| `uart_error` | parity 오류 글자, frame 오류 CR | `RX ERR` 2줄(pe·fe 수), 다음 줄 정상 |
+| `overflow` | 40줄(320 B)을 한 번에 | 31줄 정상, 32번째 `RX ERR (got "ADD:30SUB:1") lost … drop=66`, 다음 줄 정상 |
+| `overflow_vr014` | Codex 재현 자극(`X` CR LF 83번, LF, `ADD:30`) | 83줄 정상, `#84 RX ERR (got "ADD:") lost … drop=2`, 다음 줄 정상 |
+| `overflow_at_crlf` | `LOST`가 CR과 LF 사이 | `#85 … eol lost`, `#86 … lost`, 다음 줄 정상 |
+| `lcd_missing` | LCD 없음 | `LCD_NOT_FOUND`, `#1 LCD_FAIL FPGA> ADD:30`, LCD 쓰기 0 |
+| `lcd_write_fail` | 쓰기와 재시도 실패 → 다음 줄에서 복구 | `LCD_WRITE_FAIL`, `#1 LCD_FAIL …`, `LCD_RECOVERED`, `#2 FPGA> SUB:1` |
+
+2026-11-12 결과: 11사례 모두 일치(`STM32_HOST_PASS cases=11 wrong=0`), sanitizer 오류 0. 같은 시험을 고치기 전 판(94f1f07)의 `main.c`·`uart_fpga.c`에 돌리면 `lf_only`·`cr_only`·`overflow` 3종·`lcd_missing`·`lcd_write_fail` 7사례가 불일치였다(시험이 결함을 잡는다는 확인).
 
 ## 시험 순서
 
