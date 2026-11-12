@@ -17,8 +17,13 @@ Judging rules:
 - A PC reply must end with CR LF; a line ending with LF alone fails.
 - The automatic test stops at the first reply timeout (a late reply could
   otherwise be paired with the next line), and a line that came in before a
-  line is sent fails. In manual mode an expected reply that does not come
-  within --timeout is dropped and logged, so it is not paired with a later reply.
+  line is sent fails.
+- Manual mode sends the next line only after the reply of the previous one
+  (or its timeout), so at most one line waits for a reply. The replies carry
+  no request number, so after a timeout, or a reply that no line waits for,
+  the page stops judging replies until BTN0 (the board reset) is pressed and
+  confirmed on the page; lines that come in the first RESYNC_QUIET seconds
+  after that belong to earlier requests and are not judged.
 - An STM32 line marked "LCD_FAIL" (the LCD did not show it) fails the LCD
   check, and after "LCD_NOT_FOUND" every LCD check fails.
 
@@ -92,6 +97,9 @@ def open_window(url):
 STM_LINE_RE = re.compile(r"^#\d+ (LCD_FAIL )?(?:FPGA> (.*)|(RX ERR|RX LONG)\b.*)$")
 LOG_KEEP = 3000
 BAD_EOL = "줄 끝이 CRLF가 아님(LF만)"
+RESYNC_QUIET = 0.5          # s after BTN0: lines then still belong to earlier requests
+UNSYNCED_NOTE = "판정 안 함: 응답 짝을 알 수 없는 상태(BTN0으로 다시 맞춤)"
+UNPAIRED_NOTE = "보낸 줄과 짝이 없는 응답(늦게 온 응답이거나 응답이 없어야 하는 줄의 응답)"
 
 
 def as_int(v):
@@ -175,7 +183,9 @@ class App:
         self.model_known = False       # board A/B unknown at start (kept from earlier use)
         self.log = []
         self.next_id = 1
-        self.pending_exp = []           # manual mode: {"exp", "line", "t"} of lines that get a reply
+        self.pending_exp = []           # manual mode: {"exp", "line", "done"} of the line waiting for its reply
+        self.synced = True              # manual mode: replies can be paired with the lines sent
+        self.quiet_until = 0.0          # monotonic time until which received lines are old ones (BTN0)
         self.pc_q = queue.Queue()        # PC replies (automatic test): (text, problem)
         self.stm_q = queue.Queue()       # STM32 lines (automatic test): (text, lcd_ok)
         self.last_pc = ""
@@ -219,29 +229,31 @@ class App:
                     raw = raw[:-1]
                 on_line(raw.decode("ascii", "replace"), eol_ok)
 
+    def lose_sync(self, why):
+        """Manual mode: stop judging replies until BTN0 (see the module notes)."""
+        with self.state_lock:
+            was, self.synced = self.synced, False
+        if was:
+            self.add_log("err", "응답 판정 중단: %s. 계산기 응답에는 요청 번호가 없어 이후 응답이 어느 요청의 것인지 "
+                                "알 수 없습니다. 보드 BTN0을 누른 뒤 [BTN0 눌렀음]을 누르면 다시 판정합니다" % why)
+
     def take_pending(self, text):
-        """Manual mode: the expectation of the oldest line still waiting for a
-        reply, as log fields for this reply."""
+        """Manual mode: pair this reply with the line waiting for it (at most one,
+        manual_send waits for each reply), as log fields for this reply."""
         with self.state_lock:
             e = self.pending_exp.pop(0) if self.pending_exp else None
+            synced = self.synced
         if e is None:
-            return {"note": "보낸 줄과 짝이 없는 응답(늦게 온 응답이거나 응답이 없어야 하는 줄의 응답)"}
+            if time.monotonic() < self.quiet_until:
+                return {"note": "BTN0 직후에 받은 줄: BTN0 전 요청의 응답으로 보고 판정하지 않음"}
+            self.lose_sync("보낸 줄과 짝이 없는 응답이 왔습니다")
+            return {"note": UNPAIRED_NOTE}
+        e["done"].set()
+        if not synced:
+            return {"note": UNSYNCED_NOTE}
         if e["exp"] is None:
             return {}
         return {"expected": e["exp"], "match": text == e["exp"]}
-
-    def expire_loop(self):
-        """Manual mode: drop expectations whose reply did not come in time, so a
-        late reply is not paired with them."""
-        while self.alive:
-            time.sleep(0.1)
-            now = time.monotonic()
-            gone = []
-            with self.state_lock:
-                while self.pending_exp and now - self.pending_exp[0]["t"] > self.timeout:
-                    gone.append(self.pending_exp.pop(0))
-            for e in gone:
-                self.add_log("err", "응답 없음: '%s'의 응답이 %.1f초 안에 오지 않았습니다" % (e["line"], self.timeout))
 
     def on_pc_line(self, text, eol_ok=True):
         bad = "" if eol_ok else BAD_EOL
@@ -315,6 +327,9 @@ class App:
                 return "자동 시험 중에는 보낼 수 없습니다"
             if len(line) > 40 or any(ord(c) < 0x20 or ord(c) > 0x7E for c in line):
                 return "ASCII 40자 이하의 한 줄만 보낼 수 있습니다"
+            wait = self.quiet_until - time.monotonic()
+            if wait > 0:
+                time.sleep(wait)     # just after BTN0: replies of earlier requests may still come
             exp = self.model.line(line)
             note = "응답 없음(숫자 저장)" if exp is None and cbt.NUM_RE.match(line) else ""
             if self.model.a is not None:
@@ -322,13 +337,23 @@ class App:
             if not self.model_known and line.upper() in cbt.OPS:
                 exp = None
                 note = "보드의 A·B를 몰라 판정하지 않음"
-            with self.state_lock:
-                # a reply always comes for a non-number line; keep the queue aligned
-                if exp is not None or (not cbt.NUM_RE.match(line) and line != ""):
-                    self.pending_exp.append({"exp": exp, "line": line, "t": time.monotonic()})
+            entry = None
+            # a reply always comes for a non-number line
+            if exp is not None or (not cbt.NUM_RE.match(line) and line != ""):
+                entry = {"exp": exp, "line": line, "done": threading.Event()}
+                with self.state_lock:
+                    self.pending_exp.append(entry)
             extra = {"expected": exp} if exp is not None else ({"note": note} if note else {})
             self.add_log("tx", line, extra)
             self.write_line(line)
+            # rate rule (calculator.md 2): the next line goes out after this reply
+            if entry is not None and not entry["done"].wait(self.timeout):
+                with self.state_lock:
+                    waiting = any(e is entry for e in self.pending_exp)
+                    self.pending_exp = [e for e in self.pending_exp if e is not entry]
+                if waiting:
+                    self.add_log("err", "응답 없음: '%s'의 응답이 %.1f초 안에 오지 않았습니다" % (line, self.timeout))
+                    self.lose_sync("'%s'의 응답이 시간 안에 오지 않았습니다" % line)
             return ""
 
     def calc(self, a, b, op):
@@ -346,7 +371,8 @@ class App:
             return self.manual_send("%s,%s" % (a, b)) or self.manual_send(op)
 
     def btn0_pressed(self):
-        """User pressed BTN0 on the board: A/B cleared."""
+        """User pressed BTN0 on the board: A/B cleared, and the board reset ends
+        every earlier reply, so replies can be paired again (after RESYNC_QUIET)."""
         with self.tx_lock:
             if self.fake:
                 self.pc.reset_board()
@@ -354,10 +380,12 @@ class App:
             self.model_known = True
             with self.state_lock:
                 self.pending_exp = []
+                self.synced = True
+            self.quiet_until = time.monotonic() + RESYNC_QUIET
             if self.test["running"] and self.test["waiting_btn"]:
                 self.btn_event.set()
             else:
-                self.add_log("info", "BTN0 눌림: A·B를 지운 상태로 기대값을 계산합니다")
+                self.add_log("info", "BTN0 눌림: A·B를 지운 상태로 기대값을 계산하고 응답 판정을 다시 시작합니다")
 
     # ---- automatic test -------------------------------------------------
     def start_test(self, use_btn0, parity, random_count, seed):
@@ -366,9 +394,13 @@ class App:
         if random_count is None or seed is None:
             return "무작위 줄 수와 seed는 정수로 넣어 주세요"
         random_count = max(0, min(random_count, 2000))
+        use_btn0 = bool(use_btn0)
         with self.tx_lock:
             if self.test["running"]:
                 return "이미 실행 중입니다"
+            if not self.synced and not use_btn0:
+                return ("응답 판정이 멈춘 상태입니다(앞 요청 시간 초과 등). BTN0을 누르고 [BTN0 눌렀음]으로 맞춘 뒤 "
+                        "시작하거나, 'BTN0 단계 포함'으로 시작하세요")
             with self.state_lock:
                 self.pending_exp = []
             self.test = {"running": True, "waiting_btn": "", "rows": [], "failures": 0,
@@ -376,7 +408,7 @@ class App:
                          "aborted": ""}
             self.stop_flag.clear()
             self.btn_event.clear()
-            threading.Thread(target=self.run_test, args=(bool(use_btn0), bool(parity), random_count, seed),
+            threading.Thread(target=self.run_test, args=(use_btn0, bool(parity), random_count, seed),
                              daemon=True).start()
         return ""
 
@@ -533,6 +565,8 @@ class App:
         t["summary"] = summary
         self.model_known = True        # the model followed every line the test sent
         self.add_log("info", summary)
+        if t["aborted"]:
+            self.lose_sync("자동 시험에서 응답이 시간 안에 오지 않았습니다")
         t["running"] = False
 
     def state(self, since):
@@ -541,7 +575,7 @@ class App:
         t = dict(self.test)
         rows = t.pop("rows")
         return {"pc_port": self.pc_name, "stm_port": self.stm_name, "fake": self.fake,
-                "reply_stm": self.reply_stm, "lcd_missing": self.lcd_missing,
+                "reply_stm": self.reply_stm, "lcd_missing": self.lcd_missing, "synced": self.synced,
                 "last_pc": self.last_pc, "last_stm": self.last_stm, "log": log,
                 "a": self.model.a, "b": self.model.b, "known": self.model_known,
                 "test": t, "rows": rows}
@@ -583,6 +617,7 @@ th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--car
    <button class="op pri" data-op="MUL">MUL</button><button class="op pri" data-op="DIV">DIV</button></div>
   <div class="row"><input type="text" id="free" placeholder="직접 입력 (예: 7,-2)"><button id="sendfree">보내기</button></div>
   <div class="muted" id="ab"></div>
+  <div class="banner" id="syncbanner">응답 판정 중단: 앞 요청의 응답이 시간 안에 오지 않았거나 짝이 없는 응답이 왔습니다. 보드 BTN0을 누른 뒤 [BTN0 눌렀음]을 누르면 다시 판정합니다.</div>
   <div class="muted">A·B를 넣고 연산 버튼을 누르면 숫자 줄과 연산 줄을 함께 보내고, FPGA가 결과를 보냅니다. 직접 입력은 한 줄만 그대로 보냅니다(숫자 줄만 보내면 응답이 없습니다).</div>
  </div>
  <div class="card"><h2>2. 결과</h2>
@@ -635,6 +670,7 @@ async function poll(){
   replyStm=!!s.reply_stm;$('pclbl').style.display=$('lastpc').style.display=$('pcth').style.display=replyStm?'none':'';
   if(replyStm)$('lcdlbl').textContent='FPGA 응답 (STM32가 받아 LCD에 표시한 줄)';
   $('lastpc').textContent=s.last_pc;$('laststm').textContent=s.last_stm;
+  $('syncbanner').style.display=s.synced?'none':'block';
   $('ab').textContent='보드의 A·B(화면 추정): '+(!s.known?'모름 — 계산을 보내거나 BTN0을 누르면 맞춰집니다':(s.a===null?'없음':s.a+', '+s.b));
   const log=$('log'),atEnd=log.scrollTop+log.clientHeight>=log.scrollHeight-20;
   for(const e of s.log){log.appendChild(logLine(e));since=e.id;}
@@ -792,7 +828,6 @@ def main():
     if stm is not None:
         stm.reset_input_buffer()
         threading.Thread(target=app.reader, args=(stm, app.on_stm_line), daemon=True).start()
-    threading.Thread(target=app.expire_loop, daemon=True).start()
     app.add_log("info", "시작: FPGA 변환기 %s, STM32 %s, 응답 읽는 곳 %s" % (
         pc_name, stm_name or "연결 안 함", "STM32 출력" if args.reply_from == "stm32" else "PC 변환기 RX"))
 

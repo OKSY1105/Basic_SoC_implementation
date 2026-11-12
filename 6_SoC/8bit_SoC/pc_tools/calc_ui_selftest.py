@@ -139,9 +139,11 @@ def http_inputs():
 
 # ---- in-process helpers -----------------------------------------------------
 def make_app(port, timeout=0.3, reply_from="pc", fault=None):
+    """App on a fake port; BTN0 first (A/B known), then past the quiet time."""
     app = ui.App(port, None, True, timeout, "E", "O", "fake", "fake", reply_from, fault)
     threading.Thread(target=app.reader, args=(port, app.on_pc_line), daemon=True).start()
-    threading.Thread(target=app.expire_loop, daemon=True).start()
+    app.btn0_pressed()
+    time.sleep(ui.RESYNC_QUIET + 0.1)
     return app
 
 
@@ -195,10 +197,43 @@ class LatePort(ui.LockedFake):
         return b""
 
 
+class HoldPort(ui.LockedFake):
+    """Keeps every reply line until the test releases it (in order); with
+    passthrough set, replies go through at once."""
+
+    def __init__(self):
+        super().__init__(None)
+        self.held = bytearray()
+        self.out = bytearray()
+        self.mu = threading.Lock()
+        self.passthrough = False
+
+    def read(self, n=1):
+        data = super().read(n)
+        with self.mu:
+            self.held += data
+            if self.passthrough:
+                self.out += self.held
+                self.held = bytearray()
+            out, self.out = bytes(self.out), bytearray()
+        return out
+
+    def release_line(self):
+        t0 = time.monotonic()
+        while time.monotonic() - t0 < 2:
+            with self.mu:
+                if b"\n" in self.held:
+                    i = self.held.index(b"\n") + 1
+                    self.out += self.held[:i]
+                    del self.held[:i]
+                    return True
+            time.sleep(0.01)
+        return False
+
+
 def concurrent_calc():
     port = GatePort(b"1,2\r\n")
     app = make_app(port)
-    app.btn0_pressed()
     res = {}
     ta = threading.Thread(target=lambda: res.update(a=app.calc("1", "2", "ADD")))
     ta.start()
@@ -222,7 +257,6 @@ def concurrent_calc():
 
 def late_reply_auto():
     app = make_app(LatePort(0.5), timeout=0.2)
-    app.btn0_pressed()
     err = app.start_test(False, False, 0, 1)
     t0 = time.monotonic()
     while app.test["running"] and time.monotonic() - t0 < 10:
@@ -234,31 +268,53 @@ def late_reply_auto():
     late = [e for e in entries(app, "rx") if "짝이 없는" in e.get("note", "")]
     ok = (err == "" and t["result"] == "FAIL" and t["aborted"] == "reply_timeout"
           and len(reply_rows) == 1 and not reply_rows[0]["ok"] and not any(r["ok"] for r in reply_rows)
-          and len(late) == 1 and late[0]["text"] == "ADD:30" and "match" not in late[0])
-    report("late_reply_auto", ok, "summary=%s rows=%d why=%r late=%r"
+          and len(late) == 1 and late[0]["text"] == "ADD:30" and "match" not in late[0] and not app.synced)
+    report("late_reply_auto", ok, "summary=%s rows=%d why=%r late=%r synced=%s"
            % (t.get("summary"), len(t["rows"]), reply_rows[0]["why"] if reply_rows else None,
-              [(e["text"], e.get("note")) for e in late]))
+              [(e["text"], e.get("note")) for e in late], app.synced))
 
 
-def late_reply_manual():
-    app = make_app(LatePort(0.5), timeout=0.2)
-    app.btn0_pressed()
-    e1 = app.calc("1", "2", "ADD")          # reply ADD:3 comes after 0.5 s (timeout 0.2 s)
-    time.sleep(0.9)
-    e2 = app.calc("5", "3", "SUB")          # reply SUB:2 on time
-    time.sleep(0.4)
+def late_reply_manual(mode):
+    """VR-014_r1-I1: A = 1,2 ADD gets no reply in time; B = 2,1 ADD (same
+    expected text ADD:3) is sent; A's late reply comes while B waits, B's own
+    reply after that. Neither may count as a match. Then BTN0 resyncs."""
+    port = HoldPort()
+    app = make_app(port, timeout=0.2, reply_from=mode)
+    kind = "rx" if mode == "pc" else "stm"
+    e1 = app.calc("1", "2", "ADD")              # A: reply held -> timeout after 0.2 s
+    synced_after_a = app.synced
+    res = {}
+    tb = threading.Thread(target=lambda: res.update(b=app.calc("2", "1", "ADD")))
+    tb.start()
+    time.sleep(0.05)                            # B is waiting for its reply
+    r1 = port.release_line()                    # A's late ADD:3 comes while B waits
+    tb.join(2)
+    r2 = port.release_line()                    # B's own ADD:3 comes after B
+    time.sleep(0.2)
+    refused = app.start_test(False, False, 0, 1)
+    before = [(e["text"], e.get("match"), e.get("note", "")) for e in entries(app, kind)]
+    port.passthrough = True
+    app.btn0_pressed()                          # resync
+    synced_after_btn0 = app.synced
+    e3 = app.calc("5", "3", "SUB")              # waits out the quiet time, then SUB:2 on time
+    time.sleep(0.2)
     app.alive = False
-    rx = [(e["text"], e.get("expected"), e.get("match"), e.get("note", "")) for e in entries(app, "rx")]
+    after = [(e["text"], e.get("expected"), e.get("match")) for e in entries(app, kind)][len(before):]
     timeouts = [e["text"] for e in entries(app, "err") if e["text"].startswith("응답 없음")]
-    ok = (e1 == e2 == "" and len(rx) == 2 and rx[0][0] == "ADD:3" and rx[0][1] is None
-          and "짝이 없는" in rx[0][3] and rx[1][:3] == ("SUB:2", "SUB:2", True) and len(timeouts) == 1)
-    report("late_reply_manual", ok, "rx=%r timeouts=%r" % (rx, timeouts))
+    ok = (e1 == "" and res.get("b") == "" and e3 == "" and r1 and r2 and not synced_after_a
+          and len(before) == 2 and not any(m is True for _, m, _ in before)
+          and before[0][0] == "ADD:3" and before[0][2] == ui.UNSYNCED_NOTE
+          and before[1][0] == "ADD:3" and before[1][2] == ui.UNPAIRED_NOTE
+          and bool(refused) and synced_after_btn0 and after == [("SUB:2", "SUB:2", True)]
+          and len(timeouts) == 1)
+    report("late_reply_manual mode=%s" % mode, ok,
+           "replies_before_btn0=%r refused_auto_start=%s after_btn0=%r timeouts=%d"
+           % (before, bool(refused), after, len(timeouts)))
 
 
 def lf_only_manual():
     port = ui.LockedFake("lf_only")
     app = make_app(port, fault="lf_only")
-    app.btn0_pressed()
     err = app.calc("1", "2", "ADD")
     time.sleep(0.4)
     app.alive = False
@@ -288,7 +344,8 @@ def main():
     quick = "--quick" in sys.argv[1:]
     concurrent_calc()
     late_reply_auto()
-    late_reply_manual()
+    late_reply_manual("pc")
+    late_reply_manual("stm32")
     lf_only_manual()
     lcd_lines()
     http_inputs()
