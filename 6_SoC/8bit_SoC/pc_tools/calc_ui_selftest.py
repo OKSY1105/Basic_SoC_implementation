@@ -13,7 +13,10 @@
    transaction (two concurrent calculations), a late reply stops the
    automatic test and is not paired with another line in manual mode, an
    earlier reply that comes in the quiet time after a BTN0 step of the
-   automatic test is not judged, an LF-only reply fails in manual mode,
+   automatic test is not judged, a BTN0 confirmed again during the quiet
+   time starts it again (automatic test and manual mode: no line goes out
+   and no reply is judged before the quiet time of the latest BTN0 ends), an
+   LF-only reply fails in manual mode,
    and the STM32 "LCD_FAIL" /
    "LCD_NOT_FOUND" lines fail the LCD check.
 
@@ -234,9 +237,10 @@ class HoldPort(ui.LockedFake):
 
 
 class BtnLatePort(ui.LockedFake):
-    """VR-014_r2-I1: every reply is kept back until arm() (that request times
-    out); after arm() the first new reply line is lost and the rest pass;
-    release_old() then delivers the kept reply."""
+    """VR-014_r2-I1, VR-014_r3-I1: every reply is kept back until arm() (that
+    request times out); after arm() the first new reply line is lost and the
+    rest pass; release_old() then delivers the kept reply. Records the time of
+    every write."""
 
     def __init__(self):
         super().__init__(None)
@@ -246,6 +250,15 @@ class BtnLatePort(ui.LockedFake):
         self.out = bytearray()
         self.state = "keep"
         self.dropped = b""
+        self.writes = []
+
+    def write(self, data):
+        self.writes.append(time.monotonic())
+        super().write(data)
+
+    def first_write_after(self, t):
+        later = [w for w in self.writes if w > t]
+        return later[0] - t if later else None
 
     def read(self, n=1):
         data = super().read(n)
@@ -356,41 +369,116 @@ def late_reply_manual(mode):
            % (before, bool(refused), after, len(timeouts)))
 
 
-def late_reply_btn_auto(mode):
-    """VR-014_r2-I1: a manual ADD before BTN0 times out; its ERR NOARG comes
-    0.3 s after the first BTN0 of an automatic test, and the reply of the
-    first line after BTN0 (ADD, also ERR NOARG) is lost. The old reply must
-    not pass that line: the test waits out RESYNC_QUIET, drops the old line,
-    and stops at the first line's timeout."""
+# the note the page shows (calc_ui.QUIET_NOTE), as text so that the check also
+# runs on older calc_ui.py versions
+QUIET_NOTE = "BTN0 직후에 받은 줄: BTN0 전 요청의 응답으로 보고 판정하지 않음"
+
+
+def quiet_lines(app):
+    """(kind, text) of the lines logged as received in the BTN0 quiet time."""
+    with app.state_lock:
+        return [(e["kind"], e["text"]) for e in app.log if e.get("note") == QUIET_NOTE]
+
+
+def btn_auto_case(name, mode, again):
+    """A manual ADD before BTN0 times out (unsynced); then an automatic test
+    with BTN0 steps. At its first BTN0 step BTN0 is confirmed once (again =
+    False) or twice, 0.2 s apart (again = True). The earlier ERR NOARG comes
+    0.3 s (0.36 s) after the latest confirm, and the reply of the first new
+    line (ADD, also ERR NOARG) is lost. The first line must go out
+    RESYNC_QUIET after the latest confirm, the old line is not judged, and the
+    test stops at the first line's timeout."""
     port = BtnLatePort()
     app = make_app(port, timeout=0.2, reply_from=mode)
     e1 = app.manual_send("ADD")                 # reply kept back -> timeout, unsynced
     port.arm()
     err = app.start_test(True, False, 0, 1)
-    presses, t0 = 0, time.monotonic()
+    t0 = time.monotonic()
+    while not app.test["waiting_btn"] and time.monotonic() - t0 < 5:
+        time.sleep(0.005)
+    tb = time.monotonic()
+    app.btn0_pressed()                          # stands for pressing BTN0 on the board
+    presses = 1
+    if again:
+        time.sleep(max(0.0, tb + 0.2 - time.monotonic()))
+        tb = time.monotonic()
+        app.btn0_pressed()                      # confirmed again during the quiet time
+        presses = 2
+    time.sleep(max(0.0, tb + (0.36 if again else 0.3) - time.monotonic()))
+    port.release_old()                          # the earlier ERR NOARG comes now
     while app.test["running"] and time.monotonic() - t0 < 30:
         if app.test["waiting_btn"]:
-            app.btn0_pressed()                  # stands for pressing BTN0 on the board
+            app.btn0_pressed()
             presses += 1
             t1 = time.monotonic()
             while app.test["waiting_btn"] and time.monotonic() - t1 < 1:
                 time.sleep(0.005)
-            if presses == 1:
-                time.sleep(max(0.0, t1 + 0.3 - time.monotonic()))
-                port.release_old()              # the earlier ERR NOARG comes now
         time.sleep(0.02)
     time.sleep(0.2)
     app.alive = False
     t = app.test
     first = t["rows"][0] if t["rows"] else {}
-    dropped = [e["text"] for e in entries(app, "info") if e["text"].startswith("BTN0 뒤")]
+    first_send = port.first_write_after(tb)
+    late_ok = first_send is not None and first_send >= ui.RESYNC_QUIET
+    quiet = quiet_lines(app)
+    want_quiet = [("rx", "ERR NOARG"), ("stm", "ERR NOARG")] if mode == "pc" else [("stm", "ERR NOARG")]
+    before = [e["text"] for e in entries(app, "info") if e["text"].startswith("BTN0 확인 전")]
     ok = (e1 == "" and err == "" and t["result"] == "FAIL" and t["aborted"] == "reply_timeout"
           and first.get("line") == "ADD" and not first.get("ok") and not any(r["ok"] for r in t["rows"])
-          and len(dropped) == 1 and dropped[0].endswith("ERR NOARG") and port.dropped == b"ERR NOARG\r\n")
-    report("late_reply_btn_auto mode=%s" % mode, ok,
-           "result=%s aborted=%s rows=%d first=%r why=%r dropped_in_quiet=%r presses=%d"
+          and late_ok and quiet == want_quiet and not before and port.dropped == b"ERR NOARG\r\n")
+    report("%s mode=%s" % (name, mode), ok,
+           "result=%s aborted=%s rows=%d first=%r why=%r first_send_after_quiet=%s not_judged=%r presses=%d"
            % (t.get("result"), t.get("aborted"), len(t["rows"]), first.get("line"), first.get("why"),
-              [d.split(": ", 1)[-1] for d in dropped], presses))
+              late_ok, quiet, presses))
+
+
+def late_reply_btn_auto(mode):
+    """VR-014_r2-I1: one BTN0 confirm, the earlier reply 0.3 s after it."""
+    btn_auto_case("late_reply_btn_auto", mode, again=False)
+
+
+def repeated_btn0_auto(mode):
+    """VR-014_r3-I1: BTN0 confirmed again 0.2 s after the first confirm, the
+    earlier reply 0.36 s after the second one."""
+    btn_auto_case("repeated_btn0_auto", mode, again=True)
+
+
+def repeated_btn0_manual(mode):
+    """VR-014_r3-I1 in manual mode: after a timeout BTN0 is confirmed, a line
+    (SUB) is sent 0.1 s later and waits for the quiet time, and BTN0 is
+    confirmed again 0.2 s after the first confirm. The earlier ERR NOARG comes
+    0.36 s after the second confirm and the reply of SUB is lost. SUB must go
+    out RESYNC_QUIET after the second confirm and no reply may count as a
+    match."""
+    port = BtnLatePort()
+    app = make_app(port, timeout=0.2, reply_from=mode)
+    kind = "rx" if mode == "pc" else "stm"
+    e1 = app.manual_send("ADD")                 # reply kept back -> timeout, unsynced
+    port.arm()
+    t1 = time.monotonic()
+    app.btn0_pressed()
+    res = {}
+    ts = threading.Thread(target=lambda: res.update(s=app.manual_send("SUB")))
+    time.sleep(max(0.0, t1 + 0.1 - time.monotonic()))
+    ts.start()                                  # SUB waits for the quiet time
+    time.sleep(max(0.0, t1 + 0.2 - time.monotonic()))
+    t2 = time.monotonic()
+    tb = threading.Thread(target=app.btn0_pressed)   # own thread: it may have to wait for tx_lock
+    tb.start()
+    time.sleep(max(0.0, t2 + 0.36 - time.monotonic()))
+    port.release_old()                          # the earlier ERR NOARG comes now
+    ts.join(3)
+    tb.join(3)
+    time.sleep(0.2)
+    app.alive = False
+    sub_send = port.first_write_after(t2)
+    late_ok = sub_send is not None and sub_send >= ui.RESYNC_QUIET
+    got = [(e["text"], e.get("match"), e.get("note", "")) for e in entries(app, kind)]
+    timeouts = [e["text"] for e in entries(app, "err") if e["text"].startswith("응답 없음")]
+    ok = (e1 == "" and res.get("s") == "" and not ts.is_alive() and not tb.is_alive() and late_ok
+          and got == [("ERR NOARG", None, QUIET_NOTE)] and len(timeouts) == 2)
+    report("repeated_btn0_manual mode=%s" % mode, ok,
+           "send_after_latest_quiet=%s replies=%r timeouts=%d" % (late_ok, got, len(timeouts)))
 
 
 def lf_only_manual():
@@ -429,6 +517,10 @@ def main():
     late_reply_manual("stm32")
     late_reply_btn_auto("pc")
     late_reply_btn_auto("stm32")
+    repeated_btn0_auto("pc")
+    repeated_btn0_auto("stm32")
+    repeated_btn0_manual("pc")
+    repeated_btn0_manual("stm32")
     lf_only_manual()
     lcd_lines()
     http_inputs()

@@ -17,14 +17,16 @@ Judging rules:
 - A PC reply must end with CR LF; a line ending with LF alone fails.
 - The automatic test stops at the first reply timeout (a late reply could
   otherwise be paired with the next line), and a line that came in before a
-  line is sent fails. After a BTN0 step it waits RESYNC_QUIET seconds and
-  drops the lines that came in meanwhile, as manual mode does.
+  line is sent fails.
 - Manual mode sends the next line only after the reply of the previous one
   (or its timeout), so at most one line waits for a reply. The replies carry
   no request number, so after a timeout, or a reply that no line waits for,
   the page stops judging replies until BTN0 (the board reset) is pressed and
-  confirmed on the page; lines that come in the first RESYNC_QUIET seconds
-  after that belong to earlier requests and are not judged.
+  confirmed on the page.
+- BTN0 (both modes): lines that come in the first RESYNC_QUIET seconds after
+  the latest BTN0 confirm belong to earlier requests and are not judged, and
+  no line is sent before that time. A BTN0 confirmed again meanwhile starts
+  the RESYNC_QUIET seconds again.
 - An STM32 line marked "LCD_FAIL" (the LCD did not show it) fails the LCD
   check, and after "LCD_NOT_FOUND" every LCD check fails.
 
@@ -99,6 +101,8 @@ STM_LINE_RE = re.compile(r"^#\d+ (LCD_FAIL )?(?:FPGA> (.*)|(RX ERR|RX LONG)\b.*)
 LOG_KEEP = 3000
 BAD_EOL = "줄 끝이 CRLF가 아님(LF만)"
 RESYNC_QUIET = 0.5          # s after BTN0: lines then still belong to earlier requests
+QUIET_SLICE = 0.02          # s: the quiet time is read again this often (a new BTN0 extends it)
+QUIET_NOTE = "BTN0 직후에 받은 줄: BTN0 전 요청의 응답으로 보고 판정하지 않음"
 UNSYNCED_NOTE = "판정 안 함: 응답 짝을 알 수 없는 상태(BTN0으로 다시 맞춤)"
 UNPAIRED_NOTE = "보낸 줄과 짝이 없는 응답(늦게 온 응답이거나 응답이 없어야 하는 줄의 응답)"
 
@@ -245,8 +249,8 @@ class App:
             e = self.pending_exp.pop(0) if self.pending_exp else None
             synced = self.synced
         if e is None:
-            if time.monotonic() < self.quiet_until:
-                return {"note": "BTN0 직후에 받은 줄: BTN0 전 요청의 응답으로 보고 판정하지 않음"}
+            if self.in_quiet():
+                return {"note": QUIET_NOTE}
             self.lose_sync("보낸 줄과 짝이 없는 응답이 왔습니다")
             return {"note": UNPAIRED_NOTE}
         e["done"].set()
@@ -262,8 +266,11 @@ class App:
         if self.reply_stm:
             self.add_log("rx", text, {"note": bad} if bad else None)   # not used for judging in this mode
         elif self.test["running"]:
-            self.add_log("rx", text, {"note": bad} if bad else None)
-            self.pc_q.put((text, bad))
+            if self.in_quiet():
+                self.add_log("rx", text, {"note": QUIET_NOTE})
+            else:
+                self.add_log("rx", text, {"note": bad} if bad else None)
+                self.pc_q.put((text, bad))
         else:
             extra = self.take_pending(text)
             if bad:
@@ -304,9 +311,42 @@ class App:
         extra = {} if lcd_ok else {"note": "LCD에 표시 못 함"}
         if self.reply_stm and not self.test["running"]:
             extra.update(self.take_pending(shown))
+        quiet = self.test["running"] and self.in_quiet()
+        if quiet:
+            extra = {"note": QUIET_NOTE}
         self.add_log("stm", shown, extra)
-        if self.test["running"]:
+        if self.test["running"] and not quiet:
             self.stm_q.put((shown, lcd_ok))
+
+    # ---- BTN0 quiet time --------------------------------------------------
+    def in_quiet(self):
+        """Within RESYNC_QUIET after the latest BTN0 confirm."""
+        return time.monotonic() < self.quiet_until
+
+    def wait_quiet(self, stop=None):
+        """Wait until RESYNC_QUIET after the latest BTN0 confirm. quiet_until
+        is read again every QUIET_SLICE, so a BTN0 confirmed meanwhile extends
+        the wait. Call it without tx_lock (btn0_pressed takes tx_lock).
+        False when stop is set meanwhile."""
+        while True:
+            wait = self.quiet_until - time.monotonic()
+            if wait <= 0:
+                return True
+            if stop is not None and stop.is_set():
+                return False
+            time.sleep(min(wait, QUIET_SLICE))
+
+    def lock_after_quiet(self, stop=None):
+        """Take tx_lock after the quiet time of the latest BTN0 confirm. While
+        tx_lock is held no BTN0 is confirmed, so the line sent under it goes
+        out after that quiet time. False (lock not taken) when stopped."""
+        while True:
+            if not self.wait_quiet(stop):
+                return False
+            self.tx_lock.acquire()
+            if not self.in_quiet():
+                return True
+            self.tx_lock.release()           # BTN0 confirmed in between: wait again
 
     # ---- sending ---------------------------------------------------------
     def write_line(self, line, parity_error=False):
@@ -323,14 +363,16 @@ class App:
                 self.pc.write(data + b"\r\n")
 
     def manual_send(self, line):
-        with self.tx_lock:           # the model, the expectation and the line go out together
+        if self.test["running"]:
+            return "자동 시험 중에는 보낼 수 없습니다"
+        if len(line) > 40 or any(ord(c) < 0x20 or ord(c) > 0x7E for c in line):
+            return "ASCII 40자 이하의 한 줄만 보낼 수 있습니다"
+        # just after BTN0, replies of earlier requests may still come: the line
+        # goes out after the quiet time of the latest BTN0 confirm
+        self.lock_after_quiet()
+        try:                         # the model, the expectation and the line go out together
             if self.test["running"]:
                 return "자동 시험 중에는 보낼 수 없습니다"
-            if len(line) > 40 or any(ord(c) < 0x20 or ord(c) > 0x7E for c in line):
-                return "ASCII 40자 이하의 한 줄만 보낼 수 있습니다"
-            wait = self.quiet_until - time.monotonic()
-            if wait > 0:
-                time.sleep(wait)     # just after BTN0: replies of earlier requests may still come
             exp = self.model.line(line)
             note = "응답 없음(숫자 저장)" if exp is None and cbt.NUM_RE.match(line) else ""
             if self.model.a is not None:
@@ -356,6 +398,8 @@ class App:
                     self.add_log("err", "응답 없음: '%s'의 응답이 %.1f초 안에 오지 않았습니다" % (line, self.timeout))
                     self.lose_sync("'%s'의 응답이 시간 안에 오지 않았습니다" % line)
             return ""
+        finally:
+            self.tx_lock.release()
 
     def calc(self, a, b, op):
         """Numbers line and operation line together (one button press), as one
@@ -366,10 +410,15 @@ class App:
             return "A·B는 -128~127 정수로 넣어 주세요"
         if op not in cbt.OPS:
             return "알 수 없는 연산"
-        with self.tx_lock:
+        if self.test["running"]:
+            return "자동 시험 중에는 보낼 수 없습니다"
+        self.lock_after_quiet()      # held over both lines, so no BTN0 comes between them
+        try:
             if self.test["running"]:
                 return "자동 시험 중에는 보낼 수 없습니다"
             return self.manual_send("%s,%s" % (a, b)) or self.manual_send(op)
+        finally:
+            self.tx_lock.release()
 
     def btn0_pressed(self):
         """User pressed BTN0 on the board: A/B cleared, and the board reset ends
@@ -430,16 +479,16 @@ class App:
                 self.test["waiting_btn"] = ""
                 return False
         self.test["waiting_btn"] = ""
-        # replies of requests sent before BTN0 may still come during
-        # RESYNC_QUIET: wait it out as manual sends do, then drop them
-        wait = self.quiet_until - time.monotonic()
-        if wait > 0:
-            time.sleep(wait)
+        # replies of requests sent before BTN0 may still come for RESYNC_QUIET
+        # after the latest BTN0 confirm: the readers do not judge them, and the
+        # next line goes out after that time (test_case)
+        if not self.wait_quiet(self.stop_flag):
+            return False
         self.model.reset()
         old = self.queued()
         if old:
-            self.add_log("info", "BTN0 뒤 %.1f초 안에 받은 줄은 이전 요청의 응답으로 보고 판정하지 않습니다: %s"
-                         % (RESYNC_QUIET, " | ".join(old)))
+            self.add_log("info", "BTN0 확인 전에 받은 줄은 이전 요청의 응답으로 보고 판정하지 않습니다: %s"
+                         % " | ".join(old))
         return True
 
     def queued(self):
@@ -460,17 +509,25 @@ class App:
         self.add_log("err", "자동 시험 중단: %s. 늦게 온 응답을 다음 줄의 응답으로 짝짓지 않도록 여기서 멈춥니다" % why)
 
     def test_case(self, line, parity_error=False):
-        early = self.queued()
-        if early:
-            self.test["failures"] += 1
-            self.test["rows"].append({"line": "(%s 보내기 전)" % line, "expected": None, "pc": " | ".join(early),
-                                      "lcd": None, "ok": False, "why": "기대하지 않은 응답이 먼저 와 있음"})
-        exp = self.model.line(line, rx_error=parity_error)
-        row = {"line": line + (" (odd parity)" if parity_error else ""), "expected": exp,
-               "pc": None, "lcd": None, "ok": True, "why": ""}
-        self.add_log("tx", row["line"], {"expected": exp} if exp is not None else {})
-        self.write_line(line, parity_error)
-        self.test["lines"] += 1
+        # the line goes out after the quiet time of the latest BTN0 confirm, and
+        # no BTN0 changes the model between the expectation and the line
+        if not self.lock_after_quiet(self.stop_flag):
+            return
+        try:
+            early = self.queued()
+            if early:
+                self.test["failures"] += 1
+                self.test["rows"].append({"line": "(%s 보내기 전)" % line, "expected": None,
+                                          "pc": " | ".join(early), "lcd": None, "ok": False,
+                                          "why": "기대하지 않은 응답이 먼저 와 있음"})
+            exp = self.model.line(line, rx_error=parity_error)
+            row = {"line": line + (" (odd parity)" if parity_error else ""), "expected": exp,
+                   "pc": None, "lcd": None, "ok": True, "why": ""}
+            self.add_log("tx", row["line"], {"expected": exp} if exp is not None else {})
+            self.write_line(line, parity_error)
+            self.test["lines"] += 1
+        finally:
+            self.tx_lock.release()
         if exp is not None and self.reply_stm:
             self.test["replies"] += 1
             try:
