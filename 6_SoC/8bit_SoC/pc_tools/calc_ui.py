@@ -17,7 +17,8 @@ Judging rules:
 - A PC reply must end with CR LF; a line ending with LF alone fails.
 - The automatic test stops at the first reply timeout (a late reply could
   otherwise be paired with the next line), and a line that came in before a
-  line is sent fails.
+  line is sent fails. After a BTN0 step it waits RESYNC_QUIET seconds and
+  drops the lines that came in meanwhile, as manual mode does.
 - Manual mode sends the next line only after the reply of the previous one
   (or its timeout), so at most one line waits for a reply. The replies carry
   no request number, so after a timeout, or a reply that no line waits for,
@@ -429,9 +430,16 @@ class App:
                 self.test["waiting_btn"] = ""
                 return False
         self.test["waiting_btn"] = ""
-        time.sleep(0.2)
+        # replies of requests sent before BTN0 may still come during
+        # RESYNC_QUIET: wait it out as manual sends do, then drop them
+        wait = self.quiet_until - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
         self.model.reset()
-        self.drain()
+        old = self.queued()
+        if old:
+            self.add_log("info", "BTN0 뒤 %.1f초 안에 받은 줄은 이전 요청의 응답으로 보고 판정하지 않습니다: %s"
+                         % (RESYNC_QUIET, " | ".join(old)))
         return True
 
     def queued(self):
