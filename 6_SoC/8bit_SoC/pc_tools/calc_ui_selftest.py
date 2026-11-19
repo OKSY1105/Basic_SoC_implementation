@@ -12,7 +12,9 @@
 3. In-process checks with gated or delayed fake ports: one calculation is one
    transaction (two concurrent calculations), a late reply stops the
    automatic test and is not paired with another line in manual mode, an
-   LF-only reply fails in manual mode, and the STM32 "LCD_FAIL" /
+   earlier reply that comes in the quiet time after a BTN0 step of the
+   automatic test is not judged, an LF-only reply fails in manual mode,
+   and the STM32 "LCD_FAIL" /
    "LCD_NOT_FOUND" lines fail the LCD check.
 
 Usage (8bit_SoC folder): python3 pc_tools/calc_ui_selftest.py [--quick]
@@ -231,6 +233,48 @@ class HoldPort(ui.LockedFake):
         return False
 
 
+class BtnLatePort(ui.LockedFake):
+    """VR-014_r2-I1: every reply is kept back until arm() (that request times
+    out); after arm() the first new reply line is lost and the rest pass;
+    release_old() then delivers the kept reply."""
+
+    def __init__(self):
+        super().__init__(None)
+        self.mu = threading.Lock()
+        self.old = bytearray()
+        self.buf = bytearray()
+        self.out = bytearray()
+        self.state = "keep"
+        self.dropped = b""
+
+    def read(self, n=1):
+        data = super().read(n)
+        with self.mu:
+            if self.state == "keep":
+                self.old += data
+            else:
+                self.buf += data
+                if self.state == "drop_first" and b"\n" in self.buf:
+                    i = self.buf.index(b"\n") + 1
+                    self.dropped = bytes(self.buf[:i])
+                    del self.buf[:i]
+                    self.state = "pass"
+                if self.state == "pass":
+                    self.out += self.buf
+                    self.buf = bytearray()
+            out, self.out = bytes(self.out), bytearray()
+        return out
+
+    def arm(self):
+        with self.mu:
+            self.state = "drop_first"
+
+    def release_old(self):
+        with self.mu:
+            self.out += self.old
+            self.old = bytearray()
+
+
 def concurrent_calc():
     port = GatePort(b"1,2\r\n")
     app = make_app(port)
@@ -312,6 +356,43 @@ def late_reply_manual(mode):
            % (before, bool(refused), after, len(timeouts)))
 
 
+def late_reply_btn_auto(mode):
+    """VR-014_r2-I1: a manual ADD before BTN0 times out; its ERR NOARG comes
+    0.3 s after the first BTN0 of an automatic test, and the reply of the
+    first line after BTN0 (ADD, also ERR NOARG) is lost. The old reply must
+    not pass that line: the test waits out RESYNC_QUIET, drops the old line,
+    and stops at the first line's timeout."""
+    port = BtnLatePort()
+    app = make_app(port, timeout=0.2, reply_from=mode)
+    e1 = app.manual_send("ADD")                 # reply kept back -> timeout, unsynced
+    port.arm()
+    err = app.start_test(True, False, 0, 1)
+    presses, t0 = 0, time.monotonic()
+    while app.test["running"] and time.monotonic() - t0 < 30:
+        if app.test["waiting_btn"]:
+            app.btn0_pressed()                  # stands for pressing BTN0 on the board
+            presses += 1
+            t1 = time.monotonic()
+            while app.test["waiting_btn"] and time.monotonic() - t1 < 1:
+                time.sleep(0.005)
+            if presses == 1:
+                time.sleep(max(0.0, t1 + 0.3 - time.monotonic()))
+                port.release_old()              # the earlier ERR NOARG comes now
+        time.sleep(0.02)
+    time.sleep(0.2)
+    app.alive = False
+    t = app.test
+    first = t["rows"][0] if t["rows"] else {}
+    dropped = [e["text"] for e in entries(app, "info") if e["text"].startswith("BTN0 뒤")]
+    ok = (e1 == "" and err == "" and t["result"] == "FAIL" and t["aborted"] == "reply_timeout"
+          and first.get("line") == "ADD" and not first.get("ok") and not any(r["ok"] for r in t["rows"])
+          and len(dropped) == 1 and dropped[0].endswith("ERR NOARG") and port.dropped == b"ERR NOARG\r\n")
+    report("late_reply_btn_auto mode=%s" % mode, ok,
+           "result=%s aborted=%s rows=%d first=%r why=%r dropped_in_quiet=%r presses=%d"
+           % (t.get("result"), t.get("aborted"), len(t["rows"]), first.get("line"), first.get("why"),
+              [d.split(": ", 1)[-1] for d in dropped], presses))
+
+
 def lf_only_manual():
     port = ui.LockedFake("lf_only")
     app = make_app(port, fault="lf_only")
@@ -346,6 +427,8 @@ def main():
     late_reply_auto()
     late_reply_manual("pc")
     late_reply_manual("stm32")
+    late_reply_btn_auto("pc")
+    late_reply_btn_auto("stm32")
     lf_only_manual()
     lcd_lines()
     http_inputs()
