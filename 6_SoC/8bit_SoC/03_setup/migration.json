@@ -11,6 +11,7 @@
     "02_design/bus.md",
     "02_design/cpu.md",
     "02_design/isa_table.md",
+    "02_design/v2_design.md",
     "02_design/interfaces.md",
     "02_design/ram.md",
     "02_design/source_layout.md",
