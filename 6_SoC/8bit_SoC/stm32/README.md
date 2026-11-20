@@ -31,6 +31,7 @@ FPGA 계산기가 보내는 응답 줄을 STM32가 받아 16×2 문자 LCD에 �
 | `src/uart_fpga.c` | USART6 수신(PG9, AF8), 115200 **8E1**(`CR1.M = 1`, `PCE = 1`, `PS = 0`), 수신 인터럽트 + 256칸 링 버퍼(데이터 254칸 + `LOST` 표시 1칸), 오류 flag 수 집계 |
 | `src/i2c1.c` | I2C1 master 100 kHz(PB8 SCL, PB9 SDA, AF4, open-drain, **내부 pull-up 켬** — 쉴드에 pull-up이 없다), NACK·시간 초과 처리, 멈춘 bus 복구(`i2c1_recover`: GPIO로 SCL 최대 9번 → STOP → I2C1 재설정) |
 | `src/lcd_i2c.c` | 확장 칩 주소 찾기(0x27·0x3F 먼저, 그다음 0x20~0x27·0x38~0x3F), HD44780 4-bit 초기화, 16칸 한 줄 쓰기 |
+| `src/lcd_par.c` | 4-bit 병렬 구동 시험 드라이버(보관용). 파일 전체가 `#ifdef LCD_PARALLEL` 안에 있어 기본 빌드에서는 빈 파일로 컴파일된다(펌웨어 바이너리 불변). 이 쉴드에서는 D4~D9가 LCD에 연결되어 있지 않아 동작하지 않았다(아래 "LCD 단독" 기록). 함수 이름이 `lcd_i2c.c`와 같으므로 `-DLCD_PARALLEL`만 주면 이름이 겹쳐 링크되지 않는다. 쓰려면 `lcd_i2c.c`를 같은 조건으로 빼야 한다 |
 | `src/uart_dbg.c` | USART3 디버그 출력과 `printf` 연결(`10_USART`에서 옮김) |
 | `src/delay.c` | SysTick 바쁜 대기 |
 | `src/main.c` | 줄 조립(위 "줄 판정"), 오류 표시, LCD 2행 갱신. LCD 쓰기가 실패하면 bus 복구 → LCD 재초기화 → 한 번 더 쓰기, 결과를 `LCD_RECOVERED` 또는 `LCD_WRITE_FAIL`로 출력 |
