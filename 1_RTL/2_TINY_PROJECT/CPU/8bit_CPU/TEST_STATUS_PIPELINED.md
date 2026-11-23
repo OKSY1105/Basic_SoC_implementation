@@ -1,5 +1,37 @@
 # CPU8 RTL 검증 결과
 
+## v2 1단계 스택·서브루틴 추가 후 — 2026-11-23 (브랜치 `feat/8bit-soc`)
+
+PUSH·POP·PUSH LRx·POP LRx·LSPL·LSPH·CALL a12·RET과 레지스터 묶음별 SP·LR을 추가한 뒤 WSL Vivado 2024.2 XSim으로 실행한 결과다. 기준 모델은 명령마다 PC·레지스터·X·FLAGS와 함께 SP·LR을 비교한다.
+
+| 검사 | 실제 결과 | 범위 / 한계 |
+|---|---|---|
+| 프로그램 회귀 (`run_cpu8_tests.py --simulator xsim`) | **PASS: 134개 프로그램, 10,877개 완료 명령, 인터럽트 진입 188회** | v2 이전 88개 + v2 1단계 46개(직접 15종 × 무대기/대기, 인터럽트 3종 × 무대기/대기, 무작위 10개 중 4개는 인터럽트) |
+| v2 이전 88개 프로그램 | 완료 명령 수·클록·stall·fault·인터럽트 수 **모두 v2 이전(`cfe2326`)과 같음** | 새 명령을 쓰지 않으면 동작·성능 변화 없음 |
+| opcode | 31개 모두 실행 확인 | 기존 20 + v2 7 + CALL 네 구역 중 추가 3 |
+| ALU 전수 / 대기 중 reset | **PASS** (786,432건 / RESET_PASS) | reset 시험에 v2 사례 2개를 추가했다: SP=0800h·LR=3에서 PUSH LRH(쓰기)·POP LRH(읽기)가 데이터 대기 중일 때 reset → 두 포트 IDLE, 두 묶음 SP·LR 0, 대기 중 접근 미반영, reset 뒤 CALL·RET 정상·데이터 전송 0회 |
+| SVA (`cpu8_ahb_checker.sv` + `cpu8_irq_checker.sv`) | **위반 0건** | 인터럽트 검사기에 6번 단언 추가: 처리 루틴 동안 묶음 0의 SP·LR 불변 |
+| 인터럽트 지연 | 최대 **6클록** | |
+| 경계 상황 | SP 의존 대기 2,424클록, LR 의존 대기 1,219클록, 스택 접근을 버리고 진입 11, CALL·RET를 버리고 진입 6, 붙잡힌 스택 주소 단계 46 | 기존 항목과 함께 모두 1회 이상이어야 runner가 통과 |
+| 클록 측정 (`measure_cpu8_cycles.py`) | **CPU8_CYCLES_PASS cases=31 programs=62**, 기존 25사례 불변 | 새 사례 값은 `6_SoC/8bit_SoC/02_design/isa_table.md` |
+
+변이 시험(임시 사본, 모두 FAIL):
+
+| 변이 | 잡은 검사 |
+|---|---|
+| SP 의존 대기 제거 | 기준 모델 완료 추적(`v2_push_pop`) |
+| LR 의존 대기 제거 | 기준 모델 완료 추적(`v2_lr_restore_ret`: `POP LRH` 직후 RET로 LR 상위 바이트가 바뀜) |
+| PUSH 주소를 SP−1 대신 SP | 기준 모델 완료 추적 |
+| POP LRx 바이트 뒤바꿈 / PUSH LRx 바이트 뒤바꿈 | 기준 모델 완료 추적(`v2_nested8`) |
+| CALL의 LR을 PC+1 대신 PC | 사례 미완료(`v2_call_ret`) |
+| SP를 묶음 0에만 기록 | SVA `a_handler_keeps_sp_lr` |
+| CALL 목표를 하위 10bit만 사용 | 사례 미완료(`v2_far_calls`) |
+| POP LRx가 묶음 0의 LR과 합침 | 인터럽트 진입 수 부족(`irq_v2_stack`) |
+| RET 예약 bit 허용 / PUSH LRx r=2 허용 | 사례 미완료·fault 불일치(`v2_illegal_ret`·`v2_illegal_pushlr`) |
+| reset에서 SP0 / LR0 / SP1 / LR1을 지우지 않음 | `tb_cpu8_reset` "reset did not clear in-flight state (PUSH LRH)". v2 사례를 넣기 전 reset 시험은 이 4개를 모두 통과시켰다(음성 대조) |
+
+합성 수치는 이번 절에서 측정하지 않았다.
+
 ## 인터럽트 추가 후 — 2026-11-03 (브랜치 `feat/8bit-soc`)
 
 EI/DI/RETI·IRQ 입력·처리 루틴 레지스터 묶음을 추가한 뒤 Windows Vivado 2024.2 XSim으로 실행한 결과다.

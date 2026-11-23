@@ -29,7 +29,7 @@
 | `RTL/cpu8_isa.vh` | opcode 상수 |
 | `TB/tb_cpu8_top.sv` | 기본 내장 덧셈 데모 + 선택적 외부 회귀·메모리 지연·retirement trace |
 | `TB/tb_cpu8_alu.sv` | 독립 정수 범위 기준 786,432개 산술/플래그 조합 |
-| `TB/tb_cpu8_reset.sv` | 메모리 대기 중 리셋·이전 명령 폐기·재시작 |
+| `TB/tb_cpu8_reset.sv` | 메모리 대기 중 리셋·이전 명령 폐기·재시작(v2: PUSH LRH·POP LRH 대기 중 리셋 뒤 SP·LR 0) |
 | `TB/cpu8_ahb_checker.sv` | 두 AHB-Lite master 포트의 규칙 SVA(`CPU8_SVA`) |
 | `TB/cpu8_irq_checker.sv` | 인터럽트 진입·복귀·레지스터 묶음 규칙 SVA(`CPU8_SVA`) |
 | `TOOLS/cpu8_asm.py` | 레이블/rel8·.org·.word를 지원하는 작은 어셈블러. 2026-11-04에 `.equ NAME, value`(이름 상수, 쓰기 전에 정의)와 문자 상수 `'c'`(`,` `;` `:`는 줄 해석에 쓰이므로 `.equ`로 적는다)를 추가했다. 기존 프로그램의 기계어는 같다(회귀 시험이 만드는 88개 프로그램과 저장소의 `.asm` 5개 대조) |
@@ -96,6 +96,7 @@
 - 의존: 바로 앞 명령이 SP(LR)를 쓰고 이 명령이 SP(LR)를 읽으면 1클록 기다린다(X 규칙과 같음).
 - 어셈블러: `PUSH R0`, `POP R1`, `PUSH LRH`, `POP LRL`, `LSPH 8`, `LSPL 0`, `CALL 레이블`(0~4095), `RET`.
 - 시험(`run_cpu8_tests.py`): 기준 모델이 명령마다 SP·LR까지 비교한다. 사례는 넣기·꺼내기, CALL·RET, LR 저장 중첩 8단, LR 바이트 순서, 네 구역의 CALL(opcode 0x20~0x23), SP 미설정·순환 fault, 스택 접근 오류, 예약 bit 5종, 인터럽트 3종(처리 루틴의 SP·CALL, CALL·RET 위의 인터럽트), 무작위 10개(4개는 인터럽트 포함)다.
+- reset 시험(`tb_cpu8_reset.sv`): SP=0800h·LR=3으로 정한 뒤 PUSH LRH(쓰기)와 POP LRH(읽기)를 각각 데이터 대기에 붙잡아 두고 reset한다. reset 중 두 포트는 IDLE이고 두 묶음의 SP·LR이 0이 되며, 대기 중이던 접근은 SP·LR에 반영되지 않는다. reset 뒤 프로그램(CALL·RET, LDI·HALT)은 데이터 전송 없이 끝난다.
 
 ## 외부 메모리 포트
 
@@ -138,7 +139,7 @@
 ## 완료·정지·리셋
 
 - active-low **동기식** `i_rst_n`. 보드 상위에서 리셋 해제를 해당 클록에 동기화한다.
-- 리셋 시 GPR·X·FLAGS·PC·유효 단계·halt/fault를 지운다. 외부 RAM 전체를 지우는 신호가 아니다.
+- 리셋 시 GPR·X·FLAGS·PC·유효 단계·halt/fault와 두 묶음의 SP·LR(v2)을 지운다. 외부 RAM 전체를 지우는 신호가 아니다.
 - 결과는 유효한 MEM/WB에서 한 번만 반영한다. 대기 중 앞 WB는 계속 완료하고, RAW는 그 다음 클록의 최신 값으로 재개한다.
 - HALT를 ID에서 발행하면 후속 인출을 막고, HALT가 최선행 WB에서 완료될 때 halted를 올린다.
 - `o_pc`는 완료 기준 다음 word 주소다. fault 시 실패 명령의 word 주소를 유지한다.
@@ -152,7 +153,7 @@
 별도 옵션 없이 TB에 내장한 네 명령으로10+20을 계산하고 결과·완료 순서를 검사해 `CPU8_DEMO_PASS`를 출력한다.
 클록·리셋·시험 메모리는 TB가 만든다. 기본 시험에는 사용자 입력이나 외부파일이 필요 없다.
 
-`CASES` 인자를 명시한 경우에만 기존 외부 시험 목록 모드를 사용한다. 아래 Python runner는 전체 88개 프로그램 회귀(인터럽트 24개 포함)·ALU/reset과 기본 무인자 데모를 함께 검증한다.
+`CASES` 인자를 명시한 경우에만 기존 외부 시험 목록 모드를 사용한다. 아래 Python runner는 전체 134개 프로그램 회귀(v2 이전 88개(인터럽트 24개 포함) + v2 1단계 46개(인터럽트 10개 포함))·ALU/reset과 기본 무인자 데모를 함께 검증한다.
 `PROGRAMS/first_add.asm`은 같은 프로그램의 별도 어셈블러 예제다. 기본 TB의 내장 ROM은 해당파일을 읽지 않는다.
 
 
