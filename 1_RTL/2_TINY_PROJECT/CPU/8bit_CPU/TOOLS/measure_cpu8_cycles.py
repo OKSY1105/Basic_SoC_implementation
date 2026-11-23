@@ -27,8 +27,13 @@ SETUP = "LDI R0,1\nLDI R1,2\nLDI R2,3\nLDI R3,4\nLDXL 16"
 SETUP_Z = SETUP + "\nCMP R0,R0"            # Z=1, C=1 (no borrow) for taken JZ/JC
 SETUP_SP = SETUP + "\nLSPH 8\nLSPL 0"     # v2: SP = 0x0800
 SETUP_SP_LOW = SETUP + "\nLSPH 7\nLSPL 0" # v2: SP = 0x0700 (pops read 0x0700 upward)
-LEAF = "\n.org 0x3f0\nRET"                 # called routine that only returns
-SAVER = "\n.org 0x3e0\nPUSH LRH\nPUSH LRL\nPOP LRL\nPOP LRH\nRET"
+# Called routines. Each ends with a word after RET (a HALT that never runs):
+# the CPU fetches the word after RET before RET redirects, and tb_cpu8_top
+# answers an unwritten ROM word with an AHB ERROR whose first clock
+# (HREADY=0) holds the redirect fetch one clock. The SoC ROM answers every
+# word, so the routines must not end at the last written ROM word.
+LEAF = "\n.org 0x3f0\nRET\nHALT"           # routine that only returns
+SAVER = "\n.org 0x3e0\nPUSH LRH\nPUSH LRL\nPOP LRL\nPOP LRH\nRET\nHALT"
 
 # (name, instruction, what the block shows, block text, setup)
 CASES = [

@@ -84,7 +84,7 @@ flag 열: Z(0), N(음수), C(덧셈 자리올림, 뺄셈은 1 = 빌림 없음), 
 - ADD·SUB·AND·ADC·SBC·CMP는 Rd도 읽는다. 그래서 `ADD R0,R1`을 연달아 쓰면 매번 앞 결과를 읽어 2클록씩 걸린다. 결과를 두 명령 뒤에 쓰도록 순서를 바꾸면 1클록이 된다.
 - LDXL·LDXH도 X 전체를 읽고 쓰므로(나머지 바이트 유지) 바로 앞의 X 변경에 의존한다. LDXH는 LDXL과 같은 경로이고 측정은 LDXL로 했다.
 - CMP 바로 뒤 조건 분기는 flag 의존(+1)과 분기(+1)가 겹쳐 두 명령에 4클록이다(`cmp_jz`).
-- v2: PUSH·POP·LSPL·LSPH는 SP를 읽고 쓰므로 연달아 쓰면 매번 2클록이다(`push`·`pop`·`lspl`). CALL 직후의 루틴 첫 명령은 CALL의 인출 재지정 동안 CALL이 끝나므로 LR 의존 대기가 없다(`call_ret`: CALL부터 RET 뒤 다음 명령까지 5클록, stall 0. 분기 두 번의 버린 인출만으로 예상되는 4클록보다 1클록 많으며, 이 1클록의 원인은 아직 분석하지 않았다). LR을 저장·복원하는 루틴은 SP·LR 의존이 겹쳐 CALL부터 RET까지 12클록이다(`call_save_lr`, stall 4).
+- v2: PUSH·POP·LSPL·LSPH는 SP를 읽고 쓰므로 연달아 쓰면 매번 2클록이다(`push`·`pop`·`lspl`). CALL 직후의 루틴 첫 명령은 CALL의 인출 재지정 동안 CALL이 끝나므로 LR 의존 대기가 없다(`call_ret`: CALL부터 RET 뒤 다음 명령까지 4클록, stall 0. CALL·RET 각 1클록과 두 분기의 버린 인출 각 1클록이다). LR을 저장·복원하는 루틴은 SP·LR 의존이 겹쳐 CALL부터 RET까지 12클록이다(`call_save_lr`, stall 4).
 
 SoC에서 메모리 대기(명령 포트·데이터 포트):
 
@@ -137,9 +137,10 @@ python3 TOOLS/measure_cpu8_cycles.py --vivado-bin /home/sean/Vivado/2024.2/bin -
 | `pop` | POP R1 | 2 | 2.0 | 1 |
 | `push_pop` | PUSH R0 / POP R1 | 4 | 2.0 | 2 |
 | `lspl` | LSPL 0 | 2 | 2.0 | 1 |
-| `call_ret` | CALL 0x3F0 (루틴: RET) | 5 | 5.0 | 0 |
+| `call_ret` | CALL 0x3F0 (루틴: RET) | 4 | 4.0 | 0 |
 | `call_save_lr` | CALL 0x3E0 (루틴: PUSH LRH / PUSH LRL / POP LRL / POP LRH / RET) | 12 | 12.0 | 4 |
 
 - 분기의 추가 클록은 stall이 아니라 버린 인출로 생기므로 stall 열은 0이다.
 - `call_ret`·`call_save_lr`는 CALL 명령 하나를 묶음으로 반복하므로 "명령당 클록"은 루틴 전체(CALL부터 RET까지) 값이다.
+- 두 루틴은 RET 뒤에 실행되지 않는 한 word(HALT)를 둔다. CPU는 RET가 인출을 돌리기 전에 RET 다음 word를 인출하는데, 시험 TB는 쓰지 않은 ROM 칸을 AHB ERROR로 응답하고 그 첫 클록(HREADY=0)이 RET의 재지정 인출을 1클록 붙잡는다. SoC ROM은 모든 칸에 응답하므로 이 word를 두어 SoC와 같은 조건으로 잰다. 2026-11-23 첫 측정은 이 word 없이 `call_ret` 5클록이었다(`call_save_lr`는 RET 직전의 LR 의존 대기 동안 오류 응답이 끝나 12클록 그대로).
 - 측정하지 않은 것: RETI(처리 루틴 안에서만 실행됨), HALT(정지), 계산기 펌웨어 전체의 평균 CPI(SoC 통합 TB가 완료 명령 수를 출력하지 않는다), 메모리 대기가 있는 경우의 실제 분포.
