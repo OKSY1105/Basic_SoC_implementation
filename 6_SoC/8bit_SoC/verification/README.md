@@ -14,6 +14,15 @@
 |---|---|---|
 | `/home/sean/Basic_SoC_implementation` | Claude | 작성·자체 시뮬레이션·commit·push (SSH) |
 | `/home/sean/codex_verify/Basic_SoC_implementation` | Codex | GitHub clone. 요청서의 커밋을 받아 실행·검토 (push 없음) |
+| `/home/sean/_TEST_SANDBOX/8bit_SoC/verify/` | Claude | GitHub clone. 요청서 명령을 push한 커밋에서 다시 실행하거나 Claude가 검토할 때 쓴다 (작업 저장소와 섞지 않음) |
+
+| 교환 폴더 (로컬 `/home/sean/handoff/`) | 쓰는 쪽 | 용도 |
+|---|---|---|
+| `8bit_SoC/to_codex/` | Claude | 검증 요청서·질문 원문 (VR-015부터, 2026-11-23) |
+| `8bit_SoC/to_claude/` | Codex | 검증 결과·답변 원문 (VR-015부터) |
+| `8bit_SoC/STATE.md` | Claude | 작업권·기준 커밋·최신 메시지 |
+| `codex_tests/VR-NNN/` | Codex | 실행 로그·독립 시험 산출물 |
+| `requests/`·`results/` | — | VR-014까지의 요청서·결과·답변 원문과 Notion DB 주소(`results/NOTION_DB.md`). 원래 위치에 보존하고, 새 메시지에서는 절대 경로와 ID로 참조한다 |
 
 두 쪽은 GitHub를 통해서만 코드를 주고받는다. Codex는 Claude 작업 저장소에서 명령을 실행하지 않는다.
 
@@ -21,13 +30,13 @@
 
 ## 1. 진행 흐름
 
-1. Claude: RTL·TB 작성 → 자체 시뮬레이션(WSL Vivado 2024.2 XSim) → push 전 `git fetch`로 원격이 앞서 있지 않은지 확인 → `feat/<블록>` 브랜치 push
-2. Claude: 검증 요청서 작성 (작업 중에는 로컬 교환 폴더 `handoff/requests/`)
+1. Claude: RTL·TB 작성 → 자체 시뮬레이션(WSL Vivado 2024.2 XSim) → push 전 `git fetch`로 원격이 앞서 있지 않은지 확인 → 개발 브랜치 push (1차 개발부터 통합 브랜치 `feat/8bit-soc`)
+2. Claude: 검증 요청서를 `handoff/8bit_SoC/to_codex/`에 작성하고 `STATE.md` 갱신 (VR-014까지는 `handoff/requests/`)
 3. 사용자: Codex에 검증 지시
-4. Codex: 검증 사본에서 `git fetch` 후 요청서의 커밋을 checkout해 실행·검토(Vivado XSim 등) → Notion 상세 기록 → 결과 파일 작성 (`handoff/results/`)
+4. Codex: 검증 사본에서 `git fetch` 후 요청서의 커밋을 checkout해 실행·검토(Vivado XSim 등) → Notion 상세 기록 → 결과 파일 작성 (`handoff/8bit_SoC/to_claude/`, VR-014까지는 `handoff/results/`)
 5. Claude: 결과 확인 → FAIL이면 수정 후 재검증 요청(`_rK`)
 6. PASS: 7절 병합 규칙에 따라 Claude가 main에 병합
-7. Claude: 프로젝트 마무리 때(최종 README 작성 시) 모든 블록의 모든 회차 요청서·결과를 이 폴더의 `VR-NNN_<블록>/`에 **원문 그대로** 한꺼번에 커밋해 공개한다(2026-11-04 사용자 결정, 이전에는 병합 직후). 그때까지 원문은 로컬 `handoff/`에 보관한다
+7. Claude: 프로젝트 마무리 때(최종 README 작성 시) 모든 블록의 모든 회차 요청서·결과를 이 폴더의 `VR-NNN_<블록>/`에 **원문 그대로** 한꺼번에 커밋해 공개한다(2026-11-04 사용자 결정, 이전에는 병합 직후). 그때까지 원문은 로컬 `handoff/`(VR-014까지 `requests/`·`results/`, VR-015부터 `8bit_SoC/to_codex/`·`to_claude/`)에 보관한다
 
 검증 중에는 기록을 브랜치에 넣지 않는다. 브랜치에 커밋이 추가되면 "검증한 커밋 = 병합할 커밋" 조건이 깨지기 때문이다.
 
@@ -37,15 +46,16 @@
 
 ## 2. 파일 이름 규칙
 
-| 대상 | 작업 중 (로컬 `handoff/`) | 공개 기록 (이 폴더) |
-|---|---|---|
-| 요청서 | `requests/VR-NNN_<블록>.md` | `VR-NNN_<블록>/request.md` |
-| 재검증 요청 | `requests/VR-NNN_<블록>_rK.md` | `VR-NNN_<블록>/request_rK.md` |
-| 결과 | `results/VR-NNN_<블록>.md` | `VR-NNN_<블록>/result.md` |
-| 재검증 결과 | `results/VR-NNN_<블록>_rK.md` | `VR-NNN_<블록>/result_rK.md` |
-| 결과에 대한 답변 | `results/VR-NNN_<블록>_note.md` | `VR-NNN_<블록>/note.md` |
+| 대상 | VR-015부터 (로컬 `handoff/8bit_SoC/`) | VR-014까지 (로컬 `handoff/`, 보존) | 공개 기록 (이 폴더) |
+|---|---|---|---|
+| 요청서 | `to_codex/<시각>_claude_<ID>_review_request.md` | `requests/VR-NNN_<블록>.md` | `VR-NNN_<블록>/request.md` |
+| 재검증 요청 | `to_codex/<시각>_claude_<ID>_review_request.md` | `requests/VR-NNN_<블록>_rK.md` | `VR-NNN_<블록>/request_rK.md` |
+| 결과 | `to_claude/<시각>_codex_<ID>_review.md` | `results/VR-NNN_<블록>.md` | `VR-NNN_<블록>/result.md` |
+| 재검증 결과 | `to_claude/<시각>_codex_<ID>_review.md` | `results/VR-NNN_<블록>_rK.md` | `VR-NNN_<블록>/result_rK.md` |
+| 결과에 대한 답변 | `to_claude/<시각>_codex_<ID>_note.md` | `results/VR-NNN_<블록>_note.md` | `VR-NNN_<블록>/note.md` |
 
 - NNN은 001부터 순차 증가하며 Claude가 매긴다. VR-000은 절차 시험용이다.
+- VR-015부터의 파일 이름(2026-11-23 변경): `<시각>`은 작성 시각(KST, `YYYYMMDDTHHMMSS`), `<ID>`는 작성자가 정하는 메시지 고유 ID다(Claude는 `a001`부터 순차). VR ID와 회차(`_rK`)는 파일 첫머리의 머리말에 적고, 응답은 요청 메시지 ID를 적어 연결한다. 공개할 때는 머리말의 VR ID·회차로 오른쪽 열의 이름을 정한다.
 - 이름에는 영문·숫자·`_`·`-`만 쓴다.
 - 요청서·결과는 작성 후 수정하지 않는다. 정정은 새 회차(`_rK`) 또는 `_note`로 한다.
 
@@ -57,7 +67,7 @@
 # VR-NNN — <블록 이름>
 
 - 작성: Claude Code, YYYY-MM-DD
-- 브랜치 / 커밋: feat/<블록> @ <40자리 SHA>
+- 브랜치 / 커밋: <개발 브랜치, 예: feat/8bit-soc> @ <40자리 SHA>
 - 이전 요청: (재검증이면 이전 요청서·결과)
 - 변경 파일: <저장소 기준 경로 목록>
 - 명세 근거: <설계 문서 경로와 절>
@@ -73,6 +83,8 @@
 ## 범위 밖
 - <이번에 검증하지 않아도 되는 것>
 ```
+
+VR-015부터는 이 양식 맨 앞에 받은 편지함 공통 머리말(메시지 ID·종류·작성자·수신자·KST 시각, 관련 요청·응답 ID와 VR ID·회차, 저장소·브랜치·40자리 SHA, 사용자 지시 근거, 적용 지침)을 둔다.
 
 결과 양식은 [CODEX_GUIDE.md](CODEX_GUIDE.md) 5절에 있다.
 
