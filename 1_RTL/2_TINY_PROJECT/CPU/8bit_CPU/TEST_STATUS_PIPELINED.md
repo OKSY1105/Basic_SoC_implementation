@@ -15,20 +15,20 @@ PUSH·POP·PUSH LRx·POP LRx·LSPL·LSPH·CALL a12·RET과 레지스터 묶음�
 | 경계 상황 | SP 의존 대기 2,424클록, LR 의존 대기 1,219클록, 스택 접근을 버리고 진입 11, CALL·RET를 버리고 진입 6, 붙잡힌 스택 주소 단계 46 | 기존 항목과 함께 모두 1회 이상이어야 runner가 통과 |
 | 클록 측정 (`measure_cpu8_cycles.py`) | **CPU8_CYCLES_PASS cases=31 programs=62**, 기존 25사례 불변 | 새 사례 값은 `6_SoC/8bit_SoC/02_design/isa_table.md` |
 
-변이 시험(임시 사본, 모두 FAIL):
+변이 시험(임시 사본, 모두 FAIL). "잡은 검사"는 runner가 처음 보고한 실패다. runner는 reset 시험을 프로그램 회귀보다 먼저 확인하므로, reset 시험이 쓰는 명령(LSPH·LSPL·CALL·PUSH LRH)을 망가뜨린 변이는 reset 시험에서 먼저 걸린다:
 
 | 변이 | 잡은 검사 |
 |---|---|
-| SP 의존 대기 제거 | 기준 모델 완료 추적(`v2_push_pop`) |
+| SP 의존 대기 제거 | reset 시험 미완료 |
 | LR 의존 대기 제거 | 기준 모델 완료 추적(`v2_lr_restore_ret`: `POP LRH` 직후 RET로 LR 상위 바이트가 바뀜) |
-| PUSH 주소를 SP−1 대신 SP | 기준 모델 완료 추적 |
+| PUSH 주소를 SP−1 대신 SP | reset 시험 미완료 |
 | POP LRx 바이트 뒤바꿈 / PUSH LRx 바이트 뒤바꿈 | 기준 모델 완료 추적(`v2_nested8`) |
-| CALL의 LR을 PC+1 대신 PC | 사례 미완료(`v2_call_ret`) |
+| CALL의 LR을 PC+1 대신 PC | reset 시험 미완료 |
 | SP를 묶음 0에만 기록 | SVA `a_handler_keeps_sp_lr` |
-| CALL 목표를 하위 10bit만 사용 | 사례 미완료(`v2_far_calls`) |
+| CALL 목표를 하위 10bit만 사용 | 기준 모델 완료 추적(`v2_lr_restore_ret`: 0x500의 루틴 호출) |
 | POP LRx가 묶음 0의 LR과 합침 | 인터럽트 진입 수 부족(`irq_v2_stack`) |
 | RET 예약 bit 허용 / PUSH LRx r=2 허용 | 사례 미완료·fault 불일치(`v2_illegal_ret`·`v2_illegal_pushlr`) |
-| reset에서 SP0 / LR0 / SP1 / LR1을 지우지 않음 | `tb_cpu8_reset` "reset did not clear in-flight state (PUSH LRH)". v2 사례를 넣기 전 reset 시험은 이 4개를 모두 통과시켰다(음성 대조) |
+| reset에서 SP0 / LR0 / SP1 / LR1을 지우지 않음 | reset 시험만 따로 실행: "reset did not clear in-flight state (PUSH LRH)". v2 사례를 넣기 전 reset 시험은 이 4개를 모두 통과시켰다(음성 대조) |
 
 합성 수치는 이번 절에서 측정하지 않았다.
 
