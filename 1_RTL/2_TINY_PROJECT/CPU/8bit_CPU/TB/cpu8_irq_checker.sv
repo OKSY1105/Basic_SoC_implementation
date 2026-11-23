@@ -10,7 +10,8 @@ module cpu8_irq_checker (
     input wire reti_issue,      // RETI issues this cycle
     input wire id_valid,        // ID/EX holds an instruction
     input wire m_valid, m_done, // MEM/WB occupied / completing
-    input wire [1:0] d_htrans   // data port HTRANS
+    input wire [1:0] d_htrans,  // data port HTRANS
+    input wire [15:0] sp0, lr0  // v2: program (bank 0) SP and LR
 );
 `ifdef CPU8_SVA
     // 1. Entry only when enabled, outside the handler, with a request and an
@@ -37,5 +38,10 @@ module cpu8_irq_checker (
     a_bank_change: assert property (@(posedge clk) disable iff (!rst_n)
         bank != $past(bank) |-> $past(int_take || reti_issue))
         else begin $display("FAIL SVA a_bank_change t=%0t",$time); $fatal(1); end
+    // 6. v2: while the handler runs (bank 1 in this and the previous cycle),
+    //    the program's SP and LR do not change (the handler uses bank 1).
+    a_handler_keeps_sp_lr: assert property (@(posedge clk) disable iff (!rst_n)
+        bank && $past(bank) |-> sp0==$past(sp0) && lr0==$past(lr0))
+        else begin $display("FAIL SVA a_handler_keeps_sp_lr t=%0t",$time); $fatal(1); end
 `endif
 endmodule

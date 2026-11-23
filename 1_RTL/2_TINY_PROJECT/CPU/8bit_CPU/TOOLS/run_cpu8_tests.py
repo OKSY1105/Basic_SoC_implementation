@@ -25,8 +25,10 @@ def model(words,data=None,ierror=-1,derror=-1,ints=()):
     handler (R0-R3, X, FLAGS each). `ints` lists, for each interrupt the RTL
     took, how many instructions had retired before it; the model enters the
     handler there and checks that entry was legal (IE=1, not in the handler).
-    Interrupt timing is the RTL's; the program-visible effect is the model's."""
-    r=[[0]*4,[0]*4];x=[0,0];f=[0,0];bank=0;ie=0;epc=0;pc=0
+    Interrupt timing is the RTL's; the program-visible effect is the model's.
+    v2 stage 1: SP and LR per bank (0 after reset); PUSH/POP move one byte
+    at SP-1/SP with the LD/ST memory map; CALL sets LR=PC+1, RET jumps to LR."""
+    r=[[0]*4,[0]*4];x=[0,0];f=[0,0];sp=[0,0];lr=[0,0];bank=0;ie=0;epc=0;pc=0
     traces=[];reads=[];writes=[];memory=dict(data or {});rx=0;fault=0;taken=[];ints=list(ints)
     reverse={v:k for k,v in OPS.items()}
     for step in range(10000):
@@ -36,10 +38,12 @@ def model(words,data=None,ierror=-1,derror=-1,ints=()):
             taken.append((len(traces),pc));epc=pc;bank=1;ie=0;pc=IRQ_VECTOR
         if pc not in words or pc==ierror:fault=2;break
         ins=words[pc];op=reverse.get(ins>>10);rd=(ins>>8)&3;imm=ins&255;rs=imm&3
+        if (ins>>12)==8:op="CALL"           # opcodes 32..35: 12-bit target
         legal=op is not None
         if op in RR:legal=legal and imm<4
-        elif op in {"LD","ST"}:legal=legal and imm==0
-        elif op in {"LDXL","LDXH"}|BR:legal=legal and rd==0
+        elif op in {"LD","ST","PUSH","POP"}:legal=legal and imm==0
+        elif op in {"LDXL","LDXH","LSPL","LSPH"}|BR:legal=legal and rd==0
+        elif op in {"PUSHLR","POPLR"}:legal=legal and rd<2 and imm==0
         elif op in NOARG:legal=legal and (ins&1023)==0
         if op=="RETI" and not bank:legal=False   # RETI only in the handler
         if not legal:fault=1;break
@@ -58,20 +62,30 @@ def model(words,data=None,ierror=-1,derror=-1,ints=()):
         elif op=="EI":ie=1
         elif op=="DI":ie=0
         elif op=="RETI":nextpc=epc
-        elif op in {"LD","ST"}:
-            a=x[b]
-            mapped=a<2048 or (op=="LD" and a in (0xff00,0xff02)) or (op=="ST" and a in (0xff01,0xff04))
-            if not mapped or a==derror:fault=3;break
-            if op=="LD":
+        elif op=="LSPL":sp[b]=(sp[b]&65280)|imm
+        elif op=="LSPH":sp[b]=(imm<<8)|(sp[b]&255)
+        elif op=="CALL":lr[b]=nextpc;nextpc=ins&4095
+        elif op=="RET":nextpc=lr[b]
+        elif op in {"LD","ST","PUSH","POP","PUSHLR","POPLR"}:
+            load=op in {"LD","POP","POPLR"}
+            a=x[b] if op in {"LD","ST"} else ((sp[b]-1)&65535 if not load else sp[b])
+            mapped=a<2048 or (load and a in (0xff00,0xff02)) or (not load and a in (0xff01,0xff04))
+            if not mapped or a==derror:fault=3;break   # SP/LR/registers unchanged
+            if load:
                 value=memory.get(a,0) if a<2048 else (64+rx if a==0xff00 else 1)
-                value%=256;rw=1;reads.append((a,value))
+                value%=256;reads.append((a,value))
                 if a==0xff00:rx+=1
+                if op=="POPLR":
+                    lr[b]=(value<<8)|(lr[b]&255) if rd else (lr[b]&65280)|value
+                else:rw=1
             else:
-                value=R[rd];writes.append((a,value))
+                value=((lr[b]>>8) if rd else lr[b])&255 if op=="PUSHLR" else R[rd]
+                writes.append((a,value))
                 if a<2048:memory[a]=value
+            if op not in {"LD","ST"}:sp[b]=(sp[b]+(1 if load else -1))&65535
         if rw:R[rd]=value
         regs=sum(v<<(8*i) for i,v in enumerate(R))
-        traces.append((pc,ins,regs,x[b],f[b],nextpc,int(rw),rd,value if rw else None))
+        traces.append((pc,ins,regs,x[b],f[b],nextpc,int(rw),rd,value if rw else None,sp[b],lr[b]))
         if op=="RETI":bank=0;ie=1
         pc=nextpc
         if op=="HALT":break
@@ -79,7 +93,7 @@ def model(words,data=None,ierror=-1,derror=-1,ints=()):
     if len(taken)!=len(ints):raise AssertionError("interrupt reported after the program ended")
     regs=sum(v<<(8*i) for i,v in enumerate(r[0]))
     return dict(trace=traces,reads=reads,writes=writes,pc=pc,registers=regs,x=x[0],flags=f[0],
-                fault=fault,rx=rx,ints=taken)
+                fault=fault,rx=rx,ints=taken,sp=sp[0],lr=lr[0])
 
 def cases():
     directed=[
@@ -184,6 +198,86 @@ def cases():
             else:lines.append(op)
         lines.append("HALT")
         yield dict(name=f"random_{seed}",words=assemble("\n".join(lines)),data={64+i:rng.randrange(256) for i in range(100)},mode=1,seed=seed,ierror=-1,derror=-1)
+    yield from v2_cases(head)
+
+def v2_cases(head):
+    """v2 stage 1 (v2_design.md 6.1): stack, LR save/restore, CALL/RET,
+    dependencies, faults, interrupts with bank 1 SP/LR, random programs."""
+    S="LSPH 8\nLSPL 0\n"                  # SP=0x0800: first push at 0x07FF
+    nested=S+"CALL f1\nHALT\n"
+    for k in range(1,9):                  # eight routines that save LR, then a leaf
+        nested+=f"f{k}: PUSH LRH\nPUSH LRL\nLDI R0,{k}\nPUSH R0\nCALL f{k+1}\nPOP R1\nADD R2,R1\nPOP LRL\nPOP LRH\nRET\n"
+    nested+="f9: LDI R3,99\nRET"
+    directed=[
+      ("v2_push_pop",S+"LDI R0,17\nLDI R1,34\nPUSH R0\nPUSH R1\nPOP R2\nPOP R3\nADD R2,R3\nPUSH R2\nPOP R0\nHALT",{},-1),
+      # RET right after CALL (LR dependency), CALL right after LSPL (no SP use)
+      ("v2_call_ret","LDI R0,1\nCALL sub\nLDI R1,2\nCALL leaf\nHALT\nsub: LDI R2,3\nRET\nleaf: RET",{},-1),
+      ("v2_nested8",nested,{},-1),
+      # LR saved as two bytes: high byte at SP-1 first (0x07FF), low at 0x07FE
+      ("v2_lr_bytes","CALL main\n.org 0x2f0\nmain: "+S+"CALL sub\nHALT\n.org 0x323\nsub: PUSH LRH\nPUSH LRL\n"
+       "LDXH 7\nLDXL 254\nLD R0,[X]\nINX\nLD R1,[X]\nPOP LRL\nPOP LRH\nRET",{},-1),
+      # RET right after POP LRH that changes LR's high byte (0x05F3 -> 0x02F3):
+      # without the LR dependency wait RET would use the old high byte.
+      ("v2_lr_restore_ret","CALL main\n.org 0x2f0\nmain: "+S+"CALL sub\nHALT\n.org 0x500\nsub: PUSH LRH\nPUSH LRL\n"
+       "CALL leaf\nPOP LRL\nPOP LRH\nRET\n.org 0x123\nleaf: RET",{},-1),
+      ("v2_far_calls","CALL f1\nCALL f2\nCALL f3\nCALL f0\nCALL f4\nHALT\nf0: LDI R0,1\nRET\n.org 0x400\nf1: LDI R1,2\nRET\n"
+       ".org 0x800\nf2: LDI R2,3\nRET\n.org 0xc00\nf3: LDI R3,4\nRET\n.org 0xfff\nf4: RET",{},-1),
+      ("v2_sp_unset","LDI R0,5\nPUSH R0\nHALT",{},-1),          # SP=0: push at 0xFFFF -> fault 3
+      ("v2_sp_wrap","LSPL 1\nLDI R0,5\nPUSH R0\nPUSH R0\nHALT",{},-1),
+      ("v2_push_error",S+"LDI R0,9\nPUSH R0\nPUSH R0\nHALT",{},0x07fe),
+      # POP at 0x07FD answers ERROR: fault 3, SP stays 0x07FD, R1 unchanged
+      ("v2_pop_error",S+"LDI R0,9\nPUSH R0\nLSPL 253\nPOP R1\nHALT",{},0x07fd),
+      ("v2_illegal_push","LDI R0,31\n.word 0x3801\nLDI R1,99",{},-1),
+      ("v2_illegal_pushlr","LDI R0,31\n.word 0x4e00\nLDI R1,99",{},-1),
+      ("v2_illegal_poplr","LDI R0,31\n.word 0x5801\nLDI R1,99",{},-1),
+      ("v2_illegal_ret","LDI R0,31\n.word 0x4001\nLDI R1,99",{},-1),
+      ("v2_illegal_lsp","LDI R0,31\n.word 0x4500\nLDI R1,99",{},-1),
+    ]
+    for mode in (0,1):
+        for name,text,data,derr in directed:
+            yield dict(name=name+f"_wait{mode}",words=assemble(text),data=data,mode=mode,seed=7,
+                       ierror=-1,derror=derr)
+    # Interrupts: the handler sets its own SP (bank 1) and calls a routine; the
+    # program keeps calling a routine that saves LR. Bank 0 SP/LR must survive.
+    handler=("LDXH 255\nLDXL 4\nST [X],R0\nLSPH 7\nLSPL 0\nCALL hsub\nRETI\n"
+             "hsub: PUSH LRH\nPUSH LRL\nPUSH R1\nLDI R1,7\nPOP R1\nPOP LRL\nPOP LRH\nRET\n")
+    psub="psub: PUSH LRH\nPUSH LRL\nPUSH R0\nLDI R0,3\nADD R1,R0\nPOP R0\nPOP LRL\nPOP LRH\nRET"
+    loop=("LDI R1,0\nLDI R2,30\nLDI R3,1\nloop: CALL psub\nPUSH R2\nPOP R2\nSUB R2,R3\nJZ done\nJMP loop\n"
+          "done: HALT\n")
+    # Mostly CALL/RET in ID/EX, so interrupts also land on them (entry drops
+    # the CALL/RET; it runs again after RETI).
+    calls=("LDI R2,20\nLDI R3,1\nloop: CALL leaf\nCALL leaf\nCALL leaf\nSUB R2,R3\nJZ done\nJMP loop\n"
+           "done: HALT\nleaf: RET")
+    for mode in (0,1):
+        for name,body,irq,min_ints in (("irq_v2_stack",loop+psub,(15,23,8),3),("irq_v2_dense",loop+psub,(9,7,12),3),
+                                       ("irq_v2_call_ret",calls,(11,13,12),3)):
+            yield dict(name=name+f"_wait{mode}",words=assemble(head+handler+"main: EI\n"+S+body),
+                       data={},mode=mode,seed=7,ierror=-1,derror=-1,irq=(irq),min_ints=min_ints)
+    subs=("s0: ADD R0,R1\nRET\ns1: LDI R3,77\nSUB R2,R3\nRET\ns2: PUSH R0\nAND R0,R1\nPOP R0\nRET\n"
+          "s3: PUSH LRH\nPUSH LRL\nCALL s0\nCALL s2\nPOP LRL\nPOP LRH\nRET")
+    for seed in range(10):
+        rng=random.Random(500+seed);with_irq=seed>=6;depth=0
+        lines=[head+handler+"main: EI"] if with_irq else []
+        for rd in range(4):lines.append(f"LDI R{rd},{rng.randrange(256)}")
+        lines+=["LDXH 0","LDXL 64",S.strip()]
+        for _ in range(80):
+            op=rng.choice(["LDI","ADD","SUB","ADC","CMP","LD","ST","INX","JZ","PUSH","PUSH","POP","POP","CALL","CALL","LSPL"])
+            a,b=rng.randrange(4),rng.randrange(4)
+            if op=="LDI":lines.append(f"LDI R{a},{rng.randrange(256)}")
+            elif op in RR:lines.append(f"{op} R{a},R{b}")
+            elif op=="LD":lines.append(f"LD R{a},[X]")
+            elif op=="ST":lines.append(f"ST [X],R{a}")
+            elif op=="JZ":lines.extend([f"JZ 1",f"LDI R{a},{rng.randrange(256)}"])
+            elif op=="PUSH" and depth<40:lines.append(f"PUSH R{a}");depth+=1
+            elif op=="POP" and depth>0:lines.append(f"POP R{a}");depth-=1
+            elif op=="CALL":lines.append(f"CALL s{rng.randrange(4)}")
+            elif op=="LSPL" and depth==0:lines.append("LSPL 0")
+            elif op=="INX":lines.append("INX")
+        lines+=["POP R%d"%rng.randrange(4)]*depth+["HALT",subs]
+        cfg=dict(name=f"random_v2_{seed}",words=assemble("\n".join(lines)),data={64+i:rng.randrange(256) for i in range(100)},
+                 mode=1,seed=seed,ierror=-1,derror=-1)
+        if with_irq:cfg.update(irq=(rng.randrange(10,40),rng.randrange(9,30),12),min_ints=1)
+        yield cfg
 
 def run(command,build,log,cwd=None):
     command=list(map(str,command))
@@ -265,9 +359,9 @@ def main():
         elif current is not None and p[0]=="RET":
             t=tuple(int(x,16) for x in p[1:7])+tuple(int(x) for x in p[7:9])+(int(p[9],16),)
             if not t[6]:t=t[:-1]+(None,)
-            current["trace"].append(t)
+            current["trace"].append(t+(int(p[10],16),int(p[11],16)))   # + SP, LR
         elif current is not None and p[0]=="END":
-            current["end"]=[int(v,16) if i in (3,4,5,6) else int(v) for i,v in enumerate(p[1:])]
+            current["end"]=[int(v,16) if i in (3,4,5,6,13,14) else int(v) for i,v in enumerate(p[1:])]
     result=[];covered=set()
     for cfg in suite:
         a=got.get(cfg["name"])
@@ -287,14 +381,18 @@ def main():
         expected_end=[1,int(bool(e["fault"])),e["pc"],e["registers"],e["x"],e["flags"],e["fault"]]
         if z[1:8]!=expected_end:raise AssertionError((cfg["name"],z,expected_end))
         if z[10:13]!=[len(e["reads"]),len(e["writes"]),e["rx"]]:raise AssertionError("bus count mismatch "+cfg["name"])
+        if z[13:15]!=[e["sp"],e["lr"]]:raise AssertionError((cfg["name"],"SP/LR",z[13:15],[e["sp"],e["lr"]]))
         if cfg["name"]=="first_add_wait0" and (z[8]<1 or z[9]<1):raise AssertionError("pipeline overlap/RAW stall not observed")
         covered.update(t[1]>>10 for t in e["trace"])
         result.append(dict(name=cfg["name"],retired=len(e["trace"]),cycles=z[0],stalls=z[8],three_stages=z[9],fault=e["fault"],interrupts=len(e["ints"])))
-    assert covered==set(OPS.values()),("missing supported opcode",set(OPS.values())-covered)
+    # Every legal opcode value: the 20 + v2 stage 1 ones, CALL in all four
+    # target quarters (opcodes 32..35).
+    required=set(OPS.values())|{33,34,35}
+    assert covered==required,("missing supported opcode",required-covered,covered-required)
     # Each AHB and interrupt corner case must have occurred at least once in the suite.
     if not cover or "int_taken" not in cover or min(cover.values())<1:
         raise AssertionError("corner case not exercised: "+str(cover))
-    summary=dict(simulator=sim,default_demo_passed=True,program_cases=len(result),alu_cases=786432,reset_inflight_passed=True,all_20_opcodes_covered=True,total_retired=sum(x["retired"] for x in result),interrupts_taken=sum(x["interrupts"] for x in result),max_irq_latency_cycles=max_latency,corner_cases=cover,cases=result)
+    summary=dict(simulator=sim,default_demo_passed=True,program_cases=len(result),alu_cases=786432,reset_inflight_passed=True,all_opcodes_covered=True,opcodes_covered=len(required),total_retired=sum(x["retired"] for x in result),interrupts_taken=sum(x["interrupts"] for x in result),max_irq_latency_cycles=max_latency,corner_cases=cover,cases=result)
     (build/"results.json").write_text(json.dumps(summary,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({k:v for k,v in summary.items() if k!="cases"},indent=2))
 if __name__=="__main__":main()

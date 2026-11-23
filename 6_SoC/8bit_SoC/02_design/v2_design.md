@@ -121,12 +121,12 @@ CPU는 3칸 작업대(① 가져오기 → ② 해석·계산 → ③ 메모리 
 |---|---|---|
 | CPU RTL | `1_RTL/.../8bit_CPU/RTL/cpu8_isa.vh`·`cpu8_decoder.v`·`cpu8_top.v` | 2·3절 |
 | CPU 도구 | `TOOLS/cpu8_asm.py` | 새 명령(`PUSH LRH` 등), `CALL 레이블`(12bit 범위 검사) |
-| CPU 시험 | `TOOLS/run_cpu8_tests.py`(기준 모델·무작위 프로그램), `TB/cpu8_irq_checker.sv`, `TOOLS/measure_cpu8_cycles.py` | 새 명령, 처리 루틴 안의 CALL·RET(묶음 1 SP·LR), 클록 측정 사례(push·pop·call_ret·LR 저장) |
+| CPU 시험 | `TOOLS/run_cpu8_tests.py`(기준 모델·무작위 프로그램), `TB/cpu8_irq_checker.sv`, `TOOLS/measure_cpu8_cycles.py` | 새 명령, 처리 루틴 안의 CALL·RET(묶음 1 SP·LR), 클록 측정 사례(push·pop·call_ret·LR 저장). `run_cpu8_tests.py`의 명령 표와 "20개 opcode를 모두 썼는지" 판정(`all_20_opcodes_covered`)도 새 명령 수에 맞춘다 |
 | 펌웨어 | `6_SoC/8bit_SoC/firmware/calc.asm` | 루틴화(CALL/RET), POW·GCD·SQR, `ERR OVER`, `V_PHASE` 제거 |
 | SoC 시험 | 통합 TB 기준 모델(`tb/soc`), 보드 TB(`tb/board`) | 새 연산 사례 |
-| 문서 | `calculator.md`, `isa_table.md`, CPU `README_PIPELINED.md`, `02_design/README.md`·`03_setup/migration.json`(이 문서 목록) | |
+| 문서 | `calculator.md`, `isa_table.md`, CPU `README_PIPELINED.md`, `02_design/README.md`(이 문서 색인의 "구현 전" 표기) | 이 문서의 색인 등록과 `03_setup/migration.json` 링크 검사 등록은 2026-11-20에 했다 |
 | PC 도구 | `pc_tools/calc_board_test.py`(기준 모델·사례), `calc_ui.py`(연산 버튼) | |
-| MSPM0 (Embedded_System) | `MSPM0_CALC/src/main.c`·`pc/mspm0_calc_ui.py` | S2 순서 7개, 화면 칸, 기대값 |
+| MSPM0 (Embedded_System) | `MSPM0_CALC/src/main.c`·`pc/mspm0_calc_ui.py` | S2 순서 7개, 화면 칸, 기대값. `MSPM0_CALC`는 Embedded_System 저장소에 아직 커밋되지 않았다(2026-11-23 확인). 고치기 전에 커밋할지 정한다 |
 | STM32 | 없음 | 받은 줄을 그대로 표시하므로 바꿀 것이 없다 |
 
 ## 6. 시험 계획
@@ -140,7 +140,7 @@ CPU는 3칸 작업대(① 가져오기 → ② 해석·계산 → ③ 메모리 
 2. 클록 측정: `measure_cpu8_cycles.py`에 push·pop·call_ret 사례를 더해 `isa_table.md`의 클록 열을 실측값으로 채운다.
 3. 계산기: 통합 TB `calc`에 새 연산 경계값(`-2,15` POW·`2,15` OVER·`0,0` POW·`-128,0` GCD·`0,0` GCD·`127,0` SQR·`-1,0` SQR 등)과 무작위 줄, 보드 TB, 보드 실물(PC 화면·MSPM0).
 4. 전후 수치 표: 펌웨어 크기(word), `V_PHASE`·복사된 송신 대기 루프 수, 연산별 최악 클록.
-5. Codex 검증: CPU 모듈 요청서(VR-0xx_cpu8_v2) → 통합 요청서(VR-0xx_soc_v2) → 각각 PASS 뒤 사용자 승인으로 main 병합(CLAUDE.md §2 Codex 협업 순서).
+5. Codex 검증: CPU 모듈 요청서(VR-0xx_cpu8_v2) → 통합 요청서(VR-0xx_soc_v2) → 각각 PASS 뒤 사용자 승인으로 main 병합(병합 규칙은 [verification/README.md](../verification/README.md) 4절).
 
 ## 7. 2단계 — 숫자 16bit와 시프트·회전·ALU·분기 명령 (1단계 뒤)
 

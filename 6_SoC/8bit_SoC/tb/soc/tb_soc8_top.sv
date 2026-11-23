@@ -108,7 +108,8 @@ module tb_soc8_top;
         .clk(clk), .rst_n(rst_sync), .irq(irq), .ie(dut.u_cpu.r_ie), .bank(dut.u_cpu.r_bank),
         .int_take(dut.u_cpu.w_int_take), .id_issue(dut.u_cpu.w_id_issue),
         .reti_issue(dut.u_cpu.w_reti_issue), .id_valid(dut.u_cpu.r_id_valid),
-        .m_valid(dut.u_cpu.r_m_valid), .m_done(dut.u_cpu.w_m_done), .d_htrans(dut.w_d_htrans));
+        .m_valid(dut.u_cpu.r_m_valid), .m_done(dut.u_cpu.w_m_done), .d_htrans(dut.w_d_htrans),
+        .sp0(dut.u_cpu.r_sp0), .lr0(dut.u_cpu.r_lr0));
 
     int unsigned fails = 0;
     task automatic fail(input string msg);

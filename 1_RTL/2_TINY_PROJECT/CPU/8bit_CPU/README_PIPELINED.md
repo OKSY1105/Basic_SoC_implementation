@@ -11,6 +11,7 @@
 - 16bit 고정 명령, opcode [15:10] / r [9:8] / operand [7:0].
 - 16bit 프로그램 PC는 **명령 word** 주소, 16bit X와 데이터 포트는 **byte** 주소. 명령 포트의 AHB 주소는 byte 단위 `{PC,1'b0}`(17bit)이다.
 - 아래 20개 명령을 구현(17개 + 2026-11-03 추가한 인터럽트 제어 EI/DI/RETI). MUL/DIV는 프로그램 반복으로 구성하며 전용 opcode는 없다.
+- v2 1단계(2026-11-23): 스택 포인터 SP·링크 레지스터 LR(각 16bit, 레지스터 묶음마다)과 PUSH·POP·PUSH LRx·POP LRx·LSPL·LSPH·CALL a12·RET를 추가했다(아래 "v2 1단계" 절, 설계 근거 `6_SoC/8bit_SoC/02_design/v2_design.md` 2·3절).
 - IRQ 입력 1개의 정확한 인터럽트(precise interrupt)를 지원한다. 처리 루틴은 별도 레지스터 묶음을 쓴다(아래 "인터럽트" 절).
 - CPU 코어에는 ROM·RAM·UART를 내장하지 않는다. 프로그램 ROM과 데이터 RAM/MMIO는 분리된 외부 포트에 연결한다.
 - 첫 시스템 데이터 RAM은 2KiB(2,048×8bit)로 선정했다. 상위 모듈에서 범위를 디코드한다. CPU의 16bit 주소가 64KiB RAM 내장을 의미하지 않는다.
@@ -22,7 +23,7 @@
 | 파일 | 역할 |
 |---|---|
 | `RTL/cpu8_top.v` | 단계 경계·인출 PC·완료 PC·interlock·메모리/HALT/fault·인터럽트 제어 |
-| `RTL/cpu8_decoder.v` | 20개 명령·예약 비트·읽기/쓰기 대상 해독 |
+| `RTL/cpu8_decoder.v` | 20개 명령과 v2 스택·서브루틴 명령의 예약 비트·읽기/쓰기 대상(R·FLAGS·X·SP·LR) 해독 |
 | `RTL/cpu8_regfile.v` | 4×8bit 2R1W × 2묶음(프로그램/인터럽트 처리), R0 쓰기 가능 |
 | `RTL/cpu8_alu.v` | ADD/ADC·SUB/SBC/CMP·AND, Z/N/C/V |
 | `RTL/cpu8_isa.vh` | opcode 상수 |
@@ -75,6 +76,26 @@
 - `o_flags[3:0]={Z,N,C,V}`. 뺄셈 C=1은 **빌림 없음**이다.
 - ADD/ADC·SUB/SBC·CMP는 Z/N/C/V를 갱신한다. 결과는 8bit, carry/borrow로 여러 바이트 계산을 연결한다.
 - 주소·분기 계산은 16bit에서 순환한다. 실제 매핑 여부는 외부 메모리의 오류 응답으로 판정한다.
+
+### v2 1단계 — 스택·서브루틴 (2026-11-23)
+
+| Opcode | 명령 | 의미 |
+|---|---|---|
+| 0E | PUSH Rs | SP ← SP−1, M[SP] ← Rs. r=Rs, operand=0 |
+| 0F | POP Rd | Rd ← M[SP], SP ← SP+1. r=Rd, operand=0 |
+| 10 | RET | PC ← LR. 하위 10bit=0 |
+| 11 | LSPL imm8 | SP 하위 바이트 변경, 상위 보존. r=0 |
+| 12 | LSPH imm8 | SP 상위 바이트 변경, 하위 보존. r=0 |
+| 13 | PUSH LRL / PUSH LRH | SP ← SP−1, M[SP] ← LR 하위/상위 바이트. r=0/1, operand=0 |
+| 16 | POP LRL / POP LRH | LR 하위/상위 바이트 ← M[SP], SP ← SP+1. r=0/1, operand=0 |
+| 20~23 | CALL a12 | LR ← PC+1, PC ← a12(12bit 절대 word 주소, 기계어 `8000`+a12) |
+
+- SP·LR은 레지스터 묶음마다 따로 있고 reset 뒤 0이다. 처리 루틴은 묶음 1의 SP·LR을 쓰므로 본 프로그램의 SP·LR을 바꾸지 않는다(`cpu8_irq_checker.sv` 6번 단언).
+- 스택 명령은 LD·ST와 같은 데이터 포트 경로로 1바이트를 옮긴다. 주소만 X 대신 SP−1(넣기)·SP(꺼내기)다. SP와 POP LRx의 LR 바이트는 X처럼 MEM/WB 완료 때 바뀐다. 데이터 접근 오류(fault 3)면 SP·LR·레지스터는 바뀌지 않는다.
+- CALL·RET는 메모리를 쓰지 않고 ID에서 JMP처럼 인출을 돌린다. LR ← PC+1은 MEM/WB 완료 때 쓴다.
+- 의존: 바로 앞 명령이 SP(LR)를 쓰고 이 명령이 SP(LR)를 읽으면 1클록 기다린다(X 규칙과 같음).
+- 어셈블러: `PUSH R0`, `POP R1`, `PUSH LRH`, `POP LRL`, `LSPH 8`, `LSPL 0`, `CALL 레이블`(0~4095), `RET`.
+- 시험(`run_cpu8_tests.py`): 기준 모델이 명령마다 SP·LR까지 비교한다. 사례는 넣기·꺼내기, CALL·RET, LR 저장 중첩 8단, LR 바이트 순서, 네 구역의 CALL(opcode 0x20~0x23), SP 미설정·순환 fault, 스택 접근 오류, 예약 bit 5종, 인터럽트 3종(처리 루틴의 SP·CALL, CALL·RET 위의 인터럽트), 무작위 10개(4개는 인터럽트 포함)다.
 
 ## 외부 메모리 포트
 

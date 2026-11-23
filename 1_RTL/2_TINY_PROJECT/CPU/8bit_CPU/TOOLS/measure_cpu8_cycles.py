@@ -25,6 +25,10 @@ ROOT = Path(__file__).resolve().parents[1]
 N = 16
 SETUP = "LDI R0,1\nLDI R1,2\nLDI R2,3\nLDI R3,4\nLDXL 16"
 SETUP_Z = SETUP + "\nCMP R0,R0"            # Z=1, C=1 (no borrow) for taken JZ/JC
+SETUP_SP = SETUP + "\nLSPH 8\nLSPL 0"     # v2: SP = 0x0800
+SETUP_SP_LOW = SETUP + "\nLSPH 7\nLSPL 0" # v2: SP = 0x0700 (pops read 0x0700 upward)
+LEAF = "\n.org 0x3f0\nRET"                 # called routine that only returns
+SAVER = "\n.org 0x3e0\nPUSH LRH\nPUSH LRL\nPOP LRL\nPOP LRH\nRET"
 
 # (name, instruction, what the block shows, block text, setup)
 CASES = [
@@ -53,11 +57,18 @@ CASES = [
     ("cmp_jz", "CMP+JZ", "비교 바로 뒤 조건 분기(분기함)", "CMP R0,R0\nJZ 0", SETUP),
     ("ei", "EI", "연속", "EI", SETUP),
     ("di", "DI", "연속", "DI", SETUP),
+    # v2 stage 1. SP = 0x0800 (pushes go down from 0x07FF) or 0x0700 (pops read up).
+    ("push", "PUSH", "연속(SP 의존)", "PUSH R0", SETUP_SP),
+    ("pop", "POP", "연속(SP 의존)", "POP R1", SETUP_SP_LOW),
+    ("push_pop", "PUSH+POP", "넣고 바로 꺼냄", "PUSH R0\nPOP R1", SETUP_SP),
+    ("lspl", "LSPL", "연속(SP 하위 바이트만 바꿔도 SP 의존)", "LSPL 0", SETUP_SP),
+    ("call_ret", "CALL+RET", "다른 루틴을 부르지 않는 루틴(RET만)", "CALL 0x3f0", SETUP_SP, LEAF),
+    ("call_save_lr", "CALL+LR 저장", "LR을 저장·복원하는 루틴", "CALL 0x3e0", SETUP_SP, SAVER),
 ]
 
 
-def program(setup, block, blocks):
-    return setup + "\n" + "\n".join([block] * blocks) + "\nHALT"
+def program(setup, block, blocks, tail=""):
+    return setup + "\n" + "\n".join([block] * blocks) + "\nHALT" + tail
 
 
 def main():
@@ -75,10 +86,10 @@ def main():
     run([tool("xelab"), "tb_cpu8_top", "-s", "tb_cpu8_top_snapshot"], build, "xelab.log")
 
     lines, expect = [], {}
-    for name, _, _, block, setup in CASES:
+    for name, _, _, block, setup, *tail in CASES:
         for blocks in (N, 2 * N):
             tag = "%s_%d" % (name, blocks)
-            words = assemble(program(setup, block, blocks))
+            words = assemble(program(setup, block, blocks, *tail))
             rp, dp = build / "cases" / (tag + ".mem"), build / "cases" / (tag + ".data")
             write_mem(words, rp)
             write_mem({0: 0}, dp, 2)
@@ -99,7 +110,7 @@ def main():
             ends[current] = m.groups()
     bad = 0
     results = []
-    for name, ins, what, block, _ in CASES:
+    for name, ins, what, block, *_ in CASES:
         cyc, stl = {}, {}
         for blocks in (N, 2 * N):
             tag = "%s_%d" % (name, blocks)

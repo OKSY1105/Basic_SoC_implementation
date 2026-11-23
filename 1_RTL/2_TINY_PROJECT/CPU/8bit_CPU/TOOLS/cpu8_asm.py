@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-"""Assembler for the documented 20-instruction CPU8 ISA; no dependencies.
+"""Assembler for the documented CPU8 ISA (20 instructions + v2 stage 1 stack
+and subroutines); no dependencies.
 Directives: .org ADDR, .word VALUE, .equ NAME, VALUE. Immediates take a
-number, a .equ name defined on an earlier line or a character literal 'c'."""
+number, a .equ name defined on an earlier line or a character literal 'c'.
+v2 stage 1: PUSH Rs, POP Rd, PUSH LRL|LRH, POP LRL|LRH, LSPL imm8,
+LSPH imm8, CALL label|a12 (12-bit word address, 0..4095), RET."""
 import argparse,re
 from pathlib import Path
 
 OPS={"HALT":1,"LDI":2,"MOV":3,"LD":4,"ST":5,"LDXL":6,"LDXH":7,"INX":8,
      "ADD":9,"ADC":10,"SUB":11,"CMP":12,"AND":13,"JMP":20,"JZ":21,"JC":23,"SBC":26,
-     "EI":24,"DI":25,"RETI":27}
+     "EI":24,"DI":25,"RETI":27,
+     # v2 stage 1. PUSHLR/POPLR are written "PUSH LRL|LRH"/"POP LRL|LRH";
+     # CALL takes opcodes 32..35 (word 0x8000 + 12-bit target).
+     "PUSH":14,"POP":15,"RET":16,"LSPL":17,"LSPH":18,"PUSHLR":19,"POPLR":22,"CALL":32}
 RR={"MOV","ADD","ADC","SUB","SBC","CMP","AND"}
 BR={"JMP","JZ","JC"}
-NOARG={"HALT","INX","EI","DI","RETI"}
+NOARG={"HALT","INX","EI","DI","RETI","RET"}
 IRQ_VECTOR=2
+LR_BYTE={"LRL":0,"LRH":1}
 
 def number(s):
     # 'c': character code (any printable character except , ; : which the
@@ -70,8 +77,16 @@ def assemble(text):
                 if len(a)!=1:raise ValueError(".word takes one value")
                 word=value(a[0],line_no)
                 if not 0<=word<=65535:raise ValueError("word out of range")
+            elif op=="CALL":
+                if len(a)!=1:raise ValueError("one label/word address required")
+                target=labels[a[0]] if a[0] in labels else value(a[0],line_no)
+                if not 0<=target<=4095:raise ValueError("CALL target out of 12-bit range (0..4095)")
+                word=0x8000|target
+            elif op in {"PUSH","POP"} and len(a)==1 and a[0].upper() in LR_BYTE:
+                rd=LR_BYTE[a[0].upper()]
+                word=(OPS[op+"LR"]<<10)|(rd<<8)
             else:
-                if op not in OPS:raise ValueError("unknown opcode "+op)
+                if op not in OPS or op in {"PUSHLR","POPLR"}:raise ValueError("unknown opcode "+op)
                 if op in NOARG:
                     if a:raise ValueError("instruction takes no operands")
                 elif op in RR:
@@ -82,10 +97,13 @@ def assemble(text):
                     rd=register(a[0]);operand=value(a[1],line_no)
                     if not -128<=operand<=255:raise ValueError("imm8 out of range")
                     operand&=255
-                elif op in {"LDXL","LDXH"}:
+                elif op in {"LDXL","LDXH","LSPL","LSPH"}:
                     if len(a)!=1:raise ValueError("one imm8 required")
                     operand=value(a[0],line_no)
-                    if not 0<=operand<=255:raise ValueError("X byte out of range")
+                    if not 0<=operand<=255:raise ValueError("X/SP byte out of range")
+                elif op in {"PUSH","POP"}:
+                    if len(a)!=1:raise ValueError("one register (or LRL/LRH) required")
+                    rd=register(a[0])
                 elif op in {"LD","ST"}:
                     if len(a)!=2:raise ValueError("register and [X] required")
                     mem=a[1] if op=="LD" else a[0]

@@ -1,6 +1,6 @@
 # CPU 명령어 표 — opcode·형식·flag·실행 클록
 
-CPU8의 20개 명령을 한 표로 모은 문서다. 형식은 『Digital Computer Electronics』(Malvino·Brown) SAP-3 부록의 명령어 표(opcode, 길이, 클록 수, 영향 flag)를 따랐다. SAP 컴퓨터와의 전체 비교는 [SAP와 비교](../07_final/sap_comparison.md)에 있다. 동작의 원본은 RTL이다: opcode는 [cpu8_isa.vh](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_isa.vh), 해독은 [cpu8_decoder.v](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_decoder.v), flag는 [cpu8_alu.v](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_alu.v). 규칙 설명은 [README_PIPELINED](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/README_PIPELINED.md)에 있다. 클록 수는 TB로 실측했다(아래 "측정").
+CPU8의 명령(처음 20개 + v2 1단계 스택·서브루틴 명령, opcode 31개)을 한 표로 모은 문서다. v2 설계 근거는 [v2 설계안](v2_design.md) 2·3절이다. 형식은 『Digital Computer Electronics』(Malvino·Brown) SAP-3 부록의 명령어 표(opcode, 길이, 클록 수, 영향 flag)를 따랐다. SAP 컴퓨터와의 전체 비교는 [SAP와 비교](../07_final/sap_comparison.md)에 있다. 동작의 원본은 RTL이다: opcode는 [cpu8_isa.vh](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_isa.vh), 해독은 [cpu8_decoder.v](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_decoder.v), flag는 [cpu8_alu.v](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/RTL/cpu8_alu.v). 규칙 설명은 [README_PIPELINED](../../../1_RTL/2_TINY_PROJECT/CPU/8bit_CPU/README_PIPELINED.md)에 있다. 클록 수는 TB로 실측했다(아래 "측정").
 
 ## 명령 형식
 
@@ -18,11 +18,14 @@ CPU8의 20개 명령을 한 표로 모은 문서다. 형식은 『Digital Comput
 | RR | r = Rd, operand[1:0] = Rs, operand[7:2] = 0 | MOV, ADD, ADC, SUB, SBC, CMP, AND |
 | R + imm8 | r = Rd, operand = 값 | LDI |
 | R + [X] | r = Rd, operand = 0 | LD, ST |
-| imm8 | r = 0, operand = 값 | LDXL, LDXH |
+| imm8 | r = 0, operand = 값 | LDXL, LDXH, LSPL, LSPH |
 | rel8 | r = 0, operand = 부호 있는 변위 | JMP, JZ, JC (목표 = 명령 PC + 1 + rel8) |
-| 피연산자 없음 | 하위 10bit = 0 | HALT, INX, EI, DI, RETI |
+| 피연산자 없음 | 하위 10bit = 0 | HALT, INX, EI, DI, RETI, RET |
+| R + [SP] (v2) | r = Rs·Rd, operand = 0 | PUSH, POP |
+| LR 바이트 (v2) | r = 0(LRL, 하위)·1(LRH, 상위), operand = 0 | PUSH LRL·LRH, POP LRL·LRH |
+| a12 (v2) | opcode[1:0]·r·operand = 12bit 절대 word 주소 | CALL (opcode 0x20~0x23, 기계어 = `8000` + 목표 주소) |
 
-기계어 = 기준값 + Rd × 0x100 + operand. 예: `ADD R0,R1` = 0x2400 + 0 + 1 = `2401`, `LDI R1,20` = 0x0800 + 0x100 + 0x14 = `0914`. 표에 없는 opcode(0x00, 0x0E~0x13, 0x16, 0x1C~0x3F)와 예약 bit 위반은 불법 명령 fault(코드 1)다.
+기계어 = 기준값 + Rd × 0x100 + operand. 예: `ADD R0,R1` = 0x2400 + 0 + 1 = `2401`, `LDI R1,20` = 0x0800 + 0x100 + 0x14 = `0914`, `CALL 0x123` = `8123`. 표에 없는 opcode(0x00, 0x1C~0x1F, 0x24~0x3F — 0x24~0x27은 v2 2단계 긴 JMP용)와 예약 bit 위반은 불법 명령 fault(코드 1)다.
 
 ## 명령어 표
 
@@ -50,10 +53,20 @@ flag 열: Z(0), N(음수), C(덧셈 자리올림, 뺄셈은 1 = 빌림 없음), 
 | 18 | EI | `6000` | 없음 | 인터럽트 허용(IE = 1), 다음 명령부터 적용 | - | - | - | - | 1 |
 | 19 | DI | `6400` | 없음 | 인터럽트 금지(IE = 0) | - | - | - | - | 1 |
 | 1B | RETI | `6C00` | 없음 | PC ← EPC, 레지스터 묶음 0, IE = 1. 처리 루틴 밖에서는 불법 명령 | - | - | - | - | 미측정 |
+| 0E | PUSH Rs | `3800` | R + [SP] | SP ← SP − 1, M[SP] ← Rs | - | - | - | - | 1 + 대기 |
+| 0F | POP Rd | `3C00` | R + [SP] | Rd ← M[SP], SP ← SP + 1 | - | - | - | - | 1 + 대기 |
+| 10 | RET | `4000` | 없음 | PC ← LR | - | - | - | - | 2 |
+| 11 | LSPL imm8 | `4400` | imm8 | SP[7:0] ← imm8, SP[15:8] 유지 | - | - | - | - | 1 |
+| 12 | LSPH imm8 | `4800` | imm8 | SP[15:8] ← imm8, SP[7:0] 유지 | - | - | - | - | 1 |
+| 13 | PUSH LRL / PUSH LRH | `4C00` / `4D00` | LR 바이트 | SP ← SP − 1, M[SP] ← LR[7:0] / LR[15:8] | - | - | - | - | 1 + 대기 |
+| 16 | POP LRL / POP LRH | `5800` / `5900` | LR 바이트 | LR[7:0] / LR[15:8] ← M[SP], SP ← SP + 1 | - | - | - | - | 1 + 대기 |
+| 20~23 | CALL a12 | `8000` | a12 | LR ← PC + 1, PC ← a12 | - | - | - | - | 2 |
 
 - 산술 결과는 8bit다. C와 ADC·SBC로 여러 바이트 계산을 잇는다. CMP 뒤 C = 1이면 Rd ≥ Rs(부호 없음)다.
 - 곱셈·나눗셈 명령은 없다. 펌웨어가 반복으로 계산한다([계산기 규약](calculator.md)).
 - 인터럽트 진입: IRQ 요청부터 벡터(0x0002) 첫 명령까지 시험 조건(메모리 대기 포함)에서 최대 6클록이다. 처리 루틴은 별도 레지스터 묶음을 쓰므로 저장·복원 명령이 없다(README_PIPELINED 인터럽트 절).
+- v2 SP·LR: 각각 16bit이고 레지스터 묶음마다 따로 있다(처리 루틴은 묶음 1의 SP·LR). reset 뒤 0이다. SP를 정하지 않고 PUSH하면 0xFFFF에 쓰게 되어 SoC에서는 데이터 접근 오류(fault 3)로 멈춘다. PUSH·POP의 데이터 접근 오류는 fault 3이고, 그 명령의 SP·LR·레지스터 변경은 반영하지 않는다.
+- 다른 루틴을 부르는 루틴은 들어올 때 `PUSH LRH`·`PUSH LRL`, 나갈 때 `POP LRL`·`POP LRH`·`RET`로 LR을 저장·복원한다. 상위 바이트가 높은 주소(SP − 1)에 먼저 들어간다.
 
 ## 실행 클록 규칙
 
@@ -62,15 +75,16 @@ flag 열: Z(0), N(음수), C(덧셈 자리올림, 뺄셈은 1 = 빌림 없음), 
 | 규칙 | 추가 클록 | 근거(측정 사례) |
 |---|---|---|
 | 기본: 모든 명령은 매 클록 하나씩 발행 | 0 (1클록/명령) | `ldi`·`mov`·`cmp`·`ld`·`st`·`ei`·`di` |
-| 바로 앞 명령이 쓴 값(R0~R3, FLAGS, X)을 읽음 | +1 | `add_dep1`, `mov_dep`, `adc_flags`·`sbc_flags`(C flag), `ld_use`(읽은 값 사용), `st_after_write`, `ldxl`·`inx`·`inx_ld`(X), `cmp_jz`(Z flag) |
+| 바로 앞 명령이 쓴 값(R0~R3, FLAGS, X, v2 SP·LR)을 읽음 | +1 | `add_dep1`, `mov_dep`, `adc_flags`·`sbc_flags`(C flag), `ld_use`(읽은 값 사용), `st_after_write`, `ldxl`·`inx`·`inx_ld`(X), `cmp_jz`(Z flag), `push`·`pop`·`push_pop`·`lspl`(SP), `call_save_lr`(LR) |
 | 두 명령 이상 앞에서 쓴 값을 읽음 | 0 | `add_dep2`·`sub_dep2`·`and_dep2` |
-| 분기함(JMP, 조건 참인 JZ·JC) | +1 (이미 인출한 다음 명령을 버림) | `jmp`·`jz_taken`·`jc_taken` |
+| 분기함(JMP, 조건 참인 JZ·JC, v2 CALL·RET) | +1 (이미 인출한 다음 명령을 버림) | `jmp`·`jz_taken`·`jc_taken`, `call_ret` |
 | 분기 안 함 | 0 | `jz_not`·`jc_not` |
 | 메모리 대기 | slave가 `HREADY`를 낮춘 클록 수만큼 | 아래 표 |
 
 - ADD·SUB·AND·ADC·SBC·CMP는 Rd도 읽는다. 그래서 `ADD R0,R1`을 연달아 쓰면 매번 앞 결과를 읽어 2클록씩 걸린다. 결과를 두 명령 뒤에 쓰도록 순서를 바꾸면 1클록이 된다.
 - LDXL·LDXH도 X 전체를 읽고 쓰므로(나머지 바이트 유지) 바로 앞의 X 변경에 의존한다. LDXH는 LDXL과 같은 경로이고 측정은 LDXL로 했다.
 - CMP 바로 뒤 조건 분기는 flag 의존(+1)과 분기(+1)가 겹쳐 두 명령에 4클록이다(`cmp_jz`).
+- v2: PUSH·POP·LSPL·LSPH는 SP를 읽고 쓰므로 연달아 쓰면 매번 2클록이다(`push`·`pop`·`lspl`). CALL 직후의 루틴 첫 명령은 CALL의 인출 재지정 동안 CALL이 끝나므로 LR 의존 대기가 없다(`call_ret`: CALL부터 RET 뒤 다음 명령까지 5클록, stall 0. 분기 두 번의 버린 인출만으로 예상되는 4클록보다 1클록 많으며, 이 1클록의 원인은 아직 분석하지 않았다). LR을 저장·복원하는 루틴은 SP·LR 의존이 겹쳐 CALL부터 RET까지 12클록이다(`call_save_lr`, stall 4).
 
 SoC에서 메모리 대기(명령 포트·데이터 포트):
 
@@ -90,7 +104,7 @@ cd 1_RTL/2_TINY_PROJECT/CPU/8bit_CPU
 python3 TOOLS/measure_cpu8_cycles.py --vivado-bin /home/sean/Vivado/2024.2/bin --build-dir /tmp/claude_runs/cpu_cycles
 ```
 
-결과(2026-11-09, WSL Vivado 2024.2 XSim, 프로그램 50개, ISA 모델과 상태 일치, `CPU8_CYCLES_PASS cases=25 programs=50`):
+결과(2026-11-09 첫 25사례, 2026-11-23 v2 1단계 6사례 추가, WSL Vivado 2024.2 XSim, 프로그램 62개, ISA 모델과 상태 일치, `CPU8_CYCLES_PASS cases=31 programs=62`. v2 RTL에서 첫 25사례 수치는 그대로다):
 
 | 사례 | 반복한 묶음 | 묶음당 클록 | 명령당 클록 | 묶음당 stall |
 |---|---|---|---|---|
@@ -119,6 +133,13 @@ python3 TOOLS/measure_cpu8_cycles.py --vivado-bin /home/sean/Vivado/2024.2/bin -
 | `cmp_jz` | CMP R0,R0 / JZ 0 | 4 | 2.0 | 1 |
 | `ei` | EI | 1 | 1.0 | 0 |
 | `di` | DI | 1 | 1.0 | 0 |
+| `push` | PUSH R0 | 2 | 2.0 | 1 |
+| `pop` | POP R1 | 2 | 2.0 | 1 |
+| `push_pop` | PUSH R0 / POP R1 | 4 | 2.0 | 2 |
+| `lspl` | LSPL 0 | 2 | 2.0 | 1 |
+| `call_ret` | CALL 0x3F0 (루틴: RET) | 5 | 5.0 | 0 |
+| `call_save_lr` | CALL 0x3E0 (루틴: PUSH LRH / PUSH LRL / POP LRL / POP LRH / RET) | 12 | 12.0 | 4 |
 
 - 분기의 추가 클록은 stall이 아니라 버린 인출로 생기므로 stall 열은 0이다.
+- `call_ret`·`call_save_lr`는 CALL 명령 하나를 묶음으로 반복하므로 "명령당 클록"은 루틴 전체(CALL부터 RET까지) 값이다.
 - 측정하지 않은 것: RETI(처리 루틴 안에서만 실행됨), HALT(정지), 계산기 펌웨어 전체의 평균 CPI(SoC 통합 TB가 완료 명령 수를 출력하지 않는다), 메모리 대기가 있는 경우의 실제 분포.

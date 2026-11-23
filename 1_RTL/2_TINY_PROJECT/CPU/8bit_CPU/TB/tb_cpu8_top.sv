@@ -51,7 +51,8 @@ module tb_cpu8_top;
         .clk(clk),.rst_n(rst_n),.irq(irq),.ie(dut.r_ie),.bank(dut.r_bank),
         .int_take(dut.w_int_take),.id_issue(dut.w_id_issue),
         .reti_issue(dut.w_reti_issue),.id_valid(dut.r_id_valid),
-        .m_valid(dut.r_m_valid),.m_done(dut.w_m_done),.d_htrans(dtrans)
+        .m_valid(dut.r_m_valid),.m_done(dut.w_m_done),.d_htrans(dtrans),
+        .sp0(dut.r_sp0),.lr0(dut.r_lr0)
     );
     // Protocol assertions run under XSim (CPU8_SVA); the module is empty otherwise.
     cpu8_ahb_checker chk (
@@ -82,6 +83,9 @@ module tb_cpu8_top;
     // Interrupt coverage and request-to-entry latency.
     integer cov_int=0, cov_int_mem=0, cov_int_id_mem=0, cov_int_id_branch=0;
     integer cov_int_dheld=0, cov_int_reentry=0, cov_irq_masked=0, cov_irq_in_handler=0;
+    // v2 stage 1 corner cases: SP/LR dependency waits, interrupt over a stack
+    // access or a CALL/RET in ID/EX, stack access waited by HREADY=0.
+    integer cov_sp_wait=0, cov_lr_wait=0, cov_int_stack=0, cov_int_call_ret=0, cov_stack_hold=0;
     integer lat=0, max_lat=0;
     reg int_now=0, last_ret_reti=0, elig=0;
     function automatic mapped(input [15:0] a, input w);
@@ -137,6 +141,11 @@ module tb_cpu8_top;
                 if (dut.w_branch) cov_int_id_branch=cov_int_id_branch+1;
             end
             if (elig && dut.r_d_held) cov_int_dheld=cov_int_dheld+1;
+            if (dut.r_id_valid && dut.w_sp_hazard && !halted) cov_sp_wait=cov_sp_wait+1;
+            if (dut.r_id_valid && dut.w_lr_hazard && !halted) cov_lr_wait=cov_lr_wait+1;
+            if (int_now && dut.w_sp_addr) cov_int_stack=cov_int_stack+1;
+            if (int_now && (dut.w_call || dut.w_ret)) cov_int_call_ret=cov_int_call_ret+1;
+            if (dtrans==2'b10 && !dready && !dresp && dut.w_sp_addr) cov_stack_hold=cov_stack_hold+1;
             if (irq && !dut.r_ie && !dut.r_bank && !halted) cov_irq_masked=cov_irq_masked+1;
             if (irq && dut.r_bank) cov_irq_in_handler=cov_irq_in_handler+1;
             if (int_now || !elig) lat=0; else lat=lat+1;
@@ -181,9 +190,11 @@ module tb_cpu8_top;
             #1;
             if (ret) begin
                 // Registers, X and FLAGS of the bank the instruction ran in.
-                $display("RET %04h %04h %08h %04h %01h %04h %0d %0d %02h",
+                // v2: SP and LR of that bank after the instruction.
+                $display("RET %04h %04h %08h %04h %01h %04h %0d %0d %02h %04h %04h",
                          rpc,rins,rbk ? dut.w_registers_irq : regs,
-                         rbk ? dut.r_x1 : x,rbk ? dut.r_flags1 : flags,pc,regwe,rr,rv);
+                         rbk ? dut.r_x1 : x,rbk ? dut.r_flags1 : flags,pc,regwe,rr,rv,
+                         rbk ? dut.r_sp1 : dut.r_sp0,rbk ? dut.r_lr1 : dut.r_lr0);
                 last_ret_reti=(rins[15:10]==6'h1b);
                 if (default_demo) begin
                     if (demo_retired>=4 || rpc!==demo_retired[15:0] ||
@@ -198,8 +209,9 @@ module tb_cpu8_top;
                 if (last_ret_reti) cov_int_reentry=cov_int_reentry+1;
             end
             if (halted && !reported) begin
-                $display("END %0d %0d %0d %04h %08h %04h %01h %0d %0d %0d %0d %0d %0d",
-                    cycles,halted,fault,pc,regs,x,flags,code,stalls,overlap,reads,writes,rx);
+                $display("END %0d %0d %0d %04h %08h %04h %01h %0d %0d %0d %0d %0d %0d %04h %04h",
+                    cycles,halted,fault,pc,regs,x,flags,code,stalls,overlap,reads,writes,rx,
+                    dut.r_sp0,dut.r_lr0);
                 if (default_demo) begin
                     if (fault!==1'b0 || code!==3'd0 || pc!==16'd4 ||
                         regs!==32'h0000141e || x!==16'd0 || flags!==4'd0 ||
@@ -267,6 +279,9 @@ module tb_cpu8_top;
             $display("COVER int_taken=%0d int_after_mem_wait=%0d int_dropped_ldst=%0d int_dropped_branch=%0d int_deferred_by_held_d=%0d int_reentry_after_reti=%0d irq_masked=%0d irq_in_handler=%0d",
                      cov_int,cov_int_mem,cov_int_id_mem,cov_int_id_branch,cov_int_dheld,
                      cov_int_reentry,cov_irq_masked,cov_irq_in_handler);
+        if (cov_int!=0)
+            $display("COVER sp_wait=%0d lr_wait=%0d int_dropped_stack=%0d int_dropped_call_ret=%0d stack_addr_held=%0d",
+                     cov_sp_wait,cov_lr_wait,cov_int_stack,cov_int_call_ret,cov_stack_hold);
         $display("IRQ_LATENCY max=%0d limit=%0d",max_lat,LAT_LIMIT);
         $display("ALL_CASES_DONE %0d",count);
         $finish;

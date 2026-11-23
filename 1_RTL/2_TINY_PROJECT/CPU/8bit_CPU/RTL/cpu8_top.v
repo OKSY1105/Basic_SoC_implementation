@@ -24,6 +24,14 @@
 //   instruction. The handler uses register bank 1 (R0-R3, X, FLAGS). RETI
 //   (legal only in the handler) returns to EPC with bank 0 and IE=1.
 //   EI/DI set IE when they issue. No nesting; HALT is not woken.
+// v2 stage 1 (6_SoC/8bit_SoC/02_design/v2_design.md 2-3): SP and LR (16 bits
+//   each, per register bank, 0 after reset). PUSH/POP/PUSH LRx/POP LRx move
+//   one byte at SP-1 / SP through the same data port path as ST/LD (address
+//   from SP instead of X); SP and the LR byte are written when MEM/WB
+//   completes, like X. CALL a12 redirects fetch in ID like JMP and writes
+//   LR = PC+1 at completion; RET redirects fetch to LR. An instruction right
+//   after an SP (LR) writer that reads SP (LR) waits one clock. A data ERROR
+//   (fault 3) leaves SP, LR and registers unchanged.
 module cpu8_top (
     input wire i_clk, i_rst_n,
     output wire [16:0] o_i_haddr,
@@ -71,6 +79,10 @@ module cpu8_top (
     reg r_d_held;
     wire [15:0] w_x=r_bank ? r_x1 : r_x0;
     wire [3:0] w_flags=r_bank ? r_flags1 : r_flags0;
+    // Stack pointer and link register per register bank.
+    reg [15:0] r_sp0, r_sp1, r_lr0, r_lr1;
+    wire [15:0] w_sp=r_bank ? r_sp1 : r_sp0;
+    wire [15:0] w_lr=r_bank ? r_lr1 : r_lr0;
 
     // Instruction address phase held while HREADY=0. The slot rule below only
     // issues an address phase that can wait when IF/ID and skid are empty, so
@@ -93,6 +105,9 @@ module cpu8_top (
     reg [1:0] r_m_rd;
     reg [7:0] r_m_result, r_m_store_data;
     reg [3:0] r_m_flags;
+    // SP/LR results written at completion; POP LRx takes the loaded byte.
+    reg r_m_sp_write, r_m_lr_write, r_m_lr_load, r_m_lr_hi;
+    reg [15:0] r_m_sp_data, r_m_lr_data;
     // First cycle of a data-port ERROR seen; cancels the next address phase.
     reg r_d_err;
 
@@ -101,6 +116,7 @@ module cpu8_top (
     wire w_legal,w_read_rd,w_read_rs,w_read_flags,w_read_x;
     wire w_reg_write,w_flags_write,w_x_write,w_memory,w_store,w_branch,w_halt;
     wire w_ei,w_di,w_reti;
+    wire w_read_sp,w_write_sp,w_read_lr,w_write_lr,w_sp_addr,w_lr_store,w_lr_load,w_call,w_ret;
     wire [7:0] w_a,w_b,w_alu_result;
     wire [3:0] w_alu_flags;
     wire w_m_done=r_m_valid && (!r_m_memory || i_d_hready);
@@ -108,6 +124,12 @@ module cpu8_top (
     wire w_m_terminal=w_m_done && (w_m_error || r_m_halt);
     wire w_wb_write=w_m_done && !w_m_error && r_m_reg_write && !o_halted;
     wire [7:0] w_wb_data=r_m_memory ? i_d_hrdata : r_m_result;
+    // LR value written at completion: CALL's PC+1, or POP LRx's loaded byte
+    // into the other byte of the completing bank's LR (no other LR writer is
+    // in flight: one MEM/WB slot).
+    wire [15:0] w_lr_m=r_m_bank ? r_lr1 : r_lr0;
+    wire [15:0] w_lr_wb=!r_m_lr_load ? r_m_lr_data :
+        (r_m_lr_hi ? {i_d_hrdata,w_lr_m[7:0]} : {w_lr_m[15:8],i_d_hrdata});
 
     cpu8_decoder u_decoder (
         .i_instruction(r_id_instruction),.o_opcode(w_opcode),.o_rd(w_rd),.o_rs(w_rs),
@@ -116,7 +138,11 @@ module cpu8_top (
         .o_write_reg(w_reg_write),.o_write_flags(w_flags_write),
         .o_write_x(w_x_write),.o_memory(w_memory),.o_store(w_store),
         .o_branch(w_branch),.o_halt(w_halt),
-        .o_ei(w_ei),.o_di(w_di),.o_reti(w_reti)
+        .o_ei(w_ei),.o_di(w_di),.o_reti(w_reti),
+        .o_read_sp(w_read_sp),.o_write_sp(w_write_sp),
+        .o_read_lr(w_read_lr),.o_write_lr(w_write_lr),
+        .o_sp_addr(w_sp_addr),.o_lr_store(w_lr_store),.o_lr_load(w_lr_load),
+        .o_call(w_call),.o_ret(w_ret)
     );
     wire [31:0] w_registers_irq;
     cpu8_regfile u_regfile (
@@ -135,7 +161,9 @@ module cpu8_top (
         ((w_read_rd && w_rd==r_m_rd) || (w_read_rs && w_rs==r_m_rd));
     wire w_flags_hazard=r_m_valid && r_m_flags_write && w_read_flags;
     wire w_x_hazard=r_m_valid && r_m_x_write && w_read_x;
-    wire w_hazard=w_gpr_hazard || w_flags_hazard || w_x_hazard;
+    wire w_sp_hazard=r_m_valid && r_m_sp_write && w_read_sp;
+    wire w_lr_hazard=r_m_valid && r_m_lr_write && w_read_lr;
+    wire w_hazard=w_gpr_hazard || w_flags_hazard || w_x_hazard || w_sp_hazard || w_lr_hazard;
     wire w_id_fault=r_id_error || !w_legal || (w_reti && !r_bank);
     // ID/EX may leave this cycle: MEM/WB is empty or completes now.
     wire w_issue_slot=r_id_valid && (!r_m_valid || w_m_done) &&
@@ -144,13 +172,15 @@ module cpu8_top (
     wire w_int_ok=i_irq && r_ie && !r_bank && !r_d_held;
     wire w_int_take=w_issue_slot && w_int_ok;
     wire w_id_issue=w_issue_slot && !w_hazard && !w_int_ok;
-    wire w_take_branch=w_branch &&
+    // CALL and RET always redirect, like JMP.
+    wire w_take_branch=(w_branch &&
         ((w_opcode==`CPU8_OP_JMP) ||
          (w_opcode==`CPU8_OP_JZ && w_flags[3]) ||
-         (w_opcode==`CPU8_OP_JC && w_flags[1]));
+         (w_opcode==`CPU8_OP_JC && w_flags[1]))) || w_call || w_ret;
     wire [15:0] w_sequential_pc=r_id_pc+16'd1;
-    wire [15:0] w_branch_pc=w_sequential_pc+
-        {{8{r_id_instruction[7]}},r_id_instruction[7:0]};
+    wire [15:0] w_branch_pc=w_call ? {4'b0,r_id_instruction[11:0]} :
+        w_ret ? w_lr :
+        w_sequential_pc+{{8{r_id_instruction[7]}},r_id_instruction[7:0]};
     wire w_reti_issue=w_id_issue && !w_id_fault && w_reti;
     // Fetch redirect: taken branch, RETI (to EPC) or interrupt (to vector).
     wire w_redirect=(w_id_issue && !w_id_fault && w_take_branch) ||
@@ -193,7 +223,8 @@ module cpu8_top (
     wire w_d_request=i_rst_n && !o_halted && r_id_valid && w_memory &&
         !w_id_fault && !w_hazard && !w_m_blocks && !r_d_err && !w_int_ok;
     assign o_d_htrans=w_d_request ? HTRANS_NONSEQ : HTRANS_IDLE;
-    assign o_d_haddr=w_x;
+    // Byte address: X, or SP-1 (PUSH, PUSH LRx) / SP (POP, POP LRx).
+    assign o_d_haddr=!w_sp_addr ? w_x : (w_store ? w_sp-16'd1 : w_sp);
     assign o_d_hwrite=w_store;
     assign o_d_hwdata=r_m_store_data;
     assign o_d_hsize=3'b000;
@@ -210,6 +241,9 @@ module cpu8_top (
         if (!i_rst_n) begin
             r_fetch_pc<=16'b0; r_stop_fetch<=1'b0;
             r_x0<=16'b0; r_x1<=16'b0; r_flags0<=4'b0; r_flags1<=4'b0;
+            r_sp0<=16'b0; r_sp1<=16'b0; r_lr0<=16'b0; r_lr1<=16'b0;
+            r_m_sp_write<=1'b0; r_m_lr_write<=1'b0; r_m_lr_load<=1'b0; r_m_lr_hi<=1'b0;
+            r_m_sp_data<=16'b0; r_m_lr_data<=16'b0;
             r_ie<=1'b0; r_bank<=1'b0; r_epc<=16'b0; r_d_held<=1'b0;
             r_m_bank<=1'b0; o_retire_bank<=1'b0;
             r_i_hold<=1'b0;
@@ -243,6 +277,12 @@ module cpu8_top (
                     end
                     if (r_m_x_write) begin
                         if (r_m_bank) r_x1<=r_m_x_data; else r_x0<=r_m_x_data;
+                    end
+                    if (r_m_sp_write) begin
+                        if (r_m_bank) r_sp1<=r_m_sp_data; else r_sp0<=r_m_sp_data;
+                    end
+                    if (r_m_lr_write) begin
+                        if (r_m_bank) r_lr1<=w_lr_wb; else r_lr0<=w_lr_wb;
                     end
                     o_retire_valid<=1'b1;
                     o_retire_bank<=r_m_bank;
@@ -289,7 +329,20 @@ module cpu8_top (
                     r_m_memory<=w_memory && !w_id_fault;
                     r_m_store<=w_store && !w_id_fault;
                     r_m_rd<=w_rd;
-                    r_m_store_data<=w_a;
+                    // PUSH LRx stores LR byte r (0: low, 1: high).
+                    r_m_store_data<=!w_lr_store ? w_a :
+                        (r_id_instruction[8] ? w_lr[15:8] : w_lr[7:0]);
+                    r_m_sp_write<=w_write_sp && !w_id_fault;
+                    r_m_lr_write<=w_write_lr && !w_id_fault;
+                    r_m_lr_load<=w_lr_load;
+                    r_m_lr_hi<=r_id_instruction[8];
+                    r_m_lr_data<=w_sequential_pc;
+                    case (w_opcode)
+                        `CPU8_OP_LSPL: r_m_sp_data<={w_sp[15:8],r_id_instruction[7:0]};
+                        `CPU8_OP_LSPH: r_m_sp_data<={r_id_instruction[7:0],w_sp[7:0]};
+                        `CPU8_OP_PUSH, `CPU8_OP_PUSHLR: r_m_sp_data<=w_sp-16'd1;
+                        default: r_m_sp_data<=w_sp+16'd1;
+                    endcase
                     r_m_flags<=w_alu_flags;
                     r_m_next_pc<=w_reti ? r_epc :
                         w_take_branch ? w_branch_pc : w_sequential_pc;
