@@ -75,7 +75,7 @@ flag 열: Z(0), N(음수), C(덧셈 자리올림, 뺄셈은 1 = 빌림 없음), 
 | 규칙 | 추가 클록 | 근거(측정 사례) |
 |---|---|---|
 | 기본: 모든 명령은 매 클록 하나씩 발행 | 0 (1클록/명령) | `ldi`·`mov`·`cmp`·`ld`·`st`·`ei`·`di` |
-| 바로 앞 명령이 쓴 값(R0~R3, FLAGS, X, v2 SP·LR)을 읽음 | +1 | `add_dep1`, `mov_dep`, `adc_flags`·`sbc_flags`(C flag), `ld_use`(읽은 값 사용), `st_after_write`, `ldxl`·`inx`·`inx_ld`(X), `cmp_jz`(Z flag), `push`·`pop`·`push_pop`·`lspl`(SP), `call_save_lr`(LR) |
+| 바로 앞 명령이 쓴 값(R0~R3, FLAGS, X, v2 SP·LR)을 그 명령이 MEM/WB에 남아 있는 동안 읽음(CALL 직후 루틴 첫 명령은 해당 없음, 아래 v2 설명) | +1 | `add_dep1`, `mov_dep`, `adc_flags`·`sbc_flags`(C flag), `ld_use`(읽은 값 사용), `st_after_write`, `ldxl`·`inx`·`inx_ld`(X), `cmp_jz`(Z flag), `push`·`pop`·`push_pop`·`lspl`(SP), `call_save_lr`(LR) |
 | 두 명령 이상 앞에서 쓴 값을 읽음 | 0 | `add_dep2`·`sub_dep2`·`and_dep2` |
 | 분기함(JMP, 조건 참인 JZ·JC, v2 CALL·RET) | +1 (이미 인출한 다음 명령을 버림) | `jmp`·`jz_taken`·`jc_taken`, `call_ret` |
 | 분기 안 함 | 0 | `jz_not`·`jc_not` |

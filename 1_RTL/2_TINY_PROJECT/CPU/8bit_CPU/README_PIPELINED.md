@@ -93,7 +93,7 @@
 - SP·LR은 레지스터 묶음마다 따로 있고 reset 뒤 0이다. 처리 루틴은 묶음 1의 SP·LR을 쓰므로 본 프로그램의 SP·LR을 바꾸지 않는다(`cpu8_irq_checker.sv` 6번 단언).
 - 스택 명령은 LD·ST와 같은 데이터 포트 경로로 1바이트를 옮긴다. 주소만 X 대신 SP−1(넣기)·SP(꺼내기)다. SP와 POP LRx의 LR 바이트는 X처럼 MEM/WB 완료 때 바뀐다. 데이터 접근 오류(fault 3)면 SP·LR·레지스터는 바뀌지 않는다.
 - CALL·RET는 메모리를 쓰지 않고 ID에서 JMP처럼 인출을 돌린다. LR ← PC+1은 MEM/WB 완료 때 쓴다.
-- 의존: 바로 앞 명령이 SP(LR)를 쓰고 이 명령이 SP(LR)를 읽으면 1클록 기다린다(X 규칙과 같음).
+- 의존: SP(LR)를 쓰는 명령이 아직 MEM/WB에 남아 있는 동안 ID/EX의 명령이 SP(LR)를 읽으면 1클록 기다린다(X 규칙과 같음). 예: `POP LRH` 바로 뒤의 RET. CALL은 인출을 돌리는 동안 MEM/WB에서 끝나므로, CALL 직후 루틴 첫 명령(`PUSH LRH` 등)은 LR을 읽어도 기다리지 않는다.
 - 어셈블러: `PUSH R0`, `POP R1`, `PUSH LRH`, `POP LRL`, `LSPH 8`, `LSPL 0`, `CALL 레이블`(0~4095), `RET`.
 - 시험(`run_cpu8_tests.py`): 기준 모델이 명령마다 SP·LR까지 비교한다. 사례는 넣기·꺼내기, CALL·RET, LR 저장 중첩 8단, LR 바이트 순서, 네 구역의 CALL(opcode 0x20~0x23), SP 미설정·순환 fault, 스택 접근 오류(PUSH·POP과 PUSH LRx·POP LRx, 오류 때 SP·LR 유지), 예약 bit 5종, 인터럽트 3종(처리 루틴의 SP·CALL, CALL·RET 위의 인터럽트), 무작위 10개(4개는 인터럽트 포함)다.
 - reset 시험(`tb_cpu8_reset.sv`): SP=0800h·LR=3으로 정한 뒤 PUSH LRH(쓰기)와 POP LRH(읽기)를 각각 데이터 대기에 붙잡아 두고 reset한다. reset 중 두 포트는 IDLE이고 두 묶음의 SP·LR이 0이 되며, 대기 중이던 접근은 SP·LR에 반영되지 않는다. reset 뒤 프로그램(CALL·RET, LDI·HALT)은 데이터 전송 없이 끝난다.
