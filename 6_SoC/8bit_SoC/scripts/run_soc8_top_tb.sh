@@ -52,7 +52,7 @@ done
 status=0
 for run in fast real; do
     echo "== $run"
-    grep -E "^(CASE|COVER|SOC8_TOP_|FAIL)" "sim_$run.log"
+    grep -E "^(CASE|CALC_|COVER|SOC8_TOP_|FAIL)" "sim_$run.log"
     grep -q "^SOC8_TOP_PASS" "sim_$run.log" || status=1
     if grep -q "^FAIL" "sim_$run.log"; then status=1; fi
 done

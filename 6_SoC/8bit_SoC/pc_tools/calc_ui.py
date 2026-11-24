@@ -680,6 +680,8 @@ th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--car
    <span class="lbl">B</span><input type="number" id="b" value="20" min="-128" max="127"></div>
   <div class="row"><button class="op pri" data-op="ADD">ADD</button><button class="op pri" data-op="SUB">SUB</button>
    <button class="op pri" data-op="MUL">MUL</button><button class="op pri" data-op="DIV">DIV</button></div>
+  <div class="row"><button class="op pri" data-op="POW">POW</button><button class="op pri" data-op="GCD">GCD</button>
+   <button class="op pri" data-op="SQR">SQR</button></div>
   <div class="row"><input type="text" id="free" placeholder="직접 입력 (예: 7,-2)"><button id="sendfree">보내기</button></div>
   <div class="muted" id="ab"></div>
   <div class="banner" id="syncbanner">응답 판정 중단: 앞 요청의 응답이 시간 안에 오지 않았거나 짝이 없는 응답이 왔습니다. 보드 BTN0을 누른 뒤 [BTN0 눌렀음]을 누르면 다시 판정합니다.</div>

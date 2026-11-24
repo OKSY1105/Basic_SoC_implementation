@@ -123,11 +123,14 @@ module tb_soc8_top;
 
     // ---------------------------------------------------- UART receiver (TXD)
     logic [7:0] tx_q [$];
+    real tx_t [$];                     // start-bit time of each byte in tx_q
     initial forever begin : tx_monitor
         int unsigned r0;
         logic [7:0] b;
         logic p, s;
+        real t_s;
         @(negedge txd);
+        t_s = $realtime;
         r0 = resets_seen;
         #(BIT_NS * 1.5);
         for (int i = 0; i < 8; i++) begin b[i] = txd; #(BIT_NS); end
@@ -138,6 +141,7 @@ module tb_soc8_top;
             if (p !== ^b || s !== 1'b1)
                 fail($sformatf("UART TX frame %02h parity=%b stop=%b", b, p, s));
             tx_q.push_back(b);
+            tx_t.push_back(t_s);
         end
     end
 
@@ -244,6 +248,7 @@ module tb_soc8_top;
     // Counters that a test checks start from the reset assertion.
     task automatic clear_counts();
         tx_q.delete();
+        tx_t.delete();
         n_ram_rd = 0; n_ram_wr = 0; n_rom_rd = 0; n_uart_acc = 0; n_err = 0;
         n_rd_cmd = 0; n_wr_cmd = 0; n_commit = 0; n_ack = 0; irq_entries = 0;
     endtask
@@ -447,6 +452,33 @@ module tb_soc8_top;
         return (c >= "A" && c <= "Z") || (c >= "a" && c <= "z");
     endfunction
 
+    // v2 operations (02_design/v2_design.md section 4), from the definition:
+    // A^B for B >= 0 (0^0 = 1), out of -32768..32767 -> ERR OVER. With |A| >= 2
+    // the magnitude only grows, so the loop can stop at the first overflow.
+    function automatic string ref_pow(input int a, input int b);
+        longint p;
+        if (b < 0) return "ERR RANGE";
+        p = 1;
+        for (int i = 0; i < b; i++) begin
+            p = p * a;
+            if (p > 32767 || p < -32768) return "ERR OVER";
+        end
+        return $sformatf("POW:%0d", p);
+    endfunction
+    function automatic int ref_gcd(input int a, input int b);
+        int t;
+        if (a < 0) a = -a;
+        if (b < 0) b = -b;
+        while (b != 0) begin t = a % b; a = b; b = t; end
+        return a;
+    endfunction
+    function automatic int ref_isqrt(input int a);
+        int r;
+        r = 0;
+        while ((r + 1) * (r + 1) <= a) r++;
+        return r;
+    endfunction
+
     // Reply expected for one line (terminator excluded); "" = no reply.
     function automatic string ref_reply(input string s, input bit uart_err);
         int n;
@@ -459,11 +491,15 @@ module tb_soc8_top;
             if (n != 3) return "ERR SYNTAX";
             for (int i = 0; i < n; i++) if (!is_letter(s[i])) return "ERR SYNTAX";
             u = s.toupper();
-            if (u != "ADD" && u != "SUB" && u != "MUL" && u != "DIV") return "ERR SYNTAX";
+            if (u != "ADD" && u != "SUB" && u != "MUL" && u != "DIV" &&
+                u != "POW" && u != "GCD" && u != "SQR") return "ERR SYNTAX";
             if (!ref_ok) return "ERR NOARG";
             if (u == "ADD") return $sformatf("ADD:%0d", ref_a + ref_b);
             if (u == "SUB") return $sformatf("SUB:%0d", ref_a - ref_b);
             if (u == "MUL") return $sformatf("MUL:%0d", ref_a * ref_b);
+            if (u == "POW") return ref_pow(ref_a, ref_b);
+            if (u == "GCD") return $sformatf("GCD:%0d", ref_gcd(ref_a, ref_b));
+            if (u == "SQR") return ref_a < 0 ? "ERR RANGE" : $sformatf("SQR:%0d", ref_isqrt(ref_a));
             if (ref_b == 0) return "ERR DIV0";
             return $sformatf("DIV Q:%0d R:%0d", ref_a / ref_b, ref_a % ref_b);
         end
@@ -493,6 +529,20 @@ module tb_soc8_top;
     endfunction
 
     int unsigned calc_chars = 0, calc_lines = 0, calc_replies = 0, calc_errors = 0;
+    // Worst clocks per operation from the start of the stop bit of the line's
+    // first terminator byte to the start bit of the reply (receiver decision
+    // in the stop bit, parse, compute, reply start). The receiver decides in
+    // the middle of the stop bit (uart_rx.v), so a reply may start before the
+    // stop bit ends; from the start of the stop bit the value is never
+    // negative (checked).
+    int calc_lat [string];
+    real term_t = 0.0, reply_t0 = 0.0;
+    // Lowest bank 1 SP seen in the calculator test (handler stack, SP 0x8040).
+    int unsigned calc_sp_min = 'h8040;
+    bit calc_on = 1'b0;
+    always @(posedge clk)
+        if (calc_on && rst_sync && dut.u_cpu.r_sp1 >= 16'h8000 && dut.u_cpu.r_sp1 < calc_sp_min)
+            calc_sp_min = dut.u_cpu.r_sp1;
 
     // Send a line and its terminator (0: CRLF, 1: CR, 2: LF); bad_at >= 0
     // sends that character with a parity error.
@@ -502,7 +552,9 @@ module tb_soc8_top;
             calc_chars++;
         end
         if (term != 2) begin send_byte(8'h0D, BIT_NS); calc_chars++; end
+        if (term == 1 || term == 0) term_t = $realtime - BIT_NS;   // its stop bit start
         if (term != 1) begin send_byte(8'h0A, BIT_NS); calc_chars++; end
+        if (term == 2) term_t = $realtime - BIT_NS;
     endtask
 
     // Next reply line from TX (CRLF removed); "" after the timeout.
@@ -519,8 +571,9 @@ module tb_soc8_top;
             #(BIT_NS);
         end
         if (k < 0) return;
+        reply_t0 = tx_t[0];
         for (int i = 0; i < k; i++) r = {r, string'(tx_q[i])};
-        repeat (k + 2) void'(tx_q.pop_front());
+        repeat (k + 2) begin void'(tx_q.pop_front()); void'(tx_t.pop_front()); end
     endtask
 
     // One line: reference reply, send, and check the reply if one is due.
@@ -534,6 +587,14 @@ module tb_soc8_top;
             calc_replies++;
             if (e.substr(0, 2) == "ERR") calc_errors++;
             if (r != e) fail($sformatf("calc: line \"%s\": reply \"%s\", expected \"%s\"", s, r, e));
+            else if (s.len() == 3 && is_letter(s[0]) && bad_at < 0) begin
+                string u;
+                int c;
+                u = s.toupper();
+                c = int'((reply_t0 - term_t) / 10.0);
+                if (c < 0) fail($sformatf("calc: line \"%s\": reply starts %0d clocks before the stop bit", s, -c));
+                if (!calc_lat.exists(u) || c > calc_lat[u]) calc_lat[u] = c;
+            end
         end
     endtask
 
@@ -542,7 +603,9 @@ module tb_soc8_top;
         int t;
         ref_ok = 1'b0;
         calc_chars = 0; calc_lines = 0; calc_replies = 0; calc_errors = 0;
+        calc_lat.delete(); calc_sp_min = 'h8040;
         start_program("calc");
+        calc_on = 1'b1;
         repeat (300) @(posedge clk);
         // Directed lines: calculator.md section 5 and boundary cases.
         dir = '{"ADD", "10,20", "ADD", "SUB", "MUL", "DIV", "20,10", "DIV",
@@ -554,6 +617,20 @@ module tb_soc8_top;
                 "0000000000000000", "add", "Sub", "mUl", "007,-0", "DIV", "SUB", "",
                 "99,99", "MUL", "0,-5", "DIV", "MUL"};
         t = 0;
+        foreach (dir[i]) begin calc_step(dir[i], t); t = (t + 1) % 3; end
+        // v2 operations (v2_design.md sections 4 and 6.3): POW, GCD, SQR and
+        // ERR OVER, boundaries, names in any case, wrong names; A and B are
+        // kept after ERR OVER. 41^3 and 5^7 are over 32768 with a 16-bit carry
+        // in a mul16 addition (the carry check alone catches them).
+        dir = '{"2,10", "POW", "-2,15", "POW", "2,15", "POW", "ADD", "2,-1", "POW", "0,0", "POW",
+                "GCD", "SQR", "0,5", "POW", "1,127", "POW", "-1,127", "POW", "-1,126", "pow",
+                "-128,2", "POW", "-128,3", "Pow", "127,2", "POW", "-128,1", "POW", "5,0", "POW",
+                "2,14", "POW", "-2,16", "POW", "3,9", "POW", "3,10", "POW", "-3,9", "POW",
+                "41,3", "POW", "5,7", "POW",
+                "-181,2", "12,18", "GCD", "-12,18", "gcd", "-128,0", "GCD", "SQR", "0,-7", "GCD",
+                "-128,-128", "GCD", "17,5", "GCD", "50,0", "SQR", "127,9", "sqr", "-1,0", "SQR",
+                "1,0", "SQR", "48,0", "SQR", "49,0", "SQR", "121,0", "SQR", "120,5", "Sqr",
+                "POX", "GCE", "SQX", "SQ", "PO", "POWW", "S"};
         foreach (dir[i]) begin calc_step(dir[i], t); t = (t + 1) % 3; end
         // Back-to-back lines without waiting, then all replies.
         bursts = '{"5,6", "ADD", "SUB", "MUL", "DIV"};
@@ -580,9 +657,9 @@ module tb_soc8_top;
                 p = $urandom_range(99);
                 if (p < 45) s = $sformatf("%0d,%0d", $signed(8'($urandom)), $signed(8'($urandom)));
                 else if (p < 85) begin
-                    string ops [4];
-                    ops = '{"add", "sub", "mul", "div"};
-                    s = ops[$urandom_range(3)];
+                    string ops [7];
+                    ops = '{"add", "sub", "mul", "div", "pow", "gcd", "sqr"};
+                    s = ops[$urandom_range(6)];
                     if ($urandom_range(1)) s = s.toupper();
                 end else if (p < 92) s = $sformatf("%0d,%0d", $urandom_range(400, 128), $signed(8'($urandom)));
                 else begin
@@ -594,7 +671,11 @@ module tb_soc8_top;
             end
         end
         repeat (2000) @(posedge clk);
+        calc_on = 1'b0;
         if (tx_q.size() != 0) fail($sformatf("calc: %0d unexpected TX bytes at the end", tx_q.size()));
+        // Handler stack: SP starts at 0x8040 on every entry; it must stay above
+        // the variables (0x8000-0x801A).
+        if (calc_sp_min <= 'h801A) fail($sformatf("calc: handler stack reached 0x%04h", calc_sp_min));
         if (irq_entries != calc_chars)
             fail($sformatf("calc: %0d handler entries for %0d characters", irq_entries, calc_chars));
         if (halted !== 1'b0 || fault !== 1'b0) fail("calc: CPU stopped");
@@ -603,6 +684,12 @@ module tb_soc8_top;
         n_tests++; total_irq += irq_entries;
         $display("CASE calc lines=%0d chars=%0d replies=%0d error_replies=%0d entries=%0d random=%0d",
                  calc_lines, calc_chars, calc_replies, calc_errors, irq_entries, with_random);
+        begin
+            string l;
+            l = $sformatf("CALC_CLOCKS stack_bytes=%0d", 'h8040 - calc_sp_min);
+            foreach (calc_lat[k]) l = {l, $sformatf(" %s=%0d", k, calc_lat[k])};
+            $display("%s", l);
+        end
     endtask
 
     initial begin
@@ -632,8 +719,10 @@ module tb_soc8_top;
         $finish;
     end
 
+    // Watchdog against a hang. The real run (115200 baud) sends about 80 more
+    // calculator lines since v2 and needs more than 100 ms of simulated time.
     initial begin
-        #100ms;
+        #300ms;
         $display("FAIL timeout");
         $finish;
     end

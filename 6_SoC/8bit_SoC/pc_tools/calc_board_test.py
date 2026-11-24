@@ -22,13 +22,14 @@ its reply before sending the next line; number lines have no reply.
 Exit status 0 only if every check passes (CALC_BOARD_PASS).
 """
 import argparse
+import math
 import random
 import re
 import sys
 import time
 
 BAUD = 115200
-OPS = ("ADD", "SUB", "MUL", "DIV")
+OPS = ("ADD", "SUB", "MUL", "DIV", "POW", "GCD", "SQR")
 NUM_RE = re.compile(r"^(-?\d{1,3}),(-?\d{1,3})$")
 MAX_LINE = 15
 
@@ -48,6 +49,18 @@ FIXED = [
     ("200,1", "ERR RANGE"), ("ADD", "ADD:10"),
     ("10 ,20", "ERR SYNTAX"), ("1020", "ERR SYNTAX"), ("ADDX", "ERR SYNTAX"),
     ("1234567890123456", "ERR SYNTAX"),
+    # v2 operations (02_design/v2_design.md section 4)
+    ("2,10", None), ("POW", "POW:1024"),
+    ("-2,15", None), ("pow", "POW:-32768"),
+    ("2,15", None), ("POW", "ERR OVER"), ("ADD", "ADD:17"),
+    ("2,-1", None), ("POW", "ERR RANGE"),
+    ("0,0", None), ("POW", "POW:1"), ("GCD", "GCD:0"), ("SQR", "SQR:0"),
+    ("12,18", None), ("GCD", "GCD:6"),
+    ("-12,18", None), ("gcd", "GCD:6"),
+    ("-128,0", None), ("GCD", "GCD:128"), ("SQR", "ERR RANGE"),
+    ("50,0", None), ("SQR", "SQR:7"),
+    ("127,9", None), ("Sqr", "SQR:11"),
+    ("POX", "ERR SYNTAX"),
 ]
 FIXED_AFTER_RESET_2 = [("ADD", "ERR NOARG"), ("7,-2", None), ("DIV", "DIV Q:-3 R:1")]
 # Parity case: the text goes out with odd parity (receive errors), the CRLF
@@ -92,6 +105,15 @@ class CalcModel:
             return "SUB:%d" % (a - b)
         if op == "MUL":
             return "MUL:%d" % (a * b)
+        if op == "POW":                 # v2: B < 0 range error, result in 16 bits or ERR OVER
+            if b < 0:
+                return "ERR RANGE"
+            p = a ** b                  # Python integers: exact, 0 ** 0 = 1
+            return "POW:%d" % p if -32768 <= p <= 32767 else "ERR OVER"
+        if op == "GCD":
+            return "GCD:%d" % math.gcd(a, b)   # non-negative, gcd(0, 0) = 0
+        if op == "SQR":
+            return "ERR RANGE" if a < 0 else "SQR:%d" % math.isqrt(a)
         if b == 0:
             return "ERR DIV0"
         q = abs(a) // abs(b)
@@ -342,6 +364,28 @@ class FakePort:
             return "SUB:%d" % (a - b)
         if op == "MUL":
             return "MUL:%d" % (a * b)
+        if op == "POW":
+            if b < 0:
+                return "ERR RANGE"
+            p = 1
+            for _ in range(b):
+                p *= a
+                if abs(p) > 40000:
+                    break
+            limit = 32768 if self.fault == "pow_32768_fits" else 32767
+            return "POW:%d" % p if -32768 <= p <= limit else "ERR OVER"
+        if op == "GCD":
+            x, y = abs(a), abs(b)
+            while y:
+                x, y = y, x % y
+            return "GCD:%d" % (-x if self.fault == "gcd_keeps_sign" and a < 0 else x)
+        if op == "SQR":
+            if a < 0:
+                return "ERR RANGE"
+            r = 0
+            while (r + 1) * (r + 1) <= a:
+                r += 1
+            return "SQR:%d" % r
         if b == 0:
             return "ERR DIV0"
         q = int(a / b)
@@ -370,7 +414,7 @@ def selftest():
     # (fault, expected verdict): the correct fake device must pass; every fault must be caught.
     scenarios = [(None, True), ("rem_sign_of_b", False), ("silent", False), ("lf_only", False),
                  ("echo", False), ("parity_ignored", False), ("comma_space_ok", False),
-                 ("range_overwrites", False)]
+                 ("range_overwrites", False), ("pow_32768_fits", False), ("gcd_keeps_sign", False)]
     status = 0
     for fault, want_pass in scenarios:
         port = FakePort(fault)

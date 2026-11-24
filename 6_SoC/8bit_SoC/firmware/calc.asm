@@ -1,10 +1,11 @@
 ; 8bit SoC calculator firmware (ROM). Protocol: 02_design/calculator.md.
 ;
-; PC -> UART RX: lines "A,B" (two numbers -128..127) and "ADD"/"SUB"/"MUL"/"DIV"
-; (any case), ended by CR, LF or CRLF. UART TX: one ASCII line per operation,
-;   ADD:30   SUB:-10   MUL:200   DIV Q:0 R:10
-; or ERR DIV0 / ERR RANGE / ERR SYNTAX / ERR NOARG. A valid number line has no
-; reply; A and B stay until the next valid number line.
+; PC -> UART RX: lines "A,B" (two numbers -128..127) and "ADD"/"SUB"/"MUL"/"DIV"/
+; "POW"/"GCD"/"SQR" (any case), ended by CR, LF or CRLF. UART TX: one ASCII line
+; per operation,
+;   ADD:30   SUB:-10   MUL:200   DIV Q:0 R:10   POW:1024   GCD:6   SQR:7
+; or ERR DIV0 / ERR RANGE / ERR SYNTAX / ERR NOARG / ERR OVER (POW only). A valid
+; number line has no reply; A and B stay until the next valid number line.
 ;
 ; Structure
 ; - main (bank 0): clear the variables, IRQ_EN = RX_VALID, EI, idle loop.
@@ -19,12 +20,21 @@
 ;   while X stays at TX_DATA (no string table in ROM).
 ; - TX: before a reply the handler waits for TX_EMPTY (16 free FIFO places);
 ;   the DIV reply (up to 17 bytes with CRLF) waits once more before " R:".
-; - No CALL/RET and rel8 branches only (+-128 words): shared code is reached by
-;   JMP, the number printer continues through V_PHASE, and far targets are
-;   reached through t_*/s_* trampolines placed after unconditional jumps.
-; Arithmetic: ADD/SUB in 16 bits after sign extension; MUL by repeated addition
-; of |A|, |B| times; DIV by repeated subtraction (quotient toward zero,
-; remainder with the sign of A, as C). All results fit in signed 16 bits.
+; - Routines (v2 CPU: CALL a12 / RET with the link register LR): txwait, print,
+;   mul16 and divmod are leaves; power and gcd call them and keep LR on the
+;   stack (PUSH LRH/LRL ... POP LRL/LRH), power also keeps its count with
+;   PUSH/POP. The handler runs in bank 1, whose SP is 0 after reset, so it sets
+;   SP = 0x8040 on every entry (stack just above the variables, at most 3 bytes).
+; - Branches and JMP are still rel8 (+-128 words): far targets are reached
+;   through t_*/s_* trampolines placed after unconditional jumps; routines are
+;   reached with CALL (absolute 12-bit word address).
+; Arithmetic: ADD/SUB in 16 bits after sign extension; MUL: mul16 multiplies
+; |B| by |A| with shift and add (8 bits of |A| at most); DIV: divmod subtracts repeatedly (quotient toward zero, remainder
+; with the sign of A, as C). POW: |A| multiplied B times with mul16, stopping
+; when the magnitude exceeds 32768 (ERR OVER; 32768 itself only for a negative
+; result); B < 0 -> ERR RANGE; 0^0 = 1. GCD: Euclid on |A|, |B| with divmod;
+; GCD(0,0) = 0. SQR: counts the odd numbers 1, 3, 5, ... subtracted from A
+; (B unused); A < 0 -> ERR RANGE.
 
 ; ---------------------------------------------------------------- addresses
         .equ U_PAGE, 0xFF       ; UART registers 0xFF00-0xFF04
@@ -36,7 +46,9 @@
         .equ ST_ERR, 0x38       ; STATUS OVERRUN | FRAME_ERR | PARITY_ERR
         .equ ST_TXE, 0x40       ; STATUS TX_EMPTY
 
-        .equ V_PAGE, 0x80       ; variables in RAM 0x8000-0x8018
+        .equ V_PAGE, 0x80       ; variables in RAM 0x8000-0x801A
+        .equ STK_HI, 0x80       ; handler stack: SP = 0x8040 (first push 0x803F)
+        .equ STK_LO, 0x40
         .equ V_ST, 0x00         ; line state: 0 start, 1 number A, 2 number B, 3 letters
         .equ V_LEN, 0x01        ; characters in the line (terminator excluded)
         .equ V_ACC, 0x02        ; magnitude of the number being read
@@ -51,8 +63,8 @@
         .equ V_C1, 0x0B         ; letters of the operation line (upper case)
         .equ V_C2, 0x0C
         .equ V_C3, 0x0D
-        .equ V_OP, 0x0E         ; 1 ADD, 2 SUB, 3 MUL, 4 DIV
-        .equ V_PHASE, 0x0F      ; after printing: 0 CRLF, 1 remainder of DIV next
+        .equ V_OP, 0x0E         ; 1 ADD, 2 SUB, 3 MUL, 4 DIV, 5 POW, 6 GCD, 7 SQR
+        .equ V_MC, 0x0F         ; mul16: bit mask of |A|
         .equ V_PSGN, 0x10       ; number to print: sign (0/1), magnitude 16 bits
         .equ V_PLO, 0x11
         .equ V_PHI, 0x12
@@ -62,6 +74,8 @@
         .equ V_MB, 0x16
         .equ V_SA, 0x17
         .equ V_SB, 0x18
+        .equ V_ML, 0x19         ; mul16: multiplicand, 16 bits
+        .equ V_MH, 0x1A
 
         .equ CR, 0x0D
         .equ LF, 0x0A
@@ -110,7 +124,9 @@ main:   LDXH V_PAGE
 idle:   JMP idle
 
 ; ---------------------------------------------- handler: one RX character
-isr:    LDXH U_PAGE
+isr:    LSPL STK_LO             ; bank 1 SP for power/gcd (PUSH/POP); low byte
+        LSPH STK_HI             ; first, so SP never points into the variables
+        LDXH U_PAGE
         LDXL U_ST
         LD R0, [X]              ; STATUS
         LDI R1, ST_ERR
@@ -430,6 +446,12 @@ eo1:    LDXL V_C1
         LDI R0, 'D'
         CMP R1, R0
         JZ m_d
+        LDI R0, 'P'
+        CMP R1, R0
+        JZ m_p
+        LDI R0, 'G'
+        CMP R1, R0
+        JZ m_g
         JMP t_r_syntax
 m_a:    LDI R0, 'D'
         CMP R2, R0
@@ -441,10 +463,33 @@ m_a2:   CMP R3, R0
 m_s:    LDI R0, 'U'
         CMP R2, R0
         JZ m_s2
+        LDI R0, 'Q'
+        CMP R2, R0
+        JZ m_q2
         JMP t_r_syntax
 m_s2:   LDI R0, 'B'
         CMP R3, R0
         JZ op_sub
+        JMP t_r_syntax
+m_q2:   LDI R0, 'R'
+        CMP R3, R0
+        JZ op_sqr
+        JMP t_r_syntax
+m_p:    LDI R0, 'O'
+        CMP R2, R0
+        JZ m_p2
+        JMP t_r_syntax
+m_p2:   LDI R0, 'W'
+        CMP R3, R0
+        JZ op_pow
+        JMP t_r_syntax
+m_g:    LDI R0, 'C'
+        CMP R2, R0
+        JZ m_g2
+        JMP t_r_syntax
+m_g2:   LDI R0, 'D'
+        CMP R3, R0
+        JZ op_gcd
         JMP t_r_syntax
 m_m:    LDI R0, 'U'
         CMP R2, R0
@@ -477,6 +522,12 @@ op_sub: LDI R3, 2
         JMP op_chk
 op_mul: LDI R3, 3
         JMP op_chk
+op_pow: LDI R3, 5
+        JMP op_chk
+op_gcd: LDI R3, 6
+        JMP op_chk
+op_sqr: LDI R3, 7
+        JMP op_chk
 op_div: LDI R3, 4
 op_chk: LDXL V_OP
         ST [X], R3
@@ -486,7 +537,7 @@ op_chk: LDXL V_OP
         JZ t_r_noarg
         LDI R1, 3
         CMP R3, R1
-        JC t_absv               ; MUL, DIV
+        JC t_absv               ; MUL, DIV, POW, GCD, SQR
         LDI R1, 2
         CMP R3, R1
         JZ do_sub
@@ -583,16 +634,12 @@ r_range:
 r_noarg:
         LDI R3, 3
         JMP err_pre
+r_over: LDI R3, 5
+        JMP err_pre
 r_div0: LDI R3, 4
-; "ERR " then the name for R3 (1 SYNTAX, 2 RANGE, 3 NOARG, 4 DIV0).
+; "ERR " then the name for R3 (1 SYNTAX, 2 RANGE, 3 NOARG, 4 DIV0, 5 OVER).
 err_pre:
-        LDXH U_PAGE
-er_w:   LDXL U_ST
-        LD R0, [X]
-        LDI R1, ST_TXE
-        AND R0, R1
-        JZ er_w
-        LDXL U_TX
+        CALL txwait             ; X = TX_DATA
         LDI R0, 'E'
         ST [X], R0
         LDI R0, 'R'
@@ -609,6 +656,9 @@ er_w:   LDXL U_ST
         LDI R1, 3
         CMP R3, R1
         JZ e_noarg
+        LDI R1, 5
+        CMP R3, R1
+        JZ e_over
         LDI R0, 'D'
         ST [X], R0
         LDI R0, 'I'
@@ -618,12 +668,27 @@ er_w:   LDXL U_ST
         LDI R0, '0'
         ST [X], R0
         JMP crlf
+e_over: LDI R0, 'O'
+        ST [X], R0
+        LDI R0, 'V'
+        ST [X], R0
+        LDI R0, 'E'
+        ST [X], R0
+        LDI R0, 'R'
+        ST [X], R0
+        JMP crlf
 
 ; Trampolines (after an unconditional jump).
 s_prefix1:
         JMP s_prefix2
 s_absv: JMP absvals
 s_div0: JMP r_div0
+s_range3:
+        JMP r_range
+s_over3:
+        JMP r_over
+s_crlf2:
+        JMP crlf
 
 e_syn:  LDI R0, 'S'
         ST [X], R0
@@ -698,26 +763,14 @@ ab2:    LDXL V_MB
         LDI R2, 4
         CMP R1, R2
         JZ do_div
+        JC t_newop              ; POW, GCD, SQR (op > 4)
 
-; MUL: R1:R0 = |A| added |B| times (product at most 16384).
+; MUL: mul16 gives |A| * |B| (product at most 16384, never over 32768).
 do_mul: LDXL V_MB
-        LD R2, [X]              ; count
-        LDI R0, 0
-        LDI R1, 0
-        LDXL V_MA
-        AND R2, R2
-        JZ mu_done
-mu_l:   LD R3, [X]              ; |A|
-        ADD R0, R3
-        JC mu_c
-mu_n:   LDI R3, 1
-        SUB R2, R3
-        JZ mu_done
-        JMP mu_l
-mu_c:   LDI R3, 1
-        ADD R1, R3
-        JMP mu_n
-mu_done:
+        LD R0, [X]
+        LDI R1, 0               ; R1:R0 = |B|
+        CALL mul16              ; R1:R0 = |A| * |B|
+        LDXH V_PAGE
         LDXL V_PLO
         ST [X], R0
         LDXL V_PHI
@@ -734,23 +787,23 @@ mu_done:
         JMP prefix
 s_prefix2:
         JMP prefix
+t_newop:
+        JMP newop
+s_range2:
+        JMP s_range3
+s_over2:
+        JMP s_over3
+t_crlf: JMP s_crlf2
 
-; DIV: |A| / |B| by repeated subtraction. B = 0 -> ERR DIV0.
+; DIV: divmod gives |A| / |B| and the remainder. B = 0 -> ERR DIV0.
 do_div: LDXL V_MB
         LD R1, [X]              ; |B|
         AND R1, R1
         JZ s_div0
         LDXL V_MA
-        LD R0, [X]              ; remainder
-        LDI R2, 0               ; quotient
-        LDI R3, 1
-dv_l:   CMP R0, R1
-        JC dv_s                 ; remainder >= |B|
-        JMP dv_done
-dv_s:   SUB R0, R1
-        ADD R2, R3
-        JMP dv_l
-dv_done:
+        LD R0, [X]
+        CALL divmod             ; R2 = quotient, R0 = remainder
+        LDXH V_PAGE
         LDXL V_RMAG
         ST [X], R0
         LDXL V_SA
@@ -769,18 +822,70 @@ dv_done:
         AND R0, R1              ; quotient sign = sA xor sB
         LDXL V_PSGN
         ST [X], R0
+        JMP prefix
+
+; ---------------------------------------------------- POW, GCD, SQR (op 5-7)
+; R1 = operation. Results go to V_PSGN/V_PLO/V_PHI, then the reply text.
+newop:  LDI R2, 6
+        CMP R1, R2
+        JZ do_gcd
+        JC do_sqr               ; 7
+; POW: B < 0 -> ERR RANGE. power gives |A|^B up to 32768 (R2 = 1 above it);
+; the result is negative when A < 0 and B is odd, and 32768 fits only then.
+do_pow: LDXL V_SB
+        LD R0, [X]
+        AND R0, R0
+        JZ pw_go
+        JMP s_range2
+pw_go:  CALL power              ; R1:R0 = |A|^B, R2 = 1: over 32768
+        AND R2, R2
+        JZ pw_fit
+        JMP s_over2
+pw_fit: LDXH V_PAGE
+        LDXL V_B
+        LD R2, [X]
+        LDI R3, 1
+        AND R2, R3              ; B odd
+        LDXL V_SA
+        LD R3, [X]
+        AND R2, R3              ; 1: negative result
+        JZ pw_pos
+        JMP res_mag
+pw_pos: LDI R3, 0x80
+        CMP R1, R3
+        JZ s_over2              ; +32768 does not fit
+        JMP res_mag
+; GCD of |A| and |B| (0 for 0,0).
+do_gcd: CALL gcd                ; R0 = gcd
+        LDI R1, 0
+        LDI R2, 0
+        JMP res_mag
+; SQR: A < 0 -> ERR RANGE; B is not used.
+do_sqr: LDXL V_SA
+        LD R0, [X]
+        AND R0, R0
+        JZ sq_go
+        JMP s_range2
+sq_go:  CALL sqrt               ; R0 = floor(sqrt(A))
+        LDI R1, 0
+        LDI R2, 0
+; Sign R2, magnitude R1:R0 -> V_PSGN/V_PLO/V_PHI, then the reply text.
+res_mag:
+        LDXH V_PAGE
+        LDXL V_PSGN
+        ST [X], R2
+        LDXL V_PLO
+        ST [X], R0
+        LDXL V_PHI
+        ST [X], R1
 
 ; ------------------------------------------------------------- reply text
-; Wait for an empty TX FIFO, write the operation name, then the number.
-prefix: LDXL V_OP
+; Wait for an empty TX FIFO, write the operation name and ':', print the
+; number; DIV adds " R:" and the remainder. Then CR LF and the line reset.
+prefix: LDXH V_PAGE
+        LDXL V_OP
         LD R3, [X]              ; R3 = operation
-        LDXH U_PAGE
-px_w:   LDXL U_ST
-        LD R0, [X]
-        LDI R1, ST_TXE
-        AND R0, R1
-        JZ px_w
-        LDXL U_TX
+        CALL txwait             ; X = TX_DATA
         LDI R1, 1
         CMP R3, R1
         JZ px_add
@@ -790,6 +895,15 @@ px_w:   LDXL U_ST
         LDI R1, 3
         CMP R3, R1
         JZ px_mul
+        LDI R1, 5
+        CMP R3, R1
+        JZ px_pow
+        LDI R1, 6
+        CMP R3, R1
+        JZ px_gcd
+        LDI R1, 7
+        CMP R3, R1
+        JZ px_sqr
         LDI R0, 'D'
         ST [X], R0
         LDI R0, 'I'
@@ -800,10 +914,30 @@ px_w:   LDXL U_ST
         ST [X], R0
         LDI R0, 'Q'
         ST [X], R0
-        LDI R0, CH_COLON
+        JMP px_colon
+t_crlf4:
+        JMP t_crlf              ; trampoline (after an unconditional jump)
+px_pow: LDI R0, 'P'
         ST [X], R0
-        LDI R0, 1               ; the remainder follows the quotient
-        JMP px_end
+        LDI R0, 'O'
+        ST [X], R0
+        LDI R0, 'W'
+        ST [X], R0
+        JMP px_colon
+px_gcd: LDI R0, 'G'
+        ST [X], R0
+        LDI R0, 'C'
+        ST [X], R0
+        LDI R0, 'D'
+        ST [X], R0
+        JMP px_colon
+px_sqr: LDI R0, 'S'
+        ST [X], R0
+        LDI R0, 'Q'
+        ST [X], R0
+        LDI R0, 'R'
+        ST [X], R0
+        JMP px_colon
 px_add: LDI R0, 'A'
         ST [X], R0
         LDI R0, 'D'
@@ -826,13 +960,38 @@ px_mul: LDI R0, 'M'
 px_colon:
         LDI R0, CH_COLON
         ST [X], R0
-        LDI R0, 0
-px_end: LDXH V_PAGE
-        LDXL V_PHASE
+        CALL print
+        LDXH V_PAGE
+        LDXL V_OP
+        LD R0, [X]
+        LDI R1, 4
+        CMP R0, R1
+        JZ px_rem
+        JMP t_crlf4
+; DIV: the remainder (sign of A) after " R:" (room for it: wait again).
+px_rem: LDXL V_RSGN
+        LD R0, [X]
+        LDXL V_PSGN
         ST [X], R0
+        LDXL V_RMAG
+        LD R0, [X]
+        LDXL V_PLO
+        ST [X], R0
+        LDI R0, 0
+        LDXL V_PHI
+        ST [X], R0
+        CALL txwait
+        LDI R0, ' '
+        ST [X], R0
+        LDI R0, 'R'
+        ST [X], R0
+        LDI R0, CH_COLON
+        ST [X], R0
+        CALL print
+        JMP t_crlf4
 
-; Print V_PSGN/V_PLO/V_PHI in decimal ('-' only for a non-zero magnitude,
-; no leading zeros). R1:R0 = magnitude, X = TX_DATA.
+; print (routine): V_PSGN/V_PLO/V_PHI in decimal ('-' only for a non-zero
+; magnitude, no leading zeros) to TX_DATA. Uses R0-R3; X = TX_DATA after.
 print:  LDXH V_PAGE
         LDXL V_PLO
         LD R0, [X]
@@ -922,8 +1081,6 @@ d3_l:   LDI R3, 0xE8
 d3_c:   LDI R3, 1
         ADD R2, R3
         JMP d3_l
-t_print2:
-        JMP print               ; trampoline (after an unconditional jump)
 d100:   LDI R2, 0
 d2_l:   LDI R3, 100
         SUB R0, R3
@@ -961,62 +1118,171 @@ d1_c:   LDI R3, 1
 d1:     LDI R3, '0'
         ADD R3, R0
         ST [X], R3
-        ; Continue: remainder of DIV, or end of line.
-        LDXH V_PAGE
-        LDXL V_PHASE
-        LD R0, [X]
-        AND R0, R0
-        JZ crlf2
-        LDI R0, 0
-        ST [X], R0              ; PHASE = 0
-        LDXL V_RSGN
-        LD R0, [X]
-        LDXL V_PSGN
-        ST [X], R0
-        LDXL V_RMAG
-        LD R0, [X]
-        LDXL V_PLO
-        ST [X], R0
-        LDI R0, 0
-        LDXL V_PHI
-        ST [X], R0
-        LDXH U_PAGE
-rm_w:   LDXL U_ST
+        RET
+
+; ----------------------------------------------------------------- routines
+; txwait: wait for TX_EMPTY (16 free FIFO places). X = TX_DATA after.
+; Uses R0, R1.
+txwait: LDXH U_PAGE
+tw_l:   LDXL U_ST
         LD R0, [X]
         LDI R1, ST_TXE
         AND R0, R1
-        JZ rm_w                 ; room for " R:" and the remainder
+        JZ tw_l
         LDXL U_TX
-        LDI R0, ' '
-        ST [X], R0
-        LDI R0, 'R'
-        ST [X], R0
-        LDI R0, CH_COLON
-        ST [X], R0
-        JMP t_print2
+        RET
 
-; CR LF and line reset for the printer (a copy of crlf/line_reset, which are
-; out of rel8 reach from here).
-crlf2:  LDXH U_PAGE
-        LDXL U_TX
-        LDI R0, CR
+; mul16: R1:R0 = R1:R0 * |A| (V_MA, 0..128) by shift and add. R2 = 0, or 1
+; when the product is over 32768 (R1:R0 then not valid). The multiplicand
+; must be at most 32768. The bits of |A| are tested from bit 0 up with a mask
+; 1, 2, 4, ... 128 (ADD R,R doubles it; there is no right shift); the
+; multiplicand is doubled once per bit. It stops as soon as |A| < mask (no set
+; bit left), so the multiplicand is only doubled while a set bit remains and
+; a carry out of it means the product is over 32768.
+; Uses R0-R3, V_MC (mask)/V_ML/V_MH (multiplicand); X page = variables after.
+mul16:  LDXH V_PAGE
+        LDXL V_ML
         ST [X], R0
-        LDI R0, LF
-        ST [X], R0
-        LDXH V_PAGE
+        LDXL V_MH
+        ST [X], R1
+        LDI R2, 1
+        LDXL V_MC
+        ST [X], R2              ; mask = 1
         LDI R0, 0
-        LDXL V_ST
-        ST [X], R0              ; V_ST .. V_ERNG (0x00 - 0x06)
-        INX
-        ST [X], R0
-        INX
-        ST [X], R0
-        INX
-        ST [X], R0
-        INX
-        ST [X], R0
-        INX
-        ST [X], R0
-        INX
-        ST [X], R0
-        RETI
+        LDI R1, 0               ; product = 0
+ml_t:   LDXL V_MA
+        LD R2, [X]              ; |A|
+        LDXL V_MC
+        LD R3, [X]              ; mask
+        CMP R2, R3
+        JC ml_b                 ; |A| >= mask: a set bit at or above the mask
+        JMP ml_ok
+ml_b:   AND R2, R3
+        JZ ml_d                 ; this bit is 0
+        LDXL V_ML
+        LD R2, [X]
+        LDXL V_MH
+        LD R3, [X]
+        ADD R0, R2
+        ADC R1, R3
+        JC ml_ov                ; carry out of 16 bits
+        MOV R2, R0
+        LDI R3, 0x01
+        SUB R2, R3
+        MOV R2, R1
+        LDI R3, 0x80
+        SBC R2, R3
+        JC ml_ov                ; product >= 32769
+ml_d:   LDXL V_MC
+        LD R3, [X]
+        ADD R3, R3              ; mask * 2; 0x80 * 2 = 0: all 8 bits done
+        ST [X], R3
+        JZ ml_ok
+        LDXL V_MA
+        LD R2, [X]
+        CMP R2, R3
+        JC ml_l                 ; |A| >= new mask: a set bit remains
+        JMP ml_ok
+ml_l:   LDXL V_ML               ; multiplicand * 2 (only while a set bit remains)
+        LD R2, [X]
+        LDXL V_MH
+        LD R3, [X]
+        ADD R2, R2
+        ADC R3, R3
+        JC ml_ov                ; multiplicand >= 65536
+        ST [X], R3
+        LDXL V_ML
+        ST [X], R2
+        JMP ml_t
+ml_ok:  LDI R2, 0
+        RET
+ml_ov:  LDI R2, 1
+        RET
+
+; divmod: R0 / R1 (unsigned, R1 not 0) -> R2 = quotient, R0 = remainder.
+; R1 is kept. Uses R3.
+divmod: LDI R2, 0
+        LDI R3, 1
+dm_l:   CMP R0, R1
+        JC dm_s                 ; remainder >= divisor
+        RET
+dm_s:   SUB R0, R1
+        ADD R2, R3
+        JMP dm_l
+
+; power: R1:R0 = |A|^B for B >= 0 (V_B), R2 = 0, or 1 when a power is over
+; 32768 (stops there). |A| = 0 or 1 gives |A| at once (B > 0). Calls mul16:
+; LR and the count stay on the stack.
+power:  PUSH LRH
+        PUSH LRL
+        LDXH V_PAGE
+        LDXL V_B
+        LD R3, [X]              ; multiplications left = B
+        LDI R0, 1
+        LDI R1, 0               ; |A|^0 = 1
+        AND R3, R3
+        JZ pw_ok
+        LDXL V_MA
+        LD R2, [X]
+        LDI R1, 0xFE
+        AND R1, R2
+        JZ pw_small             ; |A| is 0 or 1
+        LDI R1, 0
+        JMP pw_l
+pw_small:
+        MOV R0, R2              ; |A|^B = |A|
+        LDI R1, 0
+        JMP pw_ok
+pw_l:   AND R3, R3
+        JZ pw_ok
+        PUSH R3
+        CALL mul16
+        POP R3
+        AND R2, R2
+        JZ pw_n
+        JMP pw_ret              ; R2 = 1
+pw_n:   LDI R2, 1
+        SUB R3, R2
+        JMP pw_l
+pw_ok:  LDI R2, 0
+pw_ret: POP LRL
+        POP LRH
+        RET
+
+; gcd: R0 = GCD(|A|, |B|) by Euclid (a, b = b, a mod b until b = 0).
+; Calls divmod: LR stays on the stack.
+gcd:    PUSH LRH
+        PUSH LRL
+        LDXH V_PAGE
+        LDXL V_MA
+        LD R0, [X]              ; a
+        LDXL V_MB
+        LD R1, [X]              ; b
+gc_l:   AND R1, R1
+        JZ gc_end
+        CALL divmod             ; R0 = a mod b, R1 = b
+        MOV R2, R0
+        MOV R0, R1              ; a = b
+        MOV R1, R2              ; b = a mod b
+        JMP gc_l
+gc_end: POP LRL
+        POP LRH
+        RET
+
+; sqrt: R0 = floor(sqrt(A)) for 0 <= A <= 127: subtract 1, 3, 5, ... while
+; they fit and count them. Uses R0-R3.
+sqrt:   LDXH V_PAGE
+        LDXL V_A
+        LD R0, [X]
+        LDI R1, 1               ; next odd number
+        LDI R2, 0               ; count
+sq_l:   CMP R0, R1
+        JC sq_s                 ; still fits
+        MOV R0, R2
+        RET
+sq_s:   SUB R0, R1
+        LDI R3, 2
+        ADD R1, R3
+        LDI R3, 1
+        ADD R2, R3
+        JMP sq_l

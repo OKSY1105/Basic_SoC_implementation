@@ -9,13 +9,15 @@
 //     0 while BTN0 is pressed and 1 after; LED[1] (DRAM initialized) comes up
 //     after each reset; LED[2] (halt) and LED[3] (fault) never light.
 //   - Calculator replies for the 02_design/calculator.md section 5 cases
-//     (errors included, the 17-byte DIV reply, A/B kept after ERR RANGE),
-//     sent at the protocol pace (wait for each operation reply), compared
-//     with the replies written here from the protocol.
+//     (errors included, the 17-byte DIV reply, A/B kept after ERR RANGE)
+//     and the v2 operations POW, GCD, SQR (ERR OVER, ERR RANGE), sent at the
+//     protocol pace (wait for each operation reply), compared with the
+//     replies written here from the protocol.
 //   - After a BTN0 reset in the middle, A/B are gone (ERR NOARG).
 //   - Every TX frame has the right parity and stop bit.
-//   The calculator keeps its 25 RAM bytes in the cache and writes each one
-//   before reading it, so it does not test the DRAM data path. PROG=1 does.
+//   The calculator keeps its 27 variable bytes and its handler stack (at
+//   most 3 bytes below 0x8040) in the cache and writes each one before
+//   reading it, so it does not test the DRAM data path. PROG=1 does.
 // PROG=1 (ram_basic.mem, tb/soc/programs/ram_basic.asm), checks:
 //   - 256 bytes (4 x the cache) written and read back through the cache,
 //     the DRAM controller and the BRAM model: UART bytes 80 12 34 56 78
@@ -188,6 +190,13 @@ module tb_soc8_zybo_top;
         op("ADD", "ADD:10");                        // A/B kept (10, 0)
         op("10 ,20", "ERR SYNTAX");
         op("ADDX", "ERR SYNTAX");
+        // v2 operations (02_design/v2_design.md section 4).
+        send_line("2,10");      op("POW", "POW:1024");
+        send_line("-2,15");     op("POW", "POW:-32768");
+        send_line("2,15");      op("POW", "ERR OVER");
+        send_line("12,18");     op("GCD", "GCD:6");
+        send_line("50,0");      op("SQR", "SQR:7");
+        send_line("-1,0");      op("SQR", "ERR RANGE");
         if (rx_q.size() != 0) fail("extra TX bytes");
         // Reset with BTN0 in the middle: A/B are cleared by the firmware.
         #(20_000);
