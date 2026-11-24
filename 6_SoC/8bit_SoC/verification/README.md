@@ -35,7 +35,7 @@
 3. 사용자: Codex에 검증 지시
 4. Codex: 검증 사본에서 `git fetch` 후 요청서의 커밋을 checkout해 실행·검토(Vivado XSim 등) → Notion 상세 기록 → 결과 파일 작성 (`handoff/8bit_SoC/to_claude/`, VR-014까지는 `handoff/results/`)
 5. Claude: 결과 확인 → FAIL이면 수정 후 재검증 요청(`_rK`)
-6. PASS: 7절 병합 규칙에 따라 Claude가 main에 병합
+6. PASS: 4절 병합 규칙에 따라 Claude가 main에 병합
 7. Claude: 프로젝트 마무리 때(최종 README 작성 시) 모든 블록의 모든 회차 요청서·결과를 이 폴더의 `VR-NNN_<블록>/`에 **원문 그대로** 한꺼번에 커밋해 공개한다(2026-11-04 사용자 결정, 이전에는 병합 직후). 그때까지 원문은 로컬 `handoff/`(VR-014까지 `requests/`·`results/`, VR-015부터 `8bit_SoC/to_codex/`·`to_claude/`)에 보관한다
 
 검증 중에는 기록을 브랜치에 넣지 않는다. 브랜치에 커밋이 추가되면 "검증한 커밋 = 병합할 커밋" 조건이 깨지기 때문이다.

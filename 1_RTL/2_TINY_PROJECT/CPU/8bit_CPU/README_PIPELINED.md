@@ -95,7 +95,7 @@
 - CALL·RET는 메모리를 쓰지 않고 ID에서 JMP처럼 인출을 돌린다. LR ← PC+1은 MEM/WB 완료 때 쓴다.
 - 의존: 바로 앞 명령이 SP(LR)를 쓰고 이 명령이 SP(LR)를 읽으면 1클록 기다린다(X 규칙과 같음).
 - 어셈블러: `PUSH R0`, `POP R1`, `PUSH LRH`, `POP LRL`, `LSPH 8`, `LSPL 0`, `CALL 레이블`(0~4095), `RET`.
-- 시험(`run_cpu8_tests.py`): 기준 모델이 명령마다 SP·LR까지 비교한다. 사례는 넣기·꺼내기, CALL·RET, LR 저장 중첩 8단, LR 바이트 순서, 네 구역의 CALL(opcode 0x20~0x23), SP 미설정·순환 fault, 스택 접근 오류, 예약 bit 5종, 인터럽트 3종(처리 루틴의 SP·CALL, CALL·RET 위의 인터럽트), 무작위 10개(4개는 인터럽트 포함)다.
+- 시험(`run_cpu8_tests.py`): 기준 모델이 명령마다 SP·LR까지 비교한다. 사례는 넣기·꺼내기, CALL·RET, LR 저장 중첩 8단, LR 바이트 순서, 네 구역의 CALL(opcode 0x20~0x23), SP 미설정·순환 fault, 스택 접근 오류(PUSH·POP과 PUSH LRx·POP LRx, 오류 때 SP·LR 유지), 예약 bit 5종, 인터럽트 3종(처리 루틴의 SP·CALL, CALL·RET 위의 인터럽트), 무작위 10개(4개는 인터럽트 포함)다.
 - reset 시험(`tb_cpu8_reset.sv`): SP=0800h·LR=3으로 정한 뒤 PUSH LRH(쓰기)와 POP LRH(읽기)를 각각 데이터 대기에 붙잡아 두고 reset한다. reset 중 두 포트는 IDLE이고 두 묶음의 SP·LR이 0이 되며, 대기 중이던 접근은 SP·LR에 반영되지 않는다. reset 뒤 프로그램(CALL·RET, LDI·HALT)은 데이터 전송 없이 끝난다.
 
 ## 외부 메모리 포트
@@ -107,7 +107,7 @@
 | 포트 | 출력 | 입력 | 고정값 |
 |---|---|---|---|
 | 명령 | `o_i_haddr[16:0]`(=`{PC,1'b0}`), `o_i_htrans[1:0]` | `i_i_hrdata[15:0]`, `i_i_hready`, `i_i_hresp` | `HSIZE`=001, `HPROT`=0010, `HWRITE`=0 |
-| 데이터 | `o_d_haddr[15:0]`(=X), `o_d_htrans[1:0]`, `o_d_hwrite`, `o_d_hwdata[7:0]` | `i_d_hrdata[7:0]`, `i_d_hready`, `i_d_hresp` | `HSIZE`=000, `HPROT`=0011 |
+| 데이터 | `o_d_haddr[15:0]`(LD·ST는 X, PUSH·PUSH LRx는 SP−1, POP·POP LRx는 SP), `o_d_htrans[1:0]`, `o_d_hwrite`, `o_d_hwdata[7:0]` | `i_d_hrdata[7:0]`, `i_d_hready`, `i_d_hresp` | `HSIZE`=000, `HPROT`=0011 |
 
 `HBURST`=000, `HMASTLOCK`=0도 두 포트에 출력한다.
 
@@ -153,7 +153,7 @@
 별도 옵션 없이 TB에 내장한 네 명령으로10+20을 계산하고 결과·완료 순서를 검사해 `CPU8_DEMO_PASS`를 출력한다.
 클록·리셋·시험 메모리는 TB가 만든다. 기본 시험에는 사용자 입력이나 외부파일이 필요 없다.
 
-`CASES` 인자를 명시한 경우에만 기존 외부 시험 목록 모드를 사용한다. 아래 Python runner는 전체 134개 프로그램 회귀(v2 이전 88개(인터럽트 24개 포함) + v2 1단계 46개(인터럽트 10개 포함))·ALU/reset과 기본 무인자 데모를 함께 검증한다.
+`CASES` 인자를 명시한 경우에만 기존 외부 시험 목록 모드를 사용한다. 아래 Python runner는 전체 138개 프로그램 회귀(v2 이전 88개(인터럽트 24개 포함) + v2 1단계 50개(인터럽트 10개 포함))·ALU/reset과 기본 무인자 데모를 함께 검증한다.
 `PROGRAMS/first_add.asm`은 같은 프로그램의 별도 어셈블러 예제다. 기본 TB의 내장 ROM은 해당파일을 읽지 않는다.
 
 

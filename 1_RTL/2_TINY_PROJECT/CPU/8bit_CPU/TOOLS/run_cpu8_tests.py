@@ -227,6 +227,11 @@ def v2_cases(head):
       ("v2_push_error",S+"LDI R0,9\nPUSH R0\nPUSH R0\nHALT",{},0x07fe),
       # POP at 0x07FD answers ERROR: fault 3, SP stays 0x07FD, R1 unchanged
       ("v2_pop_error",S+"LDI R0,9\nPUSH R0\nLSPL 253\nPOP R1\nHALT",{},0x07fd),
+      # LR stack accesses answered with ERROR (fault 3) keep SP and LR: PUSH LRL
+      # at 0x07FF leaves SP 0x0800, LR 3; POP LRH at 0x07FD (RAM byte 0xBA)
+      # leaves SP 0x07FD, LR 3 (a write on ERROR would give LR 0xBA03).
+      ("v2_pushlr_error",S+"CALL sub\nHALT\nsub: PUSH LRL\nHALT",{},0x07ff),
+      ("v2_poplr_error","LSPH 7\nLSPL 253\nCALL sub\nHALT\nsub: POP LRH\nHALT",{0x07fd:0xba},0x07fd),
       ("v2_illegal_push","LDI R0,31\n.word 0x3801\nLDI R1,99",{},-1),
       ("v2_illegal_pushlr","LDI R0,31\n.word 0x4e00\nLDI R1,99",{},-1),
       ("v2_illegal_poplr","LDI R0,31\n.word 0x5801\nLDI R1,99",{},-1),
