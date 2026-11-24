@@ -7,7 +7,7 @@
 - 상태: data ready, THR empty, transmitter empty, frame/parity/overrun, FIFO full.
 - 파라미터: CLK_FREQ_HZ, BAUD_RATE, DATA_BIT, FIFO_DEPTH. 기존 기본값을 전체 SoC 확정값으로 간주하지 않는다.
 
-CPU 쪽 연결은 APB 래퍼(M9) [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)가 맡는다(아래 M9 절). 읽기/쓰기 부작용은 성공한 전송의 ACCESS 클록에 한 번만 일어난다. 빈 RX 읽기와 가득 찬 TX 쓰기는 기다리지 않고 ERROR로 응답한다. status bit 배치와 초기값은 레지스터 표를 따른다. CPU는 인터럽트(IRQ)로 동작한다(history H046).
+CPU 쪽 연결은 APB 래퍼(M9) [soc8_uart_apb.v](../rtl/uart/soc8_uart_apb.v)가 맡는다(아래 M9 절). 읽기/쓰기 부작용은 성공한 전송의 ACCESS 클록에 한 번만 일어난다. 빈 RX 읽기와 가득 찬 TX 쓰기는 기다리지 않고 ERROR로 응답한다. status bit 배치와 초기값은 레지스터 표를 따른다. CPU는 인터럽트(IRQ)로 동작한다([CPU 인터럽트 계약](cpu.md)).
 
 ## 코어 변경 — 2026-11-03
 

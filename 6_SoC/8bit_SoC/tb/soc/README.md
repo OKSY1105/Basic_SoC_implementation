@@ -20,7 +20,7 @@
 | `uart_echo_irq` | 40바이트(앞 절반은 간격 없이, 뒤 절반은 0~3 bit 간격). 송신 측 클록 정상 / 1.5% 빠름(24바이트) / 1.5% 느림(24바이트). UART 오류 flag가 없어야 한다 |
 | `fault_unmapped`, `fault_rom_write` | 위 프로그램 |
 | `reset_mid_run` | `ram_basic` 실행 중 무작위 reset 20회(캐시 miss 중·DRAM burst 중, 1클록보다 짧은 펄스 포함) 뒤 끝까지 실행해 결과 확인 |
-| `calc` | 계산기 펌웨어. TB 안의 기준 모델(규약 2~4절을 그대로 옮긴 SV 함수)이 줄마다 기대 응답을 만든다. 지정 64줄(규약 5절, 경계값 `-128·-128`·`-128/-1`·`127-(-128)`, 오류 4종, 대소문자, 빈 줄, 줄 끝 CR·LF·CRLF 교대), 간격 없이 보낸 5줄 묶음, parity 오류가 난 줄, 무작위 120줄(빠른 baud만). 처리 루틴 진입 수 = 보낸 문자 수, 남는 송신 바이트 없음, UART 오류 flag 정리도 본다 |
+| `calc` | 계산기 펌웨어. TB 안의 기준 모델(규약 2~4절을 그대로 옮긴 SV 함수)이 줄마다 기대 응답을 만든다. 기존 지정 64줄 + v2 지정 82줄(규약 5절, 일곱 연산, POW signed16 경계·`ERR OVER`·A·B 유지, 음수 지수·SQR 음수, GCD 부호·0, 잘못된 연산 이름, 오류 5종, 대소문자, 빈 줄, 줄 끝 CR·LF·CRLF 교대), 간격 없이 보낸 5줄 묶음, parity 오류가 난 줄, 무작위 120줄(빠른 baud만). 처리 루틴 진입 수 = 보낸 문자 수, 남는 송신 바이트 없음, UART 오류 flag 정리도 본다 |
 
 - 데이터 포트 점수판: 버스에서 끝난 모든 전송을 본다. RAM 읽기는 그 바이트에 마지막으로 쓴 값(reset 뒤 아직 쓰지 않은 바이트는 처음 읽은 값을 기억), ROM 읽기는 이미지 바이트와 같아야 한다. ERROR 완료 수를 센다.
 - UART: TXD에 8E1 수신 모델(parity·stop 검사), RXD에 8E1 송신 모델. reset에 걸린 프레임은 버린다.
@@ -43,7 +43,31 @@ bash 6_SoC/8bit_SoC/scripts/run_soc8_top_tb.sh /tmp/soc8_top_tb    # 저장소 �
 SOC8_DRAM_MODEL=bram bash 6_SoC/8bit_SoC/scripts/run_soc8_top_tb.sh /tmp/soc8_top_tb_bram
 ```
 
-## 결과 (2026-11-04, 계산기 시험 추가 후)
+<a id="v2-integration-results"></a>
+
+## v2 1단계 결과와 측정 (2026-11-24)
+
+대상은 펌웨어·TB 커밋 `761dc9d512c3f61313a6f2021b3a19896d01a5c3`다. 아래는 Claude 자체 실행의 기존 XSim 로그를 문서 작업에서 대조한 결과이며 이번 Codex 시뮬레이션 재실행이나 VR-016 PASS가 아니다. 아래 2026-11-04 결과와 변이 표는 당시 기록으로 보존한다.
+
+| 모델 / baud | calc 줄 / 문자 / 응답 / 오류 응답 | 전체 판정 |
+|---|---|---|
+| DRAM / fast 3.125 Mbaud | 273 / 1518 / 164 / 58 | `SOC8_TOP_PASS`, tests=8, `RESULT status=0` |
+| BRAM / fast 3.125 Mbaud | 273 / 1526 / 176 / 78 | `SOC8_TOP_PASS`, tests=8, `RESULT status=0` |
+| 두 모델 / real 115200 | 153 / 798 / 101 / 39 | `SOC8_TOP_PASS`, tests=4, `RESULT status=0` |
+
+fast는 기존 지정 64줄 + v2 지정 82줄 + 연속 5줄 + parity·복구 2줄 + 무작위 120줄이다. real은 무작위를 뺀 153줄이다. 감시 시간은 실행 전체의 시뮬레이션 시간 **300 ms**다. 각 응답 대기는 별도로 400 bit 시간이다.
+
+`CALC_CLOCKS`는 줄의 첫 줄끝 바이트 **정지 비트 시작 → 응답 첫 시작 비트**를 100 MHz 클록(10 ns)으로 잰 연산 이름별 관측 최댓값이다. 수신 확정·해석·계산·송신 시작을 포함하고 응답 전체 전송은 포함하지 않는다. 정지 비트 중간에서 수신을 확정하므로 정지 비트 끝 기준으로 바꾸면 안 되며, 음수면 FAIL이다. `GCE`·`POX`·`SQX`는 잘못된 이름의 오류 응답 측정이다. fast와 real의 입력 집합이 다르고 UART 대기도 포함하므로 순수 산술 클록이나 전 입력의 최악 상한이 아니다. 수치의 단일 원본 표는 [펌웨어 전후 수치](../../firmware/README.md#calc-response-clocks)에 둔다.
+
+`stack_bytes=3`: 처리 루틴 SP=0x8040에서 감시 구간(0x8000~0x803F)의 관측 최소 SP까지의 차이다. 이 구간에서 변수 끝 0x801A 이하가 관측되면 FAIL이다.
+
+### v2 펌웨어 변이·모델 대조 (기존 자체 결과)
+
+- `calc.asm` 임시 사본을 한 곳씩 바꾼 fast DRAM 시험: 18/18 검출, 무변경 대조군 PASS. POW의 ±32768 경계·부호·음수 지수, 0/±1 경로, GCD 절댓값·교환, SQR 반복 시작·음수 검사, 응답 이름·`ERR OVER`, mul16의 16bit carry·배수 한계·결과 한계·비트 선택, LR 저장/복원·처리 루틴 SP 설정을 포함한다.
+- TB `ref_reply`와 PC `CalcModel` 대조: 824,586줄, 차이 0. 모델 한쪽을 바꾼 음성 대조 2건은 차이를 검출했다. 이는 모델 사이의 대조이며 824,586줄 전부를 실제 RTL에 보낸 시험은 아니다.
+- 재현 실행은 위 `run_soc8_top_tb.sh`의 두 모델 설정을 쓴다. 변이 생성기와 모델 대조 실행 자료는 로컬 시험 증거이며 저장소의 실행 도구로 추가하지 않았다. 따라서 위 명령 하나가 변이·모델 대조까지 다시 실행하지는 않는다.
+
+## 과거 결과 (2026-11-04, 계산기 시험 추가 후)
 
 ```text
 == fast
@@ -66,7 +90,7 @@ COVER tests=4 uart_tx=21 irq_entries=403 resets=0 rst_in_read=0 rst_in_write=0 r
 SOC8_TOP_PASS baud=115200 tests=4 uart_tx=21 irq_entries=403 resets=0
 ```
 
-- `reset_mid_run`의 reset 시점 분포(READ drain 4·WRITE drain 11)는 계산기 시험을 넣기 전(2·4)과 다르다. TB 코드가 늘면 `$urandom` 시드 배정이 바뀌기 때문이다(CLAUDE.md TS-B10과 같은 현상).
+- `reset_mid_run`의 reset 시점 분포(READ drain 4·WRITE drain 11)는 계산기 시험을 넣기 전(2·4)과 다르다. TB 코드가 늘면 `$urandom` 시드 배정이 바뀌기 때문이다.
 - `uart_tx`·`COVER`의 송신 바이트 수에는 계산기 응답이 들어가지 않는다(응답은 `calc`의 `replies`로 센다).
 
 ### 보드용 DRAM 모델로 실행 (2026-11-04, `SOC8_DRAM_MODEL=bram`)

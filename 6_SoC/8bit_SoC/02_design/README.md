@@ -3,8 +3,8 @@
 | 문서 | 다루는 결정 |
 |---|---|
 | [CPU](cpu.md) | 기존 ISA·파이프라인·외부 포트와 원본 연결 |
-| [CPU 명령어 표](isa_table.md) | 20개 명령의 opcode·형식·flag와 TB로 잰 실행 클록, 클록 규칙 |
-| [v2 설계안](v2_design.md) | 1단계: CALL·RET(링크 레지스터)·스택과 새 연산 POW·GCD·SQR / 2단계: 숫자 16bit와 시프트·회전·논리·즉시값·조건 분기·긴 JMP 명령(구현 전) |
+| [CPU 명령어 표](isa_table.md) | 기존 20개 + v2 1단계의 opcode 31개의 형식·flag와 TB로 잰 실행 클록, 클록 규칙 |
+| [v2 설계안](v2_design.md) | 1단계: CPU 구현·VR-015 완료, CALL·RET·스택 기반 POW·GCD·SQR 펌웨어 자체 시험 완료(VR-016 대기) / 2단계: 숫자 16bit와 시프트·회전·논리·즉시값·조건 분기·긴 JMP 명령(구현 전) |
 | [CPU AHB 포트 변경안](cpu_ahb_port.md) | 명령·데이터 포트의 AHB-Lite 변경: 경로·시간표·대기·분기 취소 |
 | [RAM](ram.md) | DRAM 행동 모델·바이트 제어기·실물 경계 |
 | [UART](uart.md) | 기존 FIFO/상태와 MMIO 변환에서 남은 일 |

@@ -44,6 +44,6 @@ PC의 UART 숫자·연산 요청을 8bit CPU가 계산하고 STM32 LCD에 결과
 └── scripts/            원본 모듈 참조·단위 실행·프로젝트 생성
 ```
 
-모듈(CPU·캐시·DRAM 제어기·ROM·AHB 버스·APB 브리지·UART 래퍼·리셋 동기화기)은 Codex 모듈 검증(VR-003~VR-010)을 통과해 main에 병합했다(2026-11-04). SoC top([rtl/soc](rtl/soc/README.md))과 통합 TB([tb/soc](tb/soc/README.md))를 구현했고, ROM·CPU·버스·캐시·DRAM·UART 연결(I01·I02)과 계산기 펌웨어([firmware](firmware/README.md), I03)는 시뮬레이션에서 통과했다. PC 도구·STM32 LCD 펌웨어와 보드 구현은 후속 단계다. 현재 검증 결과는 history와 단위 test.md를 따른다.
+모듈(CPU·캐시·DRAM 제어기·ROM·AHB 버스·APB 브리지·UART 래퍼·리셋 동기화기)은 Codex 모듈 검증(VR-003~VR-010)을 통과해 main에 병합했다(2026-11-04). SoC top([rtl/soc](rtl/soc/README.md))과 통합 TB([tb/soc](tb/soc/README.md))를 구현했고, ROM·CPU·버스·캐시·DRAM·UART 연결(I01·I02)과 계산기 펌웨어([firmware](firmware/README.md), I03)는 시뮬레이션에서 통과했다. v1 보드·PC·STM32 결합 기록은 [보드 문서](fpga/boards/zybo/README.md)와 [PC 도구](pc_tools/README.md)에 있다. v2 1단계 CPU는 VR-015 완료, 일곱 연산 펌웨어·통합은 자체 시험 완료·VR-016 대기다(2026-11-24). [설계 상태](02_design/v2_design.md)·[펌웨어 전후 수치](firmware/README.md)·[통합 TB 결과](tb/soc/README.md)를 참조한다. v2 실물·MSPM0와 2단계는 남았다.
 
-과거 CPU/RAM 결정 기록은 Windows C:/codex_project의 각 history에 보존한다. 기존 Sercurity는 별도 프로젝트다. 구성은 [logistics-automation](https://github.com/hwoo97/logistics-automation/tree/80bc1b80edac121d81cb52f1bc222814af64de7d)의 일곱 단계 구분을 SoC에 맞게 참고했다.
+기존 Sercurity는 별도 프로젝트다. 구성은 [logistics-automation](https://github.com/hwoo97/logistics-automation/tree/80bc1b80edac121d81cb52f1bc222814af64de7d)의 일곱 단계 구분을 SoC에 맞게 참고했다.

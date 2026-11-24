@@ -9,18 +9,16 @@
 | 03 준비 | [환경 기록](03_setup/README.md) | 도구 버전·재현 명령·소스 목록·보드 조건 확인 |
 | 04 단위 개발 | [블록별 시험](04_unit/README.md) | 정상·경계·대기·reset 시험과 자동 판정 |
 | 05 통합 | [통합 기록](05_integration/README.md) | CPU+RAM에서 LD/ADD/ST, 이후 MMIO UART 확인 |
-| 06 시나리오 | [전체 시험](06_scenario_test/README.md) | signed8 사칙연산·몫/나머지·예외·LCD 검증 |
+| 06 시나리오 | [전체 시험](06_scenario_test/README.md) | signed8 일곱 연산·몫/나머지·예외·LCD 검증 |
 | 07 최종 | [최종 증빙](07_final/README.md) | 소스 버전·시뮬레이션·FPGA 타이밍·시연 재현 가능 |
 
 ## 지금 이어갈 순서
 
-2026-11-05 현재 1~5는 시뮬레이션 기준으로 마쳤다(통합 Codex 검증 PASS, main 병합). 6은 진행 중이다: 보드용 DRAM 모델·보드 XDC(VR-012 PASS, main 병합), 보드 top·보드 TB·bitstream 빌드와 배치·배선 결과([보드 README](fpga/boards/zybo/README.md))까지 마쳤고, 실물 보드 시험이 남았다. 단계별 상태는 [통합 기록](05_integration/README.md)과 [단위 시험 결과](04_unit/README.md)에 있다.
+2026-11-24 현재 v1 모듈·통합·FPGA 검증과 보드 결합 기록이 있으며, v2 1단계 CPU는 VR-015를 통과했다. 일곱 연산 펌웨어·통합은 자체 시험 완료·VR-016 대기다. 상세 수치·시험 범위는 [펌웨어](firmware/README.md)와 [통합 TB](tb/soc/README.md), 전체 계획은 [v2 설계안](02_design/v2_design.md)을 따른다.
 
-1. CPU req/ready, DRAM 제어기 완료/재수락, UART FIFO 상태를 공통 시간표로 맞춘다.
-2. BUS의 주소 디코딩·오류 응답과 UART MMIO 어댑터 계약을 정한다. AMBA 채택 여부는 별도 결정한다.
-3. ROM 래퍼와 CPU→BUS→RAM 최소 통합 TB를 만든다. DRAM 행동 모델과 실제 FPGA 메모리를 구분한다.
-4. UART 단독 시험을 자동 판정으로 보강하고 BUS+UART를 붙인다.
-5. signed16 계산기 프로그램과 PC 요청/응답 형식을 만들고 전체 시뮬레이션을 한다.
-6. 최종 보드와 클록/핀을 확정하고 합성·타이밍을 통과한 뒤 STM32 LCD까지 시험한다.
+1. v2 문서·전후 수치·낡은 설명의 정합성을 검토한다.
+2. 펌웨어·통합 VR-016을 별도로 요청·검증한다. PASS와 사용자 승인 뒤 main 병합한다.
+3. v2 보드 빌드·실물·MSPM0를 확인한다. v1 결과를 v2 결과로 재사용하지 않는다.
+4. 1단계 완료 뒤 숫자 16bit·새 명령 18개의 2단계를 설계·구현·검증한다.
 
 블록별로 명세→구현→시험→기록을 반복하고, 인터페이스가 준비된 블록부터 작게 통합한다. 전체 블록 구현이 끝날 때까지 첫 통합을 미루지 않는다.

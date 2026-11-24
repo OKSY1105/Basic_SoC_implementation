@@ -23,12 +23,22 @@ bash 6_SoC/8bit_SoC/scripts/run_zybo_top_tb.sh /tmp/zybo_top_tb    # 저장소 �
 
 | 실행 | ROM 이미지 | 판정 |
 |---|---|---|
-| `calc` (`PROG=0`) | 계산기 펌웨어 | MMCM 출력 주기 10.000 ns, BTN0 동안 LD0·LD1 꺼짐과 해제 뒤 켜짐, LD2·LD3 꺼짐 유지, `calculator.md` 5절 사례(오류 4종, 17바이트 DIV 응답, `ERR RANGE` 뒤 A·B 유지)를 규약의 속도 규칙대로 보내 응답 비교, 중간 BTN0 reset 뒤 `ERR NOARG`, 모든 송신 프레임의 parity·stop bit |
+| `calc` (`PROG=0`) | 계산기 펌웨어 | MMCM 출력 주기 10.000 ns, BTN0 동안 LD0·LD1 꺼짐과 해제 뒤 켜짐, LD2·LD3 꺼짐 유지, `calculator.md` 5절 사례(일곱 연산·오류 5종, POW의 ±32768·`ERR OVER`, GCD·SQR, 17바이트 DIV 응답, `ERR RANGE` 뒤 A·B 유지)를 규약의 속도 규칙대로 보내 응답 비교, 중간 BTN0 reset 뒤 `ERR NOARG`, 모든 송신 프레임의 parity·stop bit |
 | `ram` (`PROG=1`) | `tb/soc/programs/ram_basic.asm` | 256바이트(캐시의 4배)를 캐시·DRAM 제어기·BRAM 모델로 쓰고 읽어 UART `80 12 34 56 78` → HALT(LD2 켜짐, LD3 꺼짐), BRAM 모델 배열 256바이트 = 3 + 7i |
 
-계산기 펌웨어는 RAM 변수 25바이트를 모두 캐시 안에 두고 읽기 전에 항상 쓰므로, DRAM에서 돌아오는 데이터를 쓰지 않는다. 그래서 DRAM 경로는 `ram` 실행으로 확인한다(아래 변이 시험의 `dram_dq_loop`).
+v2 계산기 펌웨어는 RAM 변수 27바이트(0x8000~0x801A)와 처리 루틴 스택 최대 3바이트(SP=0x8040)를 캐시 64바이트 주소 창 안에 두며, 읽기 전에 항상 쓴다. 계산기 시험만으로 DRAM에서 읽어 돌아오는 데이터 경로를 확인할 수 없다. 그래서 DRAM 경로는 `ram` 실행으로 확인한다(아래 변이 시험의 `dram_dq_loop`).
 
-결과 (2026-11-05, WSL Vivado 2024.2 XSim):
+v2 1단계 자체 결과(2026-11-24, WSL Vivado 2024.2 XSim, 펌웨어·TB `761dc9d512c3f61313a6f2021b3a19896d01a5c3`의 기존 실행 로그 확인):
+
+```text
+BOARD_TOP_PASS mode=calc lines=37 replies=23 tx_bytes=257 resets=2
+BOARD_TOP_PASS mode=ram tx_bytes=5 resets=1
+RESULT status=0
+```
+
+보드 **TB 시뮬레이션** 결과다. 아래 v1의 bitstream·PPA·실물·QSPI 기록을 v2 재검증으로 간주하지 않는다. v2 보드 빌드·실물·MSPM0 작업은 아직이다.
+
+과거 결과 (2026-11-05, WSL Vivado 2024.2 XSim):
 
 ```text
 == calc

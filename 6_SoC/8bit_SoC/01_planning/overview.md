@@ -11,7 +11,7 @@ STM32 LCD 표시 ← STM32 UART RX ← FPGA UART TX ← 계산 결과
 | 항목 | 기존 결정/상태 |
 |---|---|
 | CPU | 단일 코어·4×8bit GPR·16bit 명령·3단계·stall |
-| 입력 | 부호 있는 −128~127 두 수, ADD/SUB/MUL/DIV 요청 |
+| 입력 | 부호 있는 −128~127 두 수, ADD·SUB·MUL·DIV·POW·GCD·SQR 요청(v2 1단계) |
 | 결과 | 부호 있는 16bit, 나눗셈은 정수 몫과 나머지 |
 | MUL/DIV | 전용 명령 추가 대신 프로그램 반복 방향 |
 | 프로그램 공급 | 미리 준비한 ROM 프로그램, PC는 숫자와 연산 요청 전송 |
@@ -21,4 +21,4 @@ STM32 LCD 표시 ← STM32 UART RX ← FPGA UART TX ← 계산 결과
 | UART | 115200 bps, 8E1. PC 터미널·STM32도 같은 설정(2026-11-04) |
 | 통신 규약 | 줄 단위 ASCII 요청·응답과 오류 응답 — [계산기 통신 규약](../02_design/calculator.md)(2026-11-04) |
 
-SoC top과 계산기 ROM 프로그램은 구현해 시뮬레이션에서 통과했다(2026-11-04, [통합 기록](../05_integration/README.md)). PC 도구·STM32 펌웨어와 보드 구현은 후속 단계다. 요청·응답 형식, 음수 나눗셈의 몫·나머지 부호, 0으로 나누기와 잘못된 입력의 응답은 [계산기 통신 규약](../02_design/calculator.md)에 정했다. RAM은 데이터 캐시 + 직접 만든 DRAM 제어기 구조다([RAM](../02_design/ram.md)).
+SoC top과 계산기 ROM 프로그램은 구현해 시뮬레이션에서 통과했다(2026-11-04, [통합 기록](../05_integration/README.md)). v1의 보드·PC·STM32 결합 결과는 [PC 도구](../pc_tools/README.md)와 [보드 문서](../fpga/boards/zybo/README.md)의 날짜별 기록을 따른다. v2 1단계는 CPU VR-015 완료·펌웨어 자체 시험 완료 상태이며 VR-016과 v2 보드·MSPM0 확인은 남았다. 요청·응답 형식, 음수 나눗셈의 몫·나머지 부호, 0으로 나누기와 잘못된 입력의 응답은 [계산기 통신 규약](../02_design/calculator.md)에 정했다. RAM은 데이터 캐시 + 직접 만든 DRAM 제어기 구조다([RAM](../02_design/ram.md)).

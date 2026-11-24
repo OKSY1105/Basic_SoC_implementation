@@ -8,15 +8,15 @@
 |---|---|---|---|---|
 | 데이터 폭 | 8bit | 8bit | 8bit | 8bit |
 | 주소 | 4bit, 메모리 16칸 | 16bit PC | 16bit PC | 명령: 16bit word PC. 데이터: 16bit byte 주소(RAM 2 KiB `0x8000~0x87FF`, ROM `0x0000~0x1FFF`, UART `0xF000~0xFFFF`) — [BUS](../02_design/bus.md) |
-| 레지스터 | 누산기 A, B | 누산기 중심, 범용 레지스터 몇 개 | B·C·D·E·H·L, SP, F(flag) | R0~R3(모두 범용), X(16bit 주소), FLAGS(Z·N·C·V). 인터럽트용 묶음을 하나 더 가진다 |
-| 명령 수·길이 | 5개(LDA·ADD·SUB·OUT·HLT), 1바이트(opcode 4bit + 주소 4bit) | 수십 개, 1~3바이트 | SAP-2 확장(ADI·ACI·SUI·SBI·CPI, JM·JP·JC·JNC 등), 1~3바이트 | 20개, 모두 16bit 1 word — [명령어 표](../02_design/isa_table.md) |
+| 레지스터 | 누산기 A, B | 누산기 중심, 범용 레지스터 몇 개 | B·C·D·E·H·L, SP, F(flag) | R0~R3(모두 범용), X·SP·LR(16bit), FLAGS(Z·N·C·V). 인터럽트용 묶음을 하나 더 가진다 |
+| 명령 수·길이 | 5개(LDA·ADD·SUB·OUT·HLT), 1바이트(opcode 4bit + 주소 4bit) | 수십 개, 1~3바이트 | SAP-2 확장(ADI·ACI·SUI·SBI·CPI, JM·JP·JC·JNC 등), 1~3바이트 | 기존 20개 + v2 1단계, opcode 31개(명령 형식과 구분), 모두 16bit 1 word — [명령어 표](../02_design/isa_table.md) |
 | 제어 | 6단계 링 카운터(T1~T6)와 하드와이어 제어 행렬. 명령마다 같은 T-state를 차례로 거치고 한 번에 한 명령 | SAP-1 방식을 확장 | 〃 | IF / ID·EX / MEM·WB 3단 파이프라인, 해독기 조합 논리. 기본 1클록/명령, 바로 앞 결과 사용·분기 때 +1 |
 | 버스 | 8bit 공용 W bus 하나(3상태 출력이 차례로 버스를 씀) | W bus 확장 | 〃 | AMBA AHB-Lite: 명령 포트 → ROM 점대점, 데이터 포트 → 주소 디코더 → ROM·캐시·APB 브리지. 대기(`HREADY`)와 오류 응답(`HRESP`)이 있다 |
 | 메모리 | 16바이트 RAM(스위치로 프로그램 입력) | monitor ROM 2K + RAM | 〃 | ROM(BRAM, 계산기 펌웨어) + RAM 경로: 직접 사상 write-back 캐시 → DRAM 제어기 → DRAM 모델(보드는 BRAM 기반 모델) — [RAM](../02_design/ram.md) |
 | 입출력 | 출력 레지스터 → LED 표시 | 입출력 포트, READY/ACKNOWLEDGE handshaking(폴링) | 〃 | UART(APB3 slave, 115200 bps 8E1, 수신 FIFO), 수신 인터럽트 — [UART](../02_design/uart.md) |
-| 서브루틴·스택 | 없음 | CALL/RET | SP, 스택 | 없음(루틴을 펼쳐 씀) |
+| 서브루틴·스택 | 없음 | CALL/RET | SP, 스택 | v2 1단계: LR 기반 CALL/RET, SP와 PUSH/POP, 묶음별 SP·LR |
 | 인터럽트 | 없음 | 판독 범위에 없음(폴링) | 판독 범위에 없음 | IRQ 1개, 정확한 인터럽트, 처리 루틴 전용 레지스터 묶음(저장·복원 명령 불필요), EI·DI·RETI |
-| 클록·구현 | TTL 칩, 수동·단계 클록 스위치 | TTL | TTL | FPGA(Zybo Z7-20) 100 MHz, LUT 1,012·FF 981·BRAM 3, WNS +0.558 ns — [보드 README](../fpga/boards/zybo/README.md) |
+| 클록·구현 | TTL 칩, 수동·단계 클록 스위치 | TTL | TTL | FPGA(Zybo Z7-20) 100 MHz. 아래는 v1의 2026-11-05 배치·배선 값이며 v2 재측정 아님: LUT 1,012·FF 981·BRAM 3, WNS +0.558 ns — [보드 README](../fpga/boards/zybo/README.md) |
 
 ## SAP에서 가져온 생각
 
@@ -36,14 +36,14 @@
 4. **인터럽트**: SAP 장에는 인터럽트가 없다. 이 CPU는 진행 중인 명령 상태를 정확히 지키며 처리 루틴으로 들어가고, 레지스터 묶음을 바꿔 저장·복원 없이 처리한다.
 5. **검증**: 블록마다 SVA 규칙 검사, 독립 기준 모델과의 비교, 결함을 넣어 시험이 잡는지 확인하는 변이 시험을 했고, 별도 검증자(Codex)가 지정 커밋을 다시 실행했다 — [검증](../verification/README.md).
 
-## SAP에 있고 아직 없는 것 (CPU 확장 후보)
+## SAP 기능과 v2 확장 상태
 
-| SAP 기능 | 없어서 생기는 일 | 확장하면 |
+| SAP 기능 | 현행 상태 | 구현 결과 또는 확장 효과 |
 |---|---|---|
-| CALL/RET, 스택(SP·PUSH·POP) | 같은 루틴을 여러 곳에 펼쳐 써서 펌웨어가 길다 | 서브루틴으로 줄인다 |
+| CALL/RET, 스택(SP·PUSH·POP) | v2 1단계에서 구현, 펌웨어 루틴화 | [설계·전후 수치](../firmware/README.md#v2-firmware-comparison). 새 연산 추가로 전체 크기는 증가 |
 | 레지스터 쌍으로 주소 만들기(SAP-3 HL → M) | X는 즉시값(LDXL·LDXH)과 INX로만 바뀐다. 계산한 값을 주소로 쓰기 어렵다 | ROM 문자열 표·버퍼를 반복문으로 처리한다 |
-| 시프트·회전 | 곱셈·나눗셈을 반복 덧셈·뺄셈으로 한다 | shift-add 곱셈, 복원 나눗셈으로 반복 수가 8회로 준다 |
+| 시프트·회전 | 현재 mul16은 ADD/ADC 기반 시프트·덧셈, DIV는 반복 뺄셈 | 2단계에 CPU SHL·SHR·ROL·ROR와 signed16 입력 산술을 추가할 계획 |
 | 반대·부호 조건 분기(JNZ·JNC·JM·JP) | JZ·JC만 있어 반대 조건은 분기를 두 번 쓴다 | 분기가 짧아지고 부호 비교가 쉬워진다 |
 | OR·XOR·NOT | AND만 있다 | bit 처리와 문자 변환이 쉬워진다 |
 
-이 확장은 ISA를 바꾸므로 CPU 모듈 검증·SoC 통합 검증·보드 확인을 다시 해야 한다. 진행 여부는 정하지 않았다.
+1단계 CPU는 VR-015를 통과했고 펌웨어·통합은 VR-016 대기다. 시프트·회전·논리·즉시값·분기 명령 18개와 signed16 입력·signed32 결과는 사용자 결정(2026-11-18·20)에 따른 2단계 계획이며 미구현이다([v2 설계안](../02_design/v2_design.md) 7절). v2 보드 확인은 별도로 남았다.
